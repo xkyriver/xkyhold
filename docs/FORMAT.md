@@ -35,12 +35,21 @@ The File System Access API exposes, per file: name, size and last-modified
 time. Nothing else. Consequences that the format accepts:
 
 - No permissions, owners, extended attributes or creation times are stored.
-- Symbolic links are not visible to the app and are not backed up.
+  On Linux and macOS this includes the executable bit: restored scripts and
+  programs must be made executable again by hand.
+- Symbolic links are believed not to be exposed to the app (to be confirmed
+  by test) and are not backed up.
+- Chrome refuses to open the home folder itself and system folders; only
+  sub-folders such as Documents or Pictures can be chosen.
 - Empty folders **are** stored.
 - On restore to a folder, the browser cannot set a file's modification
   time: restored files carry the time of the restore. A `.zip` restore
   preserves the original times. The original time is always kept in the
   snapshot.
+
+XkyHold is therefore a backup of personal files — documents, pictures,
+work — not of a system, of dotfiles or of a development environment. The
+product must say so plainly.
 
 ## 3. Layout in Google Drive
 
@@ -84,10 +93,18 @@ WebAssembly.
 
 - **Master key**: 32 random bytes, generated once per repository. It never
   leaves the browser unwrapped.
-- **Key-encryption key (KEK)**: `Argon2id(password, salt)`, 32 bytes.
-  Default parameters: memory 64 MiB, 3 iterations, parallelism 1, 32-byte
-  random salt. The parameters are stored in `config`, so they can be raised
-  later without a format change.
+- **Password KEK**: `Argon2id(password, salt)`, 32 bytes. Default
+  parameters: memory 64 MiB, 3 iterations, parallelism 1, 32-byte random
+  salt. The parameters are stored in `config`, so they can be raised later
+  without a format change. The password is encoded as UTF-8 after Unicode
+  NFC normalisation.
+- **Recovery key**: 32 random bytes generated when the repository is
+  created, shown to the user once to print or store away from the
+  computer, and never stored by the app. It is a second way to unwrap the
+  same master key, for when the password is forgotten.
+- **Recovery KEK**: `HKDF-SHA-256(recovery key, salt = empty,
+  info = "xkyhold/v1/recovery/<repo id>")`, 32 bytes. No slow KDF is
+  needed: the recovery key already has 256 bits of entropy.
 - **Sub-keys**, derived from the master key with HKDF-SHA-256, empty salt:
 
   | Key | HKDF info | Use |
@@ -133,24 +150,37 @@ Plaintext JSON, because it must be readable before the password is known:
   "chunker": { "type": "fixed", "size": 4194304 },
   "keys": [
     {
+      "type": "password",
       "kdf": "argon2id",
       "memoryKiB": 65536,
       "iterations": 3,
       "parallelism": 1,
       "salt": "…base64…",
       "wrappedMasterKey": "…base64 of an encrypted object…"
+    },
+    {
+      "type": "recovery",
+      "kdf": "hkdf-sha256",
+      "wrappedMasterKey": "…base64 of an encrypted object…"
     }
   ]
 }
 ```
 
-- `keys` is a list so that a second way in (for example a printed recovery
-  key) can be added later without a format change. Version 1 writes one
-  entry.
-- A wrong password is detected when unwrapping the master key fails
-  authentication.
+- `keys` holds one slot per way of unwrapping the master key. Version 1
+  writes exactly one `password` slot and one `recovery` slot. Readers try
+  the slots of the matching `type` and ignore types they do not know.
+- A wrong password or recovery key is detected when unwrapping the master
+  key fails authentication.
 - Changing the password rewrites `config` with a new salt and a re-wrapped
-  master key. No data is re-encrypted.
+  master key in the `password` slot. The recovery slot and all data are
+  untouched. A forgotten password is replaced the same way, after
+  unlocking with the recovery key.
+
+**Recovery key as text.** The 32 bytes are written in Crockford base32
+(alphabet `0123456789ABCDEFGHJKMNPQRSTVWXYZ`), 52 characters, shown in
+groups of four separated by hyphens. When reading, case, spaces and hyphens
+are ignored, `O` is read as `0`, and `I` and `L` as `1`.
 - Readers must refuse a `format` they do not know.
 
 ## 5. Blobs
@@ -372,11 +402,11 @@ Drive has no atomic "create if absent", so locks are advisory:
    photos; worth revisiting for large, frequently edited files.
 2. **Compressing file data.** Most large user files (photos, video,
    archives) are already compressed. Could be enabled per blob later.
-3. **Recovery key.** A second `keys` entry holding the master key wrapped
-   under a random key shown once to the user. Would soften "forget the
-   password, lose the backup".
+3. **Symbolic links.** Confirm by test what Chrome does with them, and
+   count anything that cannot be stored as skipped.
 4. **Argon2id cost on phones.** 64 MiB should be fine for restore-only use
    on mobile; to be measured.
-5. **Test vectors.** To be added with the implementation: a fixed password,
-   salt and master key, with the expected sub-keys, blob id and encrypted
-   object.
+5. **Test vectors.** A fixture written by the first implementation lives in
+   `src/engine/golden-v1.json` (config, password, recovery key, one pack).
+   Every later version must still open it. To be extended with an index
+   and a snapshot when those are implemented.

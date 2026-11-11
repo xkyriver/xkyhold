@@ -1,0 +1,53 @@
+{
+  "note": "Format v1 compatibility fixture. Generated once; never regenerate. If a change makes the test fail, the change breaks existing backups.",
+  "password": "correct horse battery staple",
+  "recoveryKey": "ZSMB-NTXC-KTD2-CR4C-Y4NE-G14K-PFQR-RCJ3-MV2J-GJPX-C1YY-TSN7-FS40",
+  "config": {
+    "format": 1,
+    "repoId": "c156e546991f831237b4aa00d7f146ee",
+    "created": "2026-11-11T14:58:07.949Z",
+    "chunker": {
+      "type": "fixed",
+      "size": 4194304
+    },
+    "keys": [
+      {
+        "type": "password",
+        "kdf": "argon2id",
+        "memoryKiB": 1024,
+        "iterations": 2,
+        "parallelism": 1,
+        "salt": "JbyIGof6iskxCO0s4m3rKZ/hN2xEzBxGykNCRwJPZqo=",
+        "wrappedMasterKey": "Yqw2TQ9KMg+thArMXHU3UN9+s8WTznzXLpgRBbFzCzBjtp5Ew2LRzdIrtzg72tR15+1forBatIk/qk4U"
+      },
+      {
+        "type": "recovery",
+        "kdf": "hkdf-sha256",
+        "wrappedMasterKey": "YUCpILcJbwXwsRigl4p9y6eaY65wgvqbSG8RugxvHmZTq+zYsUZpA9l4CndQBCXy7Kh/xunbuf0t9YsD"
+      }
+    ]
+  },
+  "blobIdOfAbc": "55570e3d6ac2d4f6e685fdd672626b4b32f35163e1090be70a0f50c56cc49d59",
+  "pack": {
+    "name": "0055fcb297595e54fbcb8bac517e7e491e24983245fa5da87ad524b78241e1b4",
+    "base64": "WEtIMfKqNVWqnuTCG0n0vjuQhNyJCxvP4PqnxN9Mxninet1i5W08Tb7S1hR91VvVrKyOFe2F+Uj0pSJslkcf9+5Dh6O3jdTd1tDDCvZjQcKEJlJzTgyFV8Evzi0GzxFB3+AZe2YW435SVDIYKZVCPhRhESqUBWpihkP6hzYumSRZIIxJECb24C1JGG0KTfLZy/YP+O+34a3vdhpAq35heo2eKeeU8oAq0UKc4hF7R9pdl6eiMDDscW5uYFvK9A2+JTnk9Z7rnpPCzaZ14noucV62adqdPWK2p5cZian+wiY3CswQVLF8uE9VRWD22/0YE/NIhq1KWnSwS7APUEuuPlMd1eWObxZhlm+tbNo9VUO80/+R1Na4SugvDPHbdt4HU8W8D14jeFYKzTXOS0ZsvqrzSpcwpWcNUU78jB4UGjKgJ2A1xOem++39QDfeHlD/f1DOZMWUfDinwEVDwK2HTpAUOlPqBz/r1fADwjoNDDZe9zEtcXadAFjla09swd9DcYiNnFx5jmEKOIXejNUAAAA=",
+    "blobs": [
+      {
+        "id": "7337b356c7627daae9725c09733f52dc530e2130c6f0f293ea3f279e94a01e72",
+        "type": "data",
+        "offset": 4,
+        "length": 71,
+        "rawLength": 43,
+        "encoding": 0
+      },
+      {
+        "id": "eed1894af39b2cf52e509e56e9590cb49f15172762efc0fca42452c6eacfd301",
+        "type": "tree",
+        "offset": 75,
+        "length": 109,
+        "rawLength": 91,
+        "encoding": 1
+      }
+    ]
+  }
+}
