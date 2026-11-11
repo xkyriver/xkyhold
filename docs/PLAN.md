@@ -72,6 +72,8 @@ src/ui/               ecrãs Svelte, i18n
 
 ### 5.3 Formato do repositório (pasta `XkyHold/<nome>` no Drive)
 
+Especificação completa (rascunho, em inglês): [FORMAT.md](FORMAT.md). O resumo abaixo é a ideia inicial; onde diferirem, vale a especificação.
+
 - **Cifra:** password → Argon2id (WASM) → chave que desembrulha a chave mestra; dados em AES-256-GCM. Ficheiro `config` com parâmetros e versão do formato.
 - **Dados:** ficheiros partidos em blocos, identificados por hash do conteúdo (dedup), agrupados em **packs** de ~16 MB. Evita milhares de ficheiros pequenos no Drive e os limites de taxa da API.
 - **Índice:** bloco → pack, cifrado, no Drive e em cache local.
