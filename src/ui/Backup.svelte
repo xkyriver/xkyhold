@@ -47,12 +47,15 @@
   let backupProgress = $state<BackupProgress | null>(null)
   let restoreProgress = $state<RestoreProgress | null>(null)
 
+  /** The action to repeat once the user has signed in again. */
+  let retry = $state.raw<(() => unknown) | null>(null)
+
+  const sessionExpired = (err: unknown) => err instanceof AuthError || (err instanceof DriveError && err.needsSignIn)
+
   function explain(err: unknown): string {
     console.error(err)
     if (err instanceof WrongKeyError) return 'That password is not right.'
-    if (err instanceof AuthError || (err instanceof DriveError && err.needsSignIn)) {
-      return 'Your Google session expired. Sign in again, then retry.'
-    }
+    if (sessionExpired(err)) return 'Your Google session expired.'
     if (err instanceof TypeError) return 'Could not reach Google Drive. Check your connection and try again.'
     return err instanceof Error ? err.message : 'Something went wrong.'
   }
@@ -61,13 +64,29 @@
     busy = label
     error = null
     notice = null
+    retry = null
     try {
       return await run()
     } catch (err) {
       error = explain(err)
+      if (sessionExpired(err)) retry = () => task(label, run)
     } finally {
       busy = null
+      backupProgress = null
+      restoreProgress = null
     }
+  }
+
+  /** Runs from a click, so the browser lets Google's window open. */
+  async function signInAndRetry() {
+    const again = retry
+    try {
+      await googleAuth.signIn()
+    } catch (err) {
+      error = err instanceof AuthError && err.code === 'cancelled' ? 'Your Google session expired.' : explain(err)
+      return
+    }
+    await again?.()
   }
 
   async function destination(): Promise<DriveDestination> {
@@ -97,8 +116,9 @@
 
   const unlock = () =>
     task('Opening your backup…', async () => {
-      repo = await Repository.open(await destination(), { password })
-      snapshots = await repo.listSnapshots()
+      const opened = await Repository.open(await destination(), { password })
+      snapshots = await opened.listSnapshots()
+      repo = opened
       password = ''
     })
 
@@ -208,6 +228,9 @@
   {/if}
   {#if notice}<p class="hint ok" role="status">{notice}</p>{/if}
   {#if error}<p class="hint warn" role="alert">{error}</p>{/if}
+  {#if retry && !busy}
+    <button class="primary" onclick={signInAndRetry}>Sign in again and continue</button>
+  {/if}
 </section>
 
 <style>
