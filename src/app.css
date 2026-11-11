@@ -108,3 +108,17 @@ footer {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+.hint.warn {
+  color: var(--warn);
+}
+
+button.link {
+  padding: 4px 8px;
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}

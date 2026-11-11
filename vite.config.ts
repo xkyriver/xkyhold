@@ -7,6 +7,8 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
+  // The OAuth client only accepts registered origins, so the dev port is fixed.
+  server: { port: 5173, strictPort: true },
   test: {
     include: ['src/**/*.test.ts'],
   },
