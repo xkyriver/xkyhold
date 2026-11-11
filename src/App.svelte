@@ -1,10 +1,12 @@
 <script lang="ts">
   import { AuthError, googleAuth } from './auth/google'
   import { detectCapabilities } from './lib/capabilities'
+  import Backup from './ui/Backup.svelte'
   import Folders from './ui/Folders.svelte'
   import UploadTest from './ui/UploadTest.svelte'
 
   const dev = import.meta.env.DEV
+  const showUploadTest = new URLSearchParams(location.search).has('upload-test')
 
   const caps = detectCapabilities()
 
@@ -76,7 +78,11 @@
       <Folders />
     {/if}
 
-    {#if dev && account}
+    {#if account}
+      <Backup />
+    {/if}
+
+    {#if dev && account && showUploadTest}
       <UploadTest />
     {/if}
   </section>

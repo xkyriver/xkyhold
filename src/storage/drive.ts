@@ -40,7 +40,10 @@ export interface DriveFile {
   name: string
   size?: string
   sha256Checksum?: string
+  mimeType?: string
 }
+
+export const DRIVE_FOLDER_MIME = 'application/vnd.google-apps.folder'
 
 async function fail(res: Response): Promise<never> {
   let detail = ''
@@ -95,6 +98,68 @@ export class Drive {
       method: 'PATCH',
       headers: this.headers(token, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ trashed: true }),
+    })
+    if (!res.ok) await fail(res)
+  }
+
+  /** Every non-trashed child of a folder. */
+  async listChildren(token: string, folder: string): Promise<DriveFile[]> {
+    const q = encodeURIComponent(`${quote(folder)} in parents and trashed = false`)
+    const out: DriveFile[] = []
+    let page = ''
+    do {
+      const res = await this.fetch(
+        `${API}/files?q=${q}&fields=nextPageToken,files(id,name,size,sha256Checksum,mimeType)&pageSize=1000${page}`,
+        { headers: this.headers(token) },
+      )
+      if (!res.ok) await fail(res)
+      const body = await res.json()
+      out.push(...(body.files ?? []))
+      page = body.nextPageToken ? `&pageToken=${encodeURIComponent(body.nextPageToken)}` : ''
+    } while (page)
+    return out
+  }
+
+  /** Downloads a file's content, or `length` bytes from `offset`. */
+  async download(token: string, id: string, range?: { offset: number; length: number }): Promise<Uint8Array<ArrayBuffer>> {
+    if (range?.length === 0) return new Uint8Array(0)
+    const headers = this.headers(token)
+    if (range) headers.Range = `bytes=${range.offset}-${range.offset + range.length - 1}`
+    const res = await this.fetch(`${API}/files/${id}?alt=media`, { headers })
+    if (!res.ok) await fail(res)
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    // A server that ignores Range answers 200 with the whole file.
+    if (range && res.status !== 206) return bytes.slice(range.offset, range.offset + range.length)
+    return bytes
+  }
+
+  /** Creates a file in one request. For small content. */
+  async uploadSmall(token: string, name: string, parent: string, data: Uint8Array, signal?: AbortSignal): Promise<DriveFile> {
+    const boundary = `xkyhold${crypto.randomUUID().replace(/-/g, '')}`
+    const body = new Blob([
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
+      JSON.stringify({ name, parents: [parent] }),
+      `\r\n--${boundary}\r\nContent-Type: application/octet-stream\r\n\r\n`,
+      data as Uint8Array<ArrayBuffer>,
+      `\r\n--${boundary}--`,
+    ])
+    const res = await this.fetch(`${UPLOAD_API}/files?uploadType=multipart&fields=id,name,size`, {
+      method: 'POST',
+      headers: this.headers(token, { 'Content-Type': `multipart/related; boundary=${boundary}` }),
+      body,
+      signal,
+    })
+    if (!res.ok) await fail(res)
+    return res.json()
+  }
+
+  /** Replaces the content of an existing file. */
+  async replaceContent(token: string, id: string, data: Uint8Array, signal?: AbortSignal): Promise<void> {
+    const res = await this.fetch(`${UPLOAD_API}/files/${id}?uploadType=media`, {
+      method: 'PATCH',
+      headers: this.headers(token, { 'Content-Type': 'application/octet-stream' }),
+      body: data as Uint8Array<ArrayBuffer>,
+      signal,
     })
     if (!res.ok) await fail(res)
   }
@@ -155,6 +220,8 @@ async function readStep(res: Response): Promise<UploadStep> {
 export interface UploadOptions {
   /** Bytes per request; rounded down to a multiple of 256 KiB. */
   chunkSize?: number
+  /** Skip asking the server where it is: true for a session just opened. */
+  fresh?: boolean
   onProgress?: (sent: number, total: number) => void
   signal?: AbortSignal
 }
@@ -171,7 +238,7 @@ export async function uploadResumable(
   options: UploadOptions = {},
 ): Promise<DriveFile> {
   const unit = Math.max(CHUNK_UNIT, Math.floor((options.chunkSize ?? 8 * 1024 * 1024) / CHUNK_UNIT) * CHUNK_UNIT)
-  let step = await drive.uploadStatus(session, data.size)
+  let step: UploadStep = options.fresh ? { done: false, offset: 0 } : await drive.uploadStatus(session, data.size)
   while (!step.done) {
     options.signal?.throwIfAborted()
     options.onProgress?.(step.offset, data.size)
