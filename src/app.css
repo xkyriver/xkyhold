@@ -6,9 +6,10 @@
   --text: #18202c;
   --muted: #5b6676;
   --border: #dde2ea;
-  --accent: #2563d9;
-  --accent-hover: #1d4fb3;
-  --accent-soft: #e8effc;
+  /* xkyriver teal (#00ffc6), darkened for contrast on light surfaces. */
+  --accent: #00735c;
+  --accent-hover: #005c49;
+  --accent-soft: #dff5ee;
   --accent-text: #ffffff;
   --ok: #17794a;
   --ok-soft: #e4f4ec;
@@ -31,10 +32,10 @@
     --text: #e7ebf1;
     --muted: #97a1b1;
     --border: #2a313e;
-    --accent: #6b9bff;
-    --accent-hover: #8ab0ff;
-    --accent-soft: #1b2942;
-    --accent-text: #0b1220;
+    --accent: #00ffc6;
+    --accent-hover: #5cffd9;
+    --accent-soft: #0d2a25;
+    --accent-text: #02110d;
     --ok: #62d39a;
     --ok-soft: #14301f;
     --warn: #f1b560;
