@@ -8,6 +8,7 @@ export type PermissionState = 'granted' | 'prompt' | 'denied'
 export interface FileLike {
   readonly size: number
   readonly lastModified: number
+  slice(start: number, end: number): { arrayBuffer(): Promise<ArrayBuffer> }
 }
 
 export interface FileHandleLike {

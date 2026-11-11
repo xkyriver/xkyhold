@@ -8,7 +8,7 @@ function file(name: string, size: number, broken = false): FileHandleLike {
     name,
     getFile: async () => {
       if (broken) throw new Error('locked')
-      return { size, lastModified: 0 }
+      return { size, lastModified: 0, slice: () => new Blob() }
     },
   }
 }

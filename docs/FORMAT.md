@@ -324,6 +324,8 @@ One per completed backup. Before compression and encryption:
 3. Otherwise read the file, chunk it, and for each chunk compute its id; if
    the index already has it, skip; else encrypt it and add it to the open
    pack.
+   This is the usual size-and-time rule: a file rewritten with exactly the
+   same size and the same modification time is taken as unchanged.
 4. Upload full packs with resumable uploads; write an index file every few
    packs.
 5. Build tree blobs bottom-up, upload the remaining packs and the final
@@ -408,5 +410,6 @@ Drive has no atomic "create if absent", so locks are advisory:
    on mobile; to be measured.
 5. **Test vectors.** A fixture written by the first implementation lives in
    `src/engine/golden-v1.json` (config, password, recovery key, one pack).
-   Every later version must still open it. To be extended with an index
-   and a snapshot when those are implemented.
+   Every later version must still open it. `golden-v1-repo.json` is a whole
+   small repository (config, packs, index, snapshot) that every later
+   version must still restore.
