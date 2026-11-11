@@ -16,8 +16,10 @@ engine must match it; change the spec first, then the code.
 
 ## Stack
 
-TypeScript, Vite, Svelte 5, Vitest. Engine code runs in a Web Worker and
-must not depend on the UI. Storage sits behind a `Destination` interface;
+TypeScript, Vite, Svelte 5, Vitest. Engine code runs in a Web Worker
+(`src/engine/worker.ts`) and must not depend on the UI; the page reaches it
+only through `EngineClient` (`src/state/app.svelte.ts`). Errors cross that
+boundary as a `kind` string (`src/engine/errors.ts`). Storage sits behind a `Destination` interface;
 tests use an in-memory fake, never real Google Drive.
 
 ## Conventions

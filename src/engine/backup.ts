@@ -142,7 +142,7 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
       signal,
     )
   } catch (err) {
-    repo.discardOpenPacks()
+    await repo.abandon()
     throw err
   }
 }

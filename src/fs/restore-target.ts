@@ -12,24 +12,13 @@ interface WritableLike {
   abort(): Promise<void>
 }
 
-interface WritableDir {
+export interface WritableDir {
   getDirectoryHandle(name: string, options: { create: true }): Promise<WritableDir>
   getFileHandle(name: string, options: { create: true }): Promise<{ createWritable(): Promise<WritableLike> }>
 }
 
 export class FolderTarget implements RestoreTarget {
   constructor(private readonly dir: WritableDir) {}
-
-  /** Asks the user where to restore to. Returns null if they cancel. */
-  static async pick(): Promise<FolderTarget | null> {
-    const picker = (window as unknown as { showDirectoryPicker(options?: object): Promise<WritableDir> }).showDirectoryPicker
-    try {
-      return new FolderTarget(await picker.call(window, { mode: 'readwrite' }))
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return null
-      throw err
-    }
-  }
 
   async createDir(name: string): Promise<RestoreTarget> {
     return new FolderTarget(await this.dir.getDirectoryHandle(name, { create: true }))

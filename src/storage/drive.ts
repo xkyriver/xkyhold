@@ -75,7 +75,10 @@ export class Drive {
     if (!found.ok) await fail(found)
     const existing = (await found.json()).files?.[0]?.id as string | undefined
     if (existing) return existing
+    return this.createFolder(token, name, parent)
+  }
 
+  async createFolder(token: string, name: string, parent: string): Promise<string> {
     const created = await this.fetch(`${API}/files?fields=id`, {
       method: 'POST',
       headers: this.headers(token, { 'Content-Type': 'application/json' }),

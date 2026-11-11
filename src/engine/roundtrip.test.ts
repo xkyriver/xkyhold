@@ -173,6 +173,35 @@ describe('incremental backups', () => {
   })
 })
 
+describe('parallel uploads', () => {
+  it('uploads several packs at once, never more than the limit, and still restores exactly', async () => {
+    dest.putDelayMs = 5
+    const limited = new Repository(dest, repo.keys, { ...SIZES, uploads: 3 })
+    const snapshot = await run(null, limited)
+    expect(dest.maxConcurrentPuts).toBe(3)
+    const reopened = await Repository.open(dest, { password: PASSWORD }, SIZES)
+    expect((await restoreAll(reopened, snapshot)).flatten()).toEqual(prefixed(tree))
+  })
+
+  it('uploads one at a time when asked to', async () => {
+    dest.putDelayMs = 2
+    const serial = new Repository(dest, repo.keys, { ...SIZES, uploads: 1 })
+    await run(null, serial)
+    expect(dest.maxConcurrentPuts).toBe(1)
+  })
+
+  it('fails the backup when a background upload fails, and recovers on retry', async () => {
+    dest.putDelayMs = 3
+    dest.failPutsFrom = dest.puts + 4
+    await expect(run()).rejects.toThrow('network down')
+    expect(dest.names('snapshots')).toEqual([])
+    dest.failPutsFrom = null
+    const snapshot = await run()
+    const reopened = await Repository.open(dest, { password: PASSWORD }, SIZES)
+    expect((await restoreAll(reopened, snapshot)).flatten()).toEqual(prefixed(tree))
+  })
+})
+
 describe('failures', () => {
   it('skips unreadable files and folders, and says so', async () => {
     tree.file('notes.txt').unreadable = true

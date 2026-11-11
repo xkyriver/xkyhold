@@ -157,3 +157,5 @@ Por testar: botão "Sign in again and continue"; sessão Google a expirar a meio
 Feitos os pontos 1 e 2 da lista acima: as chaves ficam guardadas no browser (não extraíveis) e a interface tem assistente, Início, Restaurar (com navegação e seleção) e Definições, em inglês e pt-PT. A sessão Google sobrevive a recarregar a tab. Testado no Chrome com o repositório `XkyHold test 2`.
 
 Notado: um backup de 101 KB demora 10 a 15 segundos, pelo número de pedidos sequenciais ao Drive. A tratar com o ponto 3 (Worker e paralelismo).
+
+Feito também o ponto 3: o motor corre num Web Worker (`src/engine/worker.ts`), a página fala com ele por mensagens (`client.ts` / `host.ts`), os pacotes são enviados até três de cada vez e o restauro descarrega vários ficheiros e blocos em paralelo. O destino Drive abre com menos pedidos e repete operações em falhas temporárias. No Chrome, um backup sem alterações passou a demorar menos de 3 segundos. Por testar: um backup real com volume (centenas de MB), para ver os envios em paralelo a funcionar contra o Drive.

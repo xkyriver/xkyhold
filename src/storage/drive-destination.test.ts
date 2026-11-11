@@ -24,7 +24,14 @@ function fakeDrive() {
   }
   const describeNode = (n: Node) => ({ id: n.id, name: n.name, size: String(n.data.length), mimeType: n.mimeType })
 
+  let failing = { count: 0, status: 500 }
+  const failNext = (count: number, status: number) => (failing = { count, status })
+
   const drive = new Drive(async (url, init) => {
+    if (failing.count > 0) {
+      failing.count--
+      return new Response(null, { status: failing.status })
+    }
     const u = new URL(url)
     const method = init?.method ?? 'GET'
     log.push(`${method} ${u.pathname}${u.searchParams.get('uploadType') ? `?${u.searchParams.get('uploadType')}` : ''}`)
@@ -65,7 +72,7 @@ function fakeDrive() {
     }
     return new Response(null, { status: 404 })
   })
-  return { drive, nodes, log, create }
+  return { drive, nodes, log, create, failNext }
 }
 
 const token = async () => 't'
@@ -126,6 +133,41 @@ describe('DriveDestination', () => {
     await dest.trash('snapshots', 's1')
     await expect(dest.get('snapshots', 's1')).rejects.toThrow(NotFoundError)
     expect([...fake.nodes.values()].find((n) => n.name === 's1')!.trashed).toBe(true)
+  })
+
+  it('opens a whole repository with one listing per folder', async () => {
+    const fake = fakeDrive()
+    const first = await DriveDestination.forName(fake.drive, token, 'repo')
+    await first.put('packs', 'p1', utf8('x'))
+    await first.put('index', 'i1', utf8('y'))
+
+    const later = await DriveDestination.forName(fake.drive, token, 'repo')
+    fake.log.length = 0
+    await later.warm()
+    // repo folder once, then packs, index and snapshots; snapshots is created, not listed
+    expect(fake.log.filter((l) => l.startsWith('GET')).length).toBe(3)
+    expect(fake.log.filter((l) => l.startsWith('POST')).length).toBe(1)
+    fake.log.length = 0
+    expect(await later.list('snapshots')).toEqual([])
+    expect((await later.list('packs')).map((o) => o.name)).toEqual(['p1'])
+    expect(fake.log).toEqual([])
+  })
+
+  it('retries when Drive is briefly unavailable, and gives up on real errors', async () => {
+    const fake = fakeDrive()
+    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    await dest.put('packs', 'p1', utf8('data'))
+    const waits: number[] = []
+    dest.wait = async (ms) => void waits.push(ms)
+
+    fake.failNext(2, 503)
+    expect(await dest.get('packs', 'p1')).toEqual(utf8('data'))
+    expect(waits).toEqual([500, 1500])
+
+    fake.failNext(1, 404)
+    await expect(dest.get('packs', 'p1')).rejects.toMatchObject({ status: 404 })
+    fake.failNext(10, 503)
+    await expect(dest.get('packs', 'p1')).rejects.toMatchObject({ status: 503 })
   })
 
   it('lists repositories, ignoring loose files', async () => {

@@ -11,6 +11,11 @@ export class MemoryDestination implements Destination {
   gets = 0
   /** When set, the put with this number (1-based) and all later ones fail. */
   failPutsFrom: number | null = null
+  /** Makes every put take this long, to observe overlapping uploads. */
+  putDelayMs = 0
+  /** The most puts ever in flight at once. */
+  maxConcurrentPuts = 0
+  private inFlight = 0
 
   private key(dir: Dir, name: string): string {
     return `${dir}/${name}`
@@ -19,8 +24,16 @@ export class MemoryDestination implements Destination {
   async put(dir: Dir, name: string, data: Uint8Array, signal?: AbortSignal): Promise<void> {
     signal?.throwIfAborted()
     this.puts++
-    if (this.failPutsFrom !== null && this.puts >= this.failPutsFrom) throw new TypeError('network down')
-    this.objects.set(this.key(dir, name), data.slice() as Bytes)
+    const number = this.puts
+    this.maxConcurrentPuts = Math.max(this.maxConcurrentPuts, ++this.inFlight)
+    try {
+      if (this.putDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, this.putDelayMs))
+      signal?.throwIfAborted()
+      if (this.failPutsFrom !== null && number >= this.failPutsFrom) throw new TypeError('network down')
+      this.objects.set(this.key(dir, name), data.slice() as Bytes)
+    } finally {
+      this.inFlight--
+    }
   }
 
   async get(dir: Dir, name: string, range?: { offset: number; length: number }): Promise<Bytes> {

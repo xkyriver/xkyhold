@@ -21,11 +21,23 @@ export interface RestoreOptions {
   signal?: AbortSignal
 }
 
-/** The verified content of a file, chunk by chunk. */
+/** How many chunks of one file are fetched ahead of the writer. */
+const CHUNK_WINDOW = 3
+/** How many files are restored at the same time. */
+const FILE_CONCURRENCY = 4
+
+/** The verified content of a file, chunk by chunk, fetched a few ahead. */
 export async function* readFile(repo: Repository, file: TreeFile, signal?: AbortSignal): AsyncGenerator<Bytes> {
-  for (const id of file.content) {
+  const ahead: Promise<Bytes>[] = []
+  let next = 0
+  while (next < file.content.length || ahead.length > 0) {
     signal?.throwIfAborted()
-    yield await repo.loadBlob('data', id)
+    while (ahead.length < CHUNK_WINDOW && next < file.content.length) {
+      const chunk = repo.loadBlob('data', file.content[next++])
+      chunk.catch(() => {}) // reported when it is awaited below
+      ahead.push(chunk)
+    }
+    yield await ahead.shift()!
   }
 }
 
@@ -36,21 +48,44 @@ export async function restoreEntries(
   target: RestoreTarget,
   options: RestoreOptions = {},
   progress: RestoreProgress = { files: 0, bytes: 0, current: '' },
-  path = '',
 ): Promise<RestoreProgress> {
-  for (const entry of entries) {
-    options.signal?.throwIfAborted()
-    const entryPath = path ? `${path}/${entry.name}` : entry.name
-    if (entry.type === 'dir') {
-      const sub = await target.createDir(entry.name)
-      await restoreEntries(repo, await repo.loadTree(entry.subtree), sub, options, progress, entryPath)
-    } else {
-      progress.current = entryPath
-      await target.writeFile(entry, readFile(repo, entry, options.signal))
+  const running = new Set<Promise<void>>()
+  let failure: { error: unknown } | null = null
+
+  async function file(entry: TreeFile, into: RestoreTarget, path: string): Promise<void> {
+    while (running.size >= FILE_CONCURRENCY) await Promise.race(running)
+    if (failure) return
+    const job = (async () => {
+      progress.current = path
+      await into.writeFile(entry, readFile(repo, entry, options.signal))
       progress.files++
       progress.bytes += entry.size
       options.onProgress?.({ ...progress })
+    })()
+      .catch((error) => void (failure ??= { error }))
+      .finally(() => running.delete(job))
+    running.add(job)
+  }
+
+  async function walk(list: TreeEntry[], into: RestoreTarget, path: string): Promise<void> {
+    for (const entry of list) {
+      if (failure) return
+      options.signal?.throwIfAborted()
+      const entryPath = path ? `${path}/${entry.name}` : entry.name
+      if (entry.type === 'dir') {
+        await walk(await repo.loadTree(entry.subtree), await into.createDir(entry.name), entryPath)
+      } else {
+        await file(entry, into, entryPath)
+      }
     }
   }
+
+  try {
+    await walk(entries, target, '')
+  } catch (error) {
+    failure ??= { error }
+  }
+  while (running.size > 0) await Promise.all(running)
+  if (failure) throw (failure as { error: unknown }).error
   return progress
 }

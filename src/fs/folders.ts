@@ -63,3 +63,17 @@ export async function requestPermission(folder: SavedFolder): Promise<Permission
     return 'denied'
   }
 }
+
+/**
+ * Asks the user where restored files should go. Returns null if they
+ * cancel. Must be called from a user gesture.
+ */
+export async function pickRestoreFolder(): Promise<unknown | null> {
+  const picker = (window as unknown as { showDirectoryPicker(options?: object): Promise<unknown> }).showDirectoryPicker
+  try {
+    return await picker.call(window, { mode: 'readwrite' })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') return null
+    throw err
+  }
+}

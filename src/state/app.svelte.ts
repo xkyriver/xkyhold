@@ -2,23 +2,17 @@
 // the engine or Google Drive directly.
 
 import { AuthError, googleAuth } from '../auth/google'
-import { backup, FileReadError } from '../engine/backup'
-import { AuthenticationError, FormatError, WrongKeyError } from '../engine/crypto'
+import { EngineClient, workerTransport } from '../engine/client'
 import type { Credential, RepoKeys } from '../engine/crypto'
-import { MissingBlobError, Repository } from '../engine/repo'
+import { EngineError } from '../engine/errors'
+import type { Progress } from '../engine/host'
 import type { Snapshot, TreeEntry } from '../engine/repo'
-import { restoreEntries } from '../engine/restore'
-import type { RestoreTarget } from '../engine/restore'
-import { checkPermission, listFolders, requestPermission } from '../fs/folders'
+import { checkPermission, listFolders, pickRestoreFolder, requestPermission } from '../fs/folders'
 import type { SavedFolder } from '../fs/folders'
 import type { PermissionState } from '../fs/handles'
-import { FolderTarget, VerifyTarget } from '../fs/restore-target'
 import { detectCapabilities } from '../lib/capabilities'
 import { formatBytes } from '../lib/format'
 import { t } from '../lib/i18n.svelte'
-import { NotFoundError } from '../storage/destination'
-import { Drive, DriveError } from '../storage/drive'
-import { DriveDestination } from '../storage/drive-destination'
 import { clearStore, settings } from './db'
 
 export type View = 'home' | 'restore' | 'settings'
@@ -65,50 +59,66 @@ export const app = $state({
   error: null as string | null,
 })
 
-const drive = new Drive()
+/** The backup engine, in its own thread so the page never freezes. */
+const engine = new EngineClient(
+  workerTransport(new Worker(new URL('../engine/worker.ts', import.meta.url), { type: 'module' })),
+)
 let keys: RepoKeys | null = null
-let repo: Repository | null = null
 let abort: AbortController | null = null
+
+/** Gives the engine the current Google token, or tells it there is none. */
+function shareToken(): void {
+  const current = googleAuth.current()
+  engine.setToken(current?.accessToken ?? null)
+  app.connected = current !== null
+}
 
 // --- Errors ---------------------------------------------------------------
 
-const sessionExpired = (err: unknown) => err instanceof AuthError || (err instanceof DriveError && err.needsSignIn)
+const sessionExpired = (err: unknown) => err instanceof AuthError || (err instanceof EngineError && err.kind === 'session')
 
 /** A sentence for the user. The raw error goes to the console. */
 export function explain(err: unknown): string {
   console.error(err)
-  if (err instanceof WrongKeyError) return t('That is not the right password or recovery key.')
-  if (sessionExpired(err)) return t('Your Google session expired.')
-  if (err instanceof FormatError) return err.message
-  if (err instanceof AuthenticationError || err instanceof MissingBlobError) {
-    return t('Part of this backup is damaged or missing in Google Drive.')
+  if (err instanceof AuthError) return t('Your Google session expired.')
+  if (!(err instanceof EngineError)) return t('Something went wrong. Please try again.')
+  switch (err.kind) {
+    case 'wrong-key':
+      return t('That is not the right password or recovery key.')
+    case 'session':
+      return t('Your Google session expired.')
+    case 'format':
+      return t('This is not an XkyHold backup, or it was made by a newer version.')
+    case 'exists':
+      return t('A backup with this name already exists. Choose another name.')
+    case 'damaged':
+      return t('Part of this backup is damaged or missing in Google Drive.')
+    case 'read':
+      return t('A folder could not be read. Check that it still exists.')
+    case 'refused':
+      return t('Google Drive refused the request. Your Drive may be full.')
+    case 'network':
+      return t('Could not reach Google Drive. Check your connection and try again.')
+    case 'aborted':
+      return t('Stopped.')
+    default:
+      return t('Something went wrong. Please try again.')
   }
-  if (err instanceof FileReadError) return t('A folder could not be read. Check that it still exists.')
-  if (err instanceof DriveError && err.status === 403) return t('Google Drive refused the request. Your Drive may be full.')
-  if (err instanceof TypeError || (err instanceof DriveError && err.transient)) {
-    return t('Could not reach Google Drive. Check your connection and try again.')
-  }
-  if (err instanceof DOMException && err.name === 'AbortError') return t('Stopped.')
-  return t('Something went wrong. Please try again.')
 }
 
 function noteSession(err: unknown): void {
   if (!sessionExpired(err)) return
   googleAuth.invalidate()
-  app.connected = false
+  shareToken()
 }
 
 // --- Google session -------------------------------------------------------
 
-async function token(): Promise<string> {
-  const current = googleAuth.current()
-  if (!current) throw new AuthError('interaction_required', 'Google session expired')
-  return current.accessToken
-}
-
 async function whoAmI(): Promise<string | null> {
+  const current = googleAuth.current()
+  if (!current) return null
   const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', {
-    headers: { Authorization: `Bearer ${await token()}` },
+    headers: { Authorization: `Bearer ${current.accessToken}` },
   })
   if (!res.ok) return null
   return (await res.json()).user?.emailAddress ?? null
@@ -119,7 +129,7 @@ export async function signIn(): Promise<boolean> {
   app.error = null
   try {
     await googleAuth.signIn(app.account ?? undefined)
-    app.connected = true
+    shareToken()
     app.account = (await whoAmI()) ?? app.account
     if (app.configured) void openBackup()
     return true
@@ -145,7 +155,7 @@ export async function start(): Promise<void> {
       app.account = saved.account
       app.configured = true
     }
-    app.connected = googleAuth.current() !== null
+    shareToken()
     await refreshFolders()
   } catch (err) {
     console.error(err)
@@ -171,44 +181,28 @@ export async function allowFolders(): Promise<void> {
 
 // --- Setting up (used by the wizard) --------------------------------------
 
-export async function listBackups(): Promise<string[]> {
-  return (await DriveDestination.listRepositories(drive, token)).map((r) => r.name).sort()
-}
+export const listBackups = () => engine.call('listBackups', undefined)
 
-async function remember(repoName: string, opened: Repository): Promise<void> {
-  keys = opened.keys
-  repo = opened
+async function remember(repoName: string, repoKeys: RepoKeys, snapshots: Snapshot[]): Promise<void> {
+  keys = repoKeys
   await settings.set('setup', { repoName, account: app.account, keys } satisfies SavedSetup)
   app.repoName = repoName
+  app.snapshots = snapshots
   app.configured = true
+  app.loaded = true
 }
 
 /** Creates a new backup in Drive. Returns the recovery key, shown once. */
 export async function createBackup(repoName: string, password: string): Promise<string> {
-  const dest = await DriveDestination.forName(drive, token, repoName)
-  let exists = true
-  try {
-    await Repository.readConfig(dest)
-  } catch (err) {
-    if (!(err instanceof NotFoundError)) throw err
-    exists = false
-  }
-  if (exists) throw new FormatError(t('A backup with this name already exists. Choose another name.'))
-  const created = await Repository.create(dest, password)
-  await remember(repoName, created.repo)
-  app.snapshots = []
-  app.loaded = true
+  const created = await engine.call('create', { repoName, password })
+  await remember(repoName, created.keys, [])
   return created.recoveryKey
 }
 
 /** Connects this device to a backup that already exists in Drive. */
 export async function connectBackup(repoName: string, credential: Credential): Promise<void> {
-  const dest = await DriveDestination.forName(drive, token, repoName)
-  const opened = await Repository.open(dest, credential)
-  const snapshots = await opened.listSnapshots()
-  await remember(repoName, opened)
-  app.snapshots = snapshots
-  app.loaded = true
+  const connected = await engine.call('connect', { repoName, credential })
+  await remember(repoName, connected.keys, connected.snapshots)
 }
 
 async function openBackup(): Promise<void> {
@@ -216,11 +210,7 @@ async function openBackup(): Promise<void> {
   app.opening = true
   app.error = null
   try {
-    const dest = await DriveDestination.forName(drive, token, app.repoName)
-    const opened = new Repository(dest, keys)
-    await opened.loadIndex()
-    app.snapshots = await opened.listSnapshots()
-    repo = opened
+    app.snapshots = (await engine.call('open', { repoName: app.repoName, keys })).snapshots
     app.loaded = true
   } catch (err) {
     noteSession(err)
@@ -234,17 +224,17 @@ export const retryOpen = () => openBackup()
 
 // --- Jobs -----------------------------------------------------------------
 
-async function runJob(kind: JobKind, work: (signal: AbortSignal, progress: (j: Omit<Job, 'kind'>) => void) => Promise<void>) {
-  if (app.job || !repo) return
+async function runJob(kind: JobKind, work: (job: { signal: AbortSignal; onProgress: (p: Progress) => void }) => Promise<void>) {
+  if (app.job || !app.loaded) return
   app.job = { kind, files: 0, bytes: 0, current: '' }
   app.notice = null
   app.error = null
   abort = new AbortController()
   try {
-    await work(abort.signal, (j) => (app.job = { kind, ...j }))
+    await work({ signal: abort.signal, onProgress: (p) => (app.job = { kind, ...p }) })
   } catch (err) {
     noteSession(err)
-    app.error = abort.signal.aborted ? t('Stopped.') : explain(err)
+    app.error = explain(err)
   } finally {
     app.job = null
     abort = null
@@ -264,84 +254,71 @@ export async function backupNow(): Promise<void> {
     return
   }
   const roots = app.folders.map(({ folder }) => ({ name: folder.name, handle: folder.handle }))
-  await runJob('backup', async (signal, progress) => {
-    const before = repo!.uploadedBytes
-    const snapshot = await backup(repo!, roots, {
-      device: app.repoName,
-      parent: $state.snapshot(app.snapshots.at(-1)) ?? null,
-      signal,
-      onProgress: (p) => progress({ files: p.files, bytes: p.bytes, current: p.current }),
-    })
+  await runJob('backup', async (job) => {
+    const { snapshot, sentBytes } = await engine.call('backup', { roots, device: app.repoName }, job)
     app.snapshots = [...app.snapshots, snapshot]
-    const sent = formatBytes(repo!.uploadedBytes - before)
     app.notice =
       t('Backup complete: {files} files, {sent} sent to Google Drive.', {
         files: snapshot.stats.files.toLocaleString(),
-        sent,
+        sent: formatBytes(sentBytes),
       }) + (snapshot.stats.skipped ? ` ${t('{n} could not be read.', { n: snapshot.stats.skipped })}` : '')
   })
 }
 
-export function loadTree(tree: string): Promise<TreeEntry[]> {
-  return repo!.loadTree(tree)
-}
-
-async function restoreInto(entries: TreeEntry[], target: RestoreTarget, kind: JobKind, done: (files: number, bytes: number) => string) {
-  await runJob(kind, async (signal, progress) => {
-    const total = await restoreEntries(repo!, entries, target, {
-      signal,
-      onProgress: (p) => progress({ files: p.files, bytes: p.bytes, current: p.current }),
-    })
-    app.notice = done(total.files, total.bytes)
-  })
-}
+export const loadTree = (tree: string): Promise<TreeEntry[]> => engine.call('loadTree', { tree })
 
 /** Asks where to restore to, then restores. Must be called from a click. */
 export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
-  let target: FolderTarget | null
+  let folder: unknown
   try {
-    target = await FolderTarget.pick()
+    folder = await pickRestoreFolder()
   } catch (err) {
-    app.error = explain(err)
+    console.error(err)
+    app.error = t('That folder cannot be used. Choose a folder such as Documents or Pictures.')
     return
   }
-  if (!target) return
-  await restoreInto($state.snapshot(entries) as TreeEntry[], target, 'restore', (files, bytes) =>
-    t('Restored {files} files ({size}).', { files: files.toLocaleString(), size: formatBytes(bytes) }),
-  )
+  if (!folder) return
+  const plain = $state.snapshot(entries) as TreeEntry[]
+  await runJob('restore', async (job) => {
+    const done = await engine.call('restore', { entries: plain, folder }, job)
+    app.notice = t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size: formatBytes(done.bytes) })
+  })
 }
 
 /** Downloads and verifies every file of a backup without writing anything. */
 export async function checkSnapshot(snapshot: Snapshot): Promise<void> {
   const entries: TreeEntry[] = snapshot.roots.map((r) => ({ name: r.name, type: 'dir', subtree: r.tree }))
-  await restoreInto(entries, new VerifyTarget(), 'check', (files, bytes) =>
-    t('Checked {files} files ({size}): every one is intact.', { files: files.toLocaleString(), size: formatBytes(bytes) }),
-  )
+  await runJob('check', async (job) => {
+    const done = await engine.call('check', { entries }, job)
+    app.notice = t('Checked {files} files ({size}): every one is intact.', {
+      files: done.files.toLocaleString(),
+      size: formatBytes(done.bytes),
+    })
+  })
 }
 
 // --- Settings -------------------------------------------------------------
 
-export async function changePassword(credential: Credential, newPassword: string): Promise<void> {
-  const dest = await DriveDestination.forName(drive, token, app.repoName)
-  await Repository.changePassword(dest, credential, newPassword)
-}
+export const changePassword = (credential: Credential, newPassword: string): Promise<void> =>
+  engine.call('changePassword', { repoName: app.repoName, credential, newPassword })
 
 /** Signs out of Google on this device. The backup stays set up. */
 export async function disconnect(): Promise<void> {
   await googleAuth.signOut().catch(console.error)
-  app.connected = false
+  shareToken()
+  await engine.call('close', undefined)
   app.loaded = false
-  repo = null
 }
 
 /** Removes everything XkyHold keeps in this browser. Drive is untouched. */
 export async function forgetDevice(): Promise<void> {
   stopJob()
   await googleAuth.signOut().catch(console.error)
+  shareToken()
+  await engine.call('close', undefined)
   await clearStore('settings')
   await clearStore('folders')
   keys = null
-  repo = null
   Object.assign(app, {
     view: 'home',
     configured: false,

@@ -32,6 +32,8 @@ export const ptPT: Record<string, string> = {
   'Your browser blocked the Google window. Allow pop-ups for this site and try again.':
     'O navegador bloqueou a janela do Google. Permita janelas pop-up para este site e tente novamente.',
   'Could not sign in to Google. Please try again.': 'Não foi possível iniciar sessão no Google. Tente novamente.',
+  'This is not an XkyHold backup, or it was made by a newer version.':
+    'Isto não é uma cópia de segurança do XkyHold, ou foi feita por uma versão mais recente.',
   'A backup with this name already exists. Choose another name.':
     'Já existe uma cópia de segurança com este nome. Escolha outro nome.',
   'Choose at least one folder to save, in Settings.': 'Escolha pelo menos uma pasta a guardar, nas Definições.',
