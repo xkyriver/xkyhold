@@ -128,3 +128,26 @@ O BackMa é uma janela fixa de 460×560 com tudo atrás de links. No browser há
 | Envio retomável para o Drive | Funciona a partir do browser. 12 MB em blocos de 2 MB: interrompido a meio, a sessão respondeu que tinha 2 MB e o envio continuou daí; tamanho e SHA-256 no Drive coincidem com os locais. O cabeçalho `Location` da sessão e o `Range` das respostas 308 são legíveis por CORS; os PUT dos blocos não precisam de token. Não testado: retoma depois de recarregar a página, nem ficheiros de vários GB. |
 
 Consequência para a UI: o assistente deve explicar, no momento em que o Chrome pergunta, que "permitir em todas as visitas" é a opção que evita ter de autorizar de novo.
+
+## 10. Estado em 11/11/2026
+
+Provado contra o Google Drive real, com a pasta de teste `tmp` (2 ficheiros, 101 KB) e o repositório `XkyHold test`:
+
+- Criar repositório com password e chave de recuperação.
+- Backup; segundo backup sem alterações envia 0 bytes.
+- Verificação ("Check"): descarrega, decifra e valida todos os ficheiros.
+- Reabrir o backup depois de recarregar a página, pelo nome e password.
+- Restauro para uma pasta local: ficheiros idênticos aos originais (`diff -r` sem diferenças).
+
+Feito no código: fases 0 e 1 completas no essencial; da fase 2 existe um painel funcional, sem desenho final.
+
+Por fazer, por ordem sugerida:
+
+1. Guardar as chaves no browser (não extraíveis) para não pedir a password em cada visita.
+2. Estrutura final da interface: assistente (Google → Pastas → Password → chave de recuperação), Início, Restaurar, Definições; pt-PT.
+3. Motor num Web Worker; envio e descarga em paralelo.
+4. Restauro seletivo (navegar no snapshot) e restauro em `.zip`; modo só restauro.
+5. Agendamento ao abrir a app, retenção e limpeza (prune) com locks.
+6. Alojamento, domínio, política de privacidade, publicação do cliente OAuth.
+
+Por testar: botão "Sign in again and continue"; sessão Google a expirar a meio de um backup grande; ligações simbólicas; ficheiros de vários GB; reinício completo do Chrome com permissão persistente.
