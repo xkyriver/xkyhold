@@ -1,6 +1,7 @@
 <script lang="ts">
   import { AuthError, googleAuth } from './auth/google'
   import { detectCapabilities } from './lib/capabilities'
+  import Folders from './ui/Folders.svelte'
 
   const caps = detectCapabilities()
 
@@ -66,6 +67,10 @@
           <p class="hint warn" role="alert">{error}</p>
         {/if}
       {/if}
+    {/if}
+
+    {#if caps.folderAccess}
+      <Folders />
     {/if}
   </section>
   <footer>v{__APP_VERSION__}</footer>
