@@ -122,7 +122,7 @@ O BackMa é uma janela fixa de 460×560 com tudo atrás de links. No browser há
 |---|---|
 | Login Google sem servidor | Funciona com Google Identity Services e só o scope `drive.file`, que também chega para `about.get` (identificar a conta). O token vive em memória: perde-se ao recarregar a página. |
 | Permissão persistente de pastas | A pasta escolhida fica guardada em IndexedDB. Recarregar mantém a permissão; fechar todas as tabs da app retira-a e a app mostra "Allow". Se o utilizador escolher "permitir em todas as visitas" no aviso do Chrome, a pasta fica legível ao reabrir sem novo pedido. Não testado: reinício completo do Chrome. |
-| Renovação do token ao fim de 1 hora | Por testar. |
-| Envio retomável para o Drive | Por testar. |
+| Renovação do token ao fim de 1 hora | Indício favorável: com consentimento já dado, um novo pedido de token a partir de um clique conclui sem o utilizador ter de fazer nada no popup. Por testar: renovação a meio de um backup, sem clique. |
+| Envio retomável para o Drive | Funciona a partir do browser. 12 MB em blocos de 2 MB: interrompido a meio, a sessão respondeu que tinha 2 MB e o envio continuou daí; tamanho e SHA-256 no Drive coincidem com os locais. O cabeçalho `Location` da sessão e o `Range` das respostas 308 são legíveis por CORS; os PUT dos blocos não precisam de token. Não testado: retoma depois de recarregar a página, nem ficheiros de vários GB. |
 
 Consequência para a UI: o assistente deve explicar, no momento em que o Chrome pergunta, que "permitir em todas as visitas" é a opção que evita ter de autorizar de novo.

@@ -2,6 +2,9 @@
   import { AuthError, googleAuth } from './auth/google'
   import { detectCapabilities } from './lib/capabilities'
   import Folders from './ui/Folders.svelte'
+  import UploadTest from './ui/UploadTest.svelte'
+
+  const dev = import.meta.env.DEV
 
   const caps = detectCapabilities()
 
@@ -71,6 +74,10 @@
 
     {#if caps.folderAccess}
       <Folders />
+    {/if}
+
+    {#if dev && account}
+      <UploadTest />
     {/if}
   </section>
   <footer>v{__APP_VERSION__}</footer>
