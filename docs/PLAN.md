@@ -151,3 +151,9 @@ Por fazer, por ordem sugerida:
 6. Alojamento, domínio, política de privacidade, publicação do cliente OAuth.
 
 Por testar: botão "Sign in again and continue"; sessão Google a expirar a meio de um backup grande; ligações simbólicas; ficheiros de vários GB; reinício completo do Chrome com permissão persistente.
+
+### Atualização (mesma data, ao fim do dia)
+
+Feitos os pontos 1 e 2 da lista acima: as chaves ficam guardadas no browser (não extraíveis) e a interface tem assistente, Início, Restaurar (com navegação e seleção) e Definições, em inglês e pt-PT. A sessão Google sobrevive a recarregar a tab. Testado no Chrome com o repositório `XkyHold test 2`.
+
+Notado: um backup de 101 KB demora 10 a 15 segundos, pelo número de pedidos sequenciais ao Drive. A tratar com o ponto 3 (Worker e paralelismo).

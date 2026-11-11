@@ -1,90 +1,95 @@
 <script lang="ts">
-  import { AuthError, googleAuth } from './auth/google'
-  import { detectCapabilities } from './lib/capabilities'
-  import Backup from './ui/Backup.svelte'
-  import Folders from './ui/Folders.svelte'
-  import UploadTest from './ui/UploadTest.svelte'
+  import { i18n, LANGUAGES, setLanguage, t } from './lib/i18n.svelte'
+  import type { Lang } from './lib/i18n.svelte'
+  import { app, caps, start } from './state/app.svelte'
+  import type { View } from './state/app.svelte'
+  import Home from './ui/Home.svelte'
+  import Restore from './ui/Restore.svelte'
+  import Settings from './ui/Settings.svelte'
+  import Wizard from './ui/Wizard.svelte'
 
-  const dev = import.meta.env.DEV
-  const showUploadTest = new URLSearchParams(location.search).has('upload-test')
+  const tabs: { id: View; label: string }[] = [
+    { id: 'home', label: 'Home' },
+    { id: 'restore', label: 'Restore' },
+    { id: 'settings', label: 'Settings' },
+  ]
 
-  const caps = detectCapabilities()
+  // The wizard stays up until it says it is done, even though the backup
+  // counts as configured from the moment it is created (the recovery key
+  // still has to be shown).
+  let inWizard = $state(false)
 
-  let busy = $state(false)
-  let account = $state<string | null>(null)
-  let error = $state<string | null>(null)
+  void start().then(() => (inWizard = !app.configured))
+  $effect(() => {
+    if (app.ready && !app.configured) inWizard = true
+  })
 
-  // Phase 0 check: sign in, then ask Drive who we are to prove the token works.
-  async function signIn() {
-    busy = true
-    error = null
-    try {
-      const token = await googleAuth.signIn()
-      const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
-        headers: { Authorization: `Bearer ${token.accessToken}` },
-      })
-      if (!res.ok) throw new Error(`Google Drive answered ${res.status}`)
-      const { user } = await res.json()
-      account = user?.emailAddress ?? user?.displayName ?? 'Google account'
-    } catch (err) {
-      if (err instanceof AuthError && err.code === 'cancelled') return
-      console.error(err)
-      error =
-        err instanceof AuthError && err.code === 'interaction_required'
-          ? 'Your browser blocked the sign-in window. Allow pop-ups for this site and try again.'
-          : 'Could not sign in to Google. Please try again.'
-    } finally {
-      busy = false
-    }
+  function finishWizard(view: View) {
+    app.view = view
+    inWizard = false
   }
 
-  async function signOut() {
-    await googleAuth.signOut()
-    account = null
-  }
+  $effect(() => {
+    document.documentElement.lang = i18n.lang
+  })
 </script>
 
-<main>
-  <section class="card">
-    <h1>XkyHold</h1>
-    <p class="lead">Keep your files safe in your own Google Drive.</p>
-
-    {#if caps.mode === 'full'}
-      <p class="note ok">This browser can back up and restore.</p>
-    {:else if caps.mode === 'restore-only'}
-      <p class="note">This browser can restore files. To back up, open XkyHold in Chrome or Edge on a computer.</p>
-    {:else}
-      <p class="note warn">This browser is not supported.</p>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><img src="/favicon.svg" alt="" /> XkyHold</div>
+    {#if app.ready && !inWizard}
+      <nav class="tabs" aria-label={t('Sections')}>
+        {#each tabs as tab}
+          <button class="tab" aria-current={app.view === tab.id ? 'page' : undefined} onclick={() => (app.view = tab.id)}>
+            {t(tab.label)}
+          </button>
+        {/each}
+      </nav>
     {/if}
+  </header>
 
-    {#if caps.mode !== 'unsupported'}
-      {#if account}
-        <p class="note ok">Connected as {account}</p>
-        <button class="link" onclick={signOut}>Disconnect</button>
+  <main class="page">
+    {#if caps.mode === 'unsupported'}
+      <section class="card stack">
+        <h1>{t('This browser is not supported')}</h1>
+        <p class="muted">{t('Open XkyHold in a recent version of Chrome, Edge, Firefox or Safari.')}</p>
+      </section>
+    {:else if !app.ready}
+      <p class="muted">{t('Loading…')}</p>
+    {:else if inWizard}
+      <Wizard done={finishWizard} />
+    {:else}
+      {#if app.error}
+        <div class="banner warn" role="alert">
+          <span>{app.error}</span>
+          <button class="link" onclick={() => (app.error = null)}>{t('Dismiss')}</button>
+        </div>
+      {/if}
+      {#if app.notice}
+        <div class="banner ok" role="status">
+          <span>{app.notice}</span>
+          <button class="link" onclick={() => (app.notice = null)}>{t('Dismiss')}</button>
+        </div>
+      {/if}
+
+      {#if app.view === 'home'}
+        <Home />
+      {:else if app.view === 'restore'}
+        <Restore />
       {:else}
-        <button class="primary" onclick={signIn} disabled={busy || !googleAuth.configured}>
-          {busy ? 'Waiting for Google…' : 'Sign in with Google'}
-        </button>
-        {#if !googleAuth.configured}
-          <p class="hint">No Google client ID configured (see docs/OAUTH.md).</p>
-        {/if}
-        {#if error}
-          <p class="hint warn" role="alert">{error}</p>
-        {/if}
+        <Settings />
       {/if}
     {/if}
+  </main>
 
-    {#if caps.folderAccess}
-      <Folders />
-    {/if}
-
-    {#if account}
-      <Backup />
-    {/if}
-
-    {#if dev && account && showUploadTest}
-      <UploadTest />
-    {/if}
-  </section>
-  <footer>v{__APP_VERSION__}</footer>
-</main>
+  <footer class="footer">
+    <span>XkyHold v{__APP_VERSION__}</span>
+    <select
+      aria-label={t('Language')}
+      value={i18n.lang}
+      onchange={(e) => setLanguage(e.currentTarget.value as Lang)}
+    >
+      {#each LANGUAGES as language}<option value={language.id}>{language.name}</option>{/each}
+    </select>
+  </footer>
+</div>

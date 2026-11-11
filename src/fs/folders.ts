@@ -3,10 +3,8 @@
 // restart; the *permission* to read them may not, and is re-checked on
 // every load.
 
+import { withStore } from '../state/db'
 import type { DirHandleLike, PermissionState } from './handles'
-
-const DB_NAME = 'xkyhold'
-const STORE = 'folders'
 
 export interface SavedFolder {
   id: string
@@ -14,36 +12,15 @@ export interface SavedFolder {
   handle: DirHandleLike
 }
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1)
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE, { keyPath: 'id' })
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  const db = await openDb()
-  try {
-    return await new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(STORE, mode)
-      const request = run(tx.objectStore(STORE))
-      tx.oncomplete = () => resolve(request.result)
-      tx.onerror = () => reject(tx.error)
-      tx.onabort = () => reject(tx.error)
-    })
-  } finally {
-    db.close()
-  }
-}
+const withFolders = <T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>) =>
+  withStore('folders', mode, run)
 
 export function listFolders(): Promise<SavedFolder[]> {
-  return withStore('readonly', (store) => store.getAll() as IDBRequest<SavedFolder[]>)
+  return withFolders('readonly', (store) => store.getAll() as IDBRequest<SavedFolder[]>)
 }
 
 export async function removeFolder(id: string): Promise<void> {
-  await withStore('readwrite', (store) => store.delete(id))
+  await withFolders('readwrite', (store) => store.delete(id))
 }
 
 /**
@@ -65,7 +42,7 @@ export async function addFolder(): Promise<SavedFolder | null> {
     if (await existing.handle.isSameEntry?.(handle)) return existing
   }
   const folder: SavedFolder = { id: crypto.randomUUID(), name: handle.name, handle }
-  await withStore('readwrite', (store) => store.put(folder))
+  await withFolders('readwrite', (store) => store.put(folder))
   return folder
 }
 

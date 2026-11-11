@@ -3,8 +3,7 @@
 // There is no server, so there is no refresh token: an access token lasts
 // about an hour and a new one is requested through the same popup flow. A
 // popup can only be opened from a user gesture, so callers must be ready
-// for `getToken` to fail with 'interaction_required' and ask the user to
-// click.
+// for a missing token (see `current`) and offer the user a button.
 
 /** drive.file: the app only sees files and folders it created itself. */
 export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
@@ -46,6 +45,7 @@ interface GoogleOAuth2 {
     scope: string
     callback: (response: TokenResponse) => void
     error_callback?: (error: { type: string }) => void
+    login_hint?: string
   }): TokenClient
   revoke(token: string, done?: () => void): void
 }
@@ -100,8 +100,30 @@ function loadGis(): Promise<GoogleOAuth2> {
   return gisLoading
 }
 
+const SESSION_KEY = 'xkyhold.token'
+
+/** Survives a reload of the tab, never a restart of the browser. */
+const session = {
+  load(): Token | null {
+    try {
+      const token = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null') as Token | null
+      return isFresh(token) ? token : null
+    } catch {
+      return null
+    }
+  },
+  save(token: Token | null): void {
+    try {
+      if (token) sessionStorage.setItem(SESSION_KEY, JSON.stringify(token))
+      else sessionStorage.removeItem(SESSION_KEY)
+    } catch {
+      // storage unavailable: the token just lives in memory
+    }
+  },
+}
+
 export class GoogleAuth {
-  private token: Token | null = null
+  private token: Token | null = session.load()
 
   constructor(private readonly clientId: string) {}
 
@@ -118,13 +140,14 @@ export class GoogleAuth {
    * Opens Google's popup and resolves with a token. Must be called from a
    * user gesture (a click), or the browser blocks the popup.
    */
-  async signIn(): Promise<Token> {
+  async signIn(accountHint?: string): Promise<Token> {
     if (!this.configured) throw new AuthError('not_configured', 'No Google client ID configured')
     const oauth2 = await loadGis()
     this.token = await new Promise<Token>((resolve, reject) => {
       const client = oauth2.initTokenClient({
         client_id: this.clientId,
         scope: DRIVE_SCOPE,
+        login_hint: accountHint,
         callback: (response) => {
           try {
             resolve(parseTokenResponse(response))
@@ -143,18 +166,20 @@ export class GoogleAuth {
       // '' = no consent screen again if the user already granted access.
       client.requestAccessToken({ prompt: '' })
     })
+    session.save(this.token)
     return this.token
   }
 
-  /** A usable token: the cached one, or a new one via the popup. */
-  async getToken(): Promise<Token> {
-    return this.current() ?? this.signIn()
+  /** Drops a token the server rejected, so `current` stops offering it. */
+  invalidate(): void {
+    this.token = null
+    session.save(null)
   }
 
   /** Forgets the token and revokes the app's access at Google. */
   async signOut(): Promise<void> {
     const token = this.token
-    this.token = null
+    this.invalidate()
     if (!token) return
     const oauth2 = await loadGis()
     await new Promise<void>((resolve) => oauth2.revoke(token.accessToken, resolve))

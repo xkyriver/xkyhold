@@ -1,0 +1,164 @@
+// European Portuguese. Same register as BackMa: formal ("o seu"),
+// "cópia de segurança", "palavra-passe".
+
+export const ptPT: Record<string, string> = {
+  // Shell
+  Home: 'Início',
+  Restore: 'Restaurar',
+  Settings: 'Definições',
+  Sections: 'Secções',
+  Language: 'Idioma',
+  'Loading…': 'A carregar…',
+  Dismiss: 'Fechar',
+  'This browser is not supported': 'Este navegador não é suportado',
+  'Open XkyHold in a recent version of Chrome, Edge, Firefox or Safari.':
+    'Abra o XkyHold numa versão recente do Chrome, Edge, Firefox ou Safari.',
+  'Today, {time}': 'Hoje, {time}',
+  'Yesterday, {time}': 'Ontem, {time}',
+  '{files} files': '{files} ficheiros',
+
+  // Errors
+  'That is not the right password or recovery key.': 'A palavra-passe ou a chave de recuperação não está correta.',
+  'Your Google session expired.': 'A sua sessão Google expirou.',
+  'Part of this backup is damaged or missing in Google Drive.':
+    'Parte desta cópia de segurança está danificada ou em falta no Google Drive.',
+  'A folder could not be read. Check that it still exists.': 'Não foi possível ler uma pasta. Verifique se ainda existe.',
+  'Google Drive refused the request. Your Drive may be full.':
+    'O Google Drive recusou o pedido. O seu Drive pode estar cheio.',
+  'Could not reach Google Drive. Check your connection and try again.':
+    'Não foi possível contactar o Google Drive. Verifique a ligação e tente novamente.',
+  'Stopped.': 'Interrompido.',
+  'Something went wrong. Please try again.': 'Algo correu mal. Tente novamente.',
+  'Your browser blocked the Google window. Allow pop-ups for this site and try again.':
+    'O navegador bloqueou a janela do Google. Permita janelas pop-up para este site e tente novamente.',
+  'Could not sign in to Google. Please try again.': 'Não foi possível iniciar sessão no Google. Tente novamente.',
+  'A backup with this name already exists. Choose another name.':
+    'Já existe uma cópia de segurança com este nome. Escolha outro nome.',
+  'Choose at least one folder to save, in Settings.': 'Escolha pelo menos uma pasta a guardar, nas Definições.',
+  'XkyHold needs your permission to read your folders again.':
+    'O XkyHold precisa novamente da sua permissão para ler as pastas.',
+
+  // Notices
+  'Backup complete: {files} files, {sent} sent to Google Drive.':
+    'Cópia concluída: {files} ficheiros, {sent} enviados para o Google Drive.',
+  '{n} could not be read.': 'Não foi possível ler {n}.',
+  'Restored {files} files ({size}).': '{files} ficheiros restaurados ({size}).',
+  'Checked {files} files ({size}): every one is intact.': '{files} ficheiros verificados ({size}): estão todos intactos.',
+  '{platform} computer': 'Computador {platform}',
+  'My computer': 'O meu computador',
+
+  // Wizard
+  'Step {n} of {total}': 'Passo {n} de {total}',
+  'Keep your files safe': 'Mantenha os seus ficheiros seguros',
+  'XkyHold saves the folders you choose to your own Google Drive. Your files are encrypted on this computer first, so only you can read them.':
+    'O XkyHold guarda as pastas que escolher no seu próprio Google Drive. Os ficheiros são encriptados primeiro neste computador, por isso só o utilizador os pode ler.',
+  'This browser can restore files from a backup. To make backups, open XkyHold in Chrome or Edge on a computer.':
+    'Este navegador pode restaurar ficheiros de uma cópia de segurança. Para fazer cópias, abra o XkyHold no Chrome ou no Edge num computador.',
+  'Waiting for Google…': 'À espera do Google…',
+  'Continue with Google': 'Continuar com o Google',
+  'XkyHold can only see the files it creates in your Drive. Nothing else.':
+    'O XkyHold só vê os ficheiros que ele próprio cria no seu Drive. Mais nada.',
+  'Your backup': 'A sua cópia de segurança',
+  'Looking for your backups…': 'À procura das suas cópias de segurança…',
+  'Try again': 'Tentar novamente',
+  'Connect to a backup you already have, or start a new one.': 'Ligue-se a uma cópia que já tem, ou comece uma nova.',
+  'Start a new backup': 'Começar uma cópia nova',
+  'There is no backup in this Google account yet.': 'Ainda não há nenhuma cópia de segurança nesta conta Google.',
+  'Name of this backup': 'Nome desta cópia de segurança',
+  'Use a different name on each computer.': 'Use um nome diferente em cada computador.',
+  Continue: 'Continuar',
+  Back: 'Voltar',
+  'Folders to save': 'Pastas a guardar',
+  'Choose the folders you want to keep safe. When the browser asks, pick “Allow on every visit” so you are not asked again.':
+    'Escolha as pastas que quer manter seguras. Quando o navegador perguntar, escolha “Permitir em todas as visitas” para não voltar a ser questionado.',
+  'Protect your backup': 'Proteja a sua cópia de segurança',
+  'Your files are encrypted with this password before they leave this computer.':
+    'Os ficheiros são encriptados com esta palavra-passe antes de saírem deste computador.',
+  Password: 'Palavra-passe',
+  'Confirm password': 'Confirmar palavra-passe',
+  'Use at least {n} characters.': 'Use pelo menos {n} caracteres.',
+  'The two passwords are different.': 'As duas palavras-passe são diferentes.',
+  'Next you will get a recovery key, in case you forget this password.':
+    'A seguir recebe uma chave de recuperação, para o caso de esquecer esta palavra-passe.',
+  'Creating your backup…': 'A criar a cópia de segurança…',
+  'Create backup': 'Criar cópia de segurança',
+  'Save your recovery key': 'Guarde a sua chave de recuperação',
+  'If you forget your password, this key is the only other way to open your backup. It is shown only once.':
+    'Se esquecer a palavra-passe, esta chave é a única outra forma de abrir a cópia de segurança. Só é mostrada uma vez.',
+  Download: 'Transferir',
+  Print: 'Imprimir',
+  Copy: 'Copiar',
+  Copied: 'Copiado',
+  'I have saved my recovery key somewhere safe': 'Guardei a minha chave de recuperação num local seguro',
+  Finish: 'Concluir',
+  'Open “{name}”': 'Abrir “{name}”',
+  'Recovery key': 'Chave de recuperação',
+  'Use my password instead': 'Usar a palavra-passe',
+  'I forgot my password': 'Esqueci-me da palavra-passe',
+  'Opening your backup…': 'A abrir a cópia de segurança…',
+  'Open backup': 'Abrir cópia de segurança',
+  'XkyHold recovery key': 'Chave de recuperação do XkyHold',
+  Backup: 'Cópia de segurança',
+  'Keep this somewhere safe, away from your computer. Anyone who has it can open your backup.':
+    'Guarde isto num local seguro, longe do computador. Quem a tiver pode abrir a sua cópia de segurança.',
+
+  // Folders
+  'No folders chosen yet.': 'Ainda não escolheu nenhuma pasta.',
+  'Needs your permission to be read': 'Precisa da sua permissão para ser lida',
+  'Counting files…': 'A contar ficheiros…',
+  Allow: 'Permitir',
+  Remove: 'Remover',
+  'Remove {name}': 'Remover {name}',
+  'Add folder…': 'Adicionar pasta…',
+  'That folder cannot be used. Choose a folder such as Documents or Pictures.':
+    'Essa pasta não pode ser usada. Escolha uma pasta como Documentos ou Imagens.',
+
+  // Home
+  'Connect to Google Drive to back up or restore.': 'Ligue-se ao Google Drive para fazer cópias ou restaurar.',
+  'Your backup could not be opened.': 'Não foi possível abrir a cópia de segurança.',
+  'Backing up…': 'A fazer a cópia de segurança…',
+  Stop: 'Parar',
+  'Keep this page open until the backup finishes.': 'Mantenha esta página aberta até a cópia terminar.',
+  'Your files are safe': 'Os seus ficheiros estão seguros',
+  'Last backup: {when}': 'Última cópia: {when}',
+  'No backup yet': 'Ainda sem cópia de segurança',
+  'Make your first backup now.': 'Faça agora a sua primeira cópia.',
+  'Back up now': 'Fazer cópia agora',
+  'This browser can restore files. To make backups, open XkyHold in Chrome or Edge on a computer.':
+    'Este navegador pode restaurar ficheiros. Para fazer cópias, abra o XkyHold no Chrome ou no Edge num computador.',
+  '{n} files could not be read in the last backup.': 'Não foi possível ler {n} ficheiros na última cópia.',
+
+  // Restore
+  'Checking your backup…': 'A verificar a cópia de segurança…',
+  'Restoring…': 'A restaurar…',
+  'There is nothing to restore yet.': 'Ainda não há nada para restaurar.',
+  'Pick a date to see what is inside.': 'Escolha uma data para ver o que contém.',
+  Check: 'Verificar',
+  Location: 'Localização',
+  'This folder is empty.': 'Esta pasta está vazia.',
+  'Tick the files and folders you want back.': 'Assinale os ficheiros e as pastas que quer recuperar.',
+  'Select all': 'Selecionar tudo',
+  'Select none': 'Limpar seleção',
+  'Restore…': 'Restaurar…',
+  'Restore {n} selected…': 'Restaurar {n} selecionados…',
+  'You will choose where to put them. Restored files get today’s date.':
+    'Vai escolher onde os colocar. Os ficheiros restaurados ficam com a data de hoje.',
+  'Restoring is not available in this browser yet. Use Chrome or Edge on a computer.':
+    'O restauro ainda não está disponível neste navegador. Use o Chrome ou o Edge num computador.',
+
+  // Settings
+  'Google Drive': 'Google Drive',
+  'Backup “{name}”': 'Cópia de segurança “{name}”',
+  'Sign out of Google': 'Terminar sessão no Google',
+  'Change password…': 'Alterar palavra-passe…',
+  'Change password': 'Alterar palavra-passe',
+  'Current password': 'Palavra-passe atual',
+  'New password': 'Nova palavra-passe',
+  Cancel: 'Cancelar',
+  'Your password was changed.': 'A palavra-passe foi alterada.',
+  'This browser': 'Este navegador',
+  'Removes XkyHold’s settings from this browser. Your backup stays in Google Drive, and you can connect to it again with your password.':
+    'Remove as definições do XkyHold deste navegador. A cópia de segurança continua no Google Drive, e pode voltar a ligar-se a ela com a palavra-passe.',
+  'Remove from this browser…': 'Remover deste navegador…',
+  'Yes, remove': 'Sim, remover',
+}
