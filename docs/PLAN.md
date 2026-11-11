@@ -115,3 +115,14 @@ O BackMa é uma janela fixa de 460×560 com tudo atrás de links. No browser há
 2. Domínio: `hold.xkyriver.com` ou outro?
 3. Licença do código.
 4. Identidade visual: nova, ou alinhada com o site xkyriver.com?
+
+## 9. Fase 0 — resultados dos protótipos (11/11/2026)
+
+| Risco | Resultado |
+|---|---|
+| Login Google sem servidor | Funciona com Google Identity Services e só o scope `drive.file`, que também chega para `about.get` (identificar a conta). O token vive em memória: perde-se ao recarregar a página. |
+| Permissão persistente de pastas | A pasta escolhida fica guardada em IndexedDB. Recarregar mantém a permissão; fechar todas as tabs da app retira-a e a app mostra "Allow". Se o utilizador escolher "permitir em todas as visitas" no aviso do Chrome, a pasta fica legível ao reabrir sem novo pedido. Não testado: reinício completo do Chrome. |
+| Renovação do token ao fim de 1 hora | Por testar. |
+| Envio retomável para o Drive | Por testar. |
+
+Consequência para a UI: o assistente deve explicar, no momento em que o Chrome pergunta, que "permitir em todas as visitas" é a opção que evita ter de autorizar de novo.
