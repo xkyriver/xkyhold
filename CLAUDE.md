@@ -2,7 +2,7 @@
 
 Browser-only PWA that backs up local folders, encrypted client-side, to the
 user's own Google Drive. Web successor of BackMa. Full plan, architecture and
-phases: `docs/PLAN.md`. Repository format: `docs/FORMAT.md` — the
+phases: `docs/PLAN.md`. Opening the app to the public: `docs/LAUNCH.md`. Repository format: `docs/FORMAT.md` — the
 engine must match it; change the spec first, then the code.
 
 ## Principles
