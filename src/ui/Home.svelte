@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatBytes } from '../lib/format'
-  import { formatWhen, t } from '../lib/i18n.svelte'
+  import { fileCount, formatWhen, t } from '../lib/i18n.svelte'
   import { reminder } from '../lib/reminder'
   import { allowFolders, app, backupNow, caps, retryOpen, signIn, stopJob } from '../state/app.svelte'
 
@@ -48,7 +48,7 @@
   {:else if working && app.job}
     <h1>{t('Backing up…')}</h1>
     <p class="muted">
-      {t('{files} files', { files: app.job.files.toLocaleString() })} · {formatBytes(app.job.bytes)}
+      {fileCount(app.job.files)} · {formatBytes(app.job.bytes)}
     </p>
     <p class="small muted current">{app.job.current || ' '}</p>
     <div><button class="btn" onclick={stopJob}>{t('Stop')}</button></div>
@@ -60,13 +60,13 @@
       <h1>{t('Time for a backup')}</h1>
       <p class="muted">
         {t('Last backup: {when}', { when: formatWhen(last.time) })}<br />
-        {t('{files} files', { files: last.files.toLocaleString() })} · {formatBytes(last.bytes)}
+        {fileCount(last.files)} · {formatBytes(last.bytes)}
       </p>
     {:else if last}
       <h1>{t('Your files are safe')}</h1>
       <p class="muted">
         {t('Last backup: {when}', { when: formatWhen(last.time) })}<br />
-        {t('{files} files', { files: last.files.toLocaleString() })} · {formatBytes(last.bytes)}
+        {fileCount(last.files)} · {formatBytes(last.bytes)}
       </p>
     {:else if !app.loaded}
       <h1>{t('Welcome back')}</h1>
@@ -87,7 +87,11 @@
 </section>
 
 {#if last?.skipped}
-  <p class="small muted">{t('{n} files could not be read in the last backup.', { n: last.skipped })}</p>
+  <p class="small muted">
+    {last.skipped === 1
+      ? t('1 file could not be read in the last backup.')
+      : t('{n} files could not be read in the last backup.', { n: last.skipped })}
+  </p>
 {/if}
 
 <style>

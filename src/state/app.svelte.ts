@@ -324,10 +324,12 @@ export async function backupNow(): Promise<void> {
     const { snapshot } = done
     setSnapshots(done.snapshots)
     app.notice = [
-      t('Backup complete: {files} files, {sent} sent to Google Drive.', {
-        files: snapshot.stats.files.toLocaleString(),
-        sent: formatBytes(done.sentBytes),
-      }),
+      snapshot.stats.files === 1
+        ? t('Backup complete: 1 file, {sent} sent to Google Drive.', { sent: formatBytes(done.sentBytes) })
+        : t('Backup complete: {files} files, {sent} sent to Google Drive.', {
+            files: snapshot.stats.files.toLocaleString(),
+            sent: formatBytes(done.sentBytes),
+          }),
       snapshot.stats.skipped ? t('{n} could not be read.', { n: snapshot.stats.skipped }) : '',
       done.removed === 1
         ? t('1 old backup removed.')
@@ -356,7 +358,11 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
   const plain = $state.snapshot(entries) as TreeEntry[]
   await runJob('restore', async (job) => {
     const done = await engine.call('restore', { entries: plain, folder }, job)
-    app.notice = t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size: formatBytes(done.bytes) })
+    const size = formatBytes(done.bytes)
+    app.notice =
+      done.files === 1
+        ? t('Restored 1 file ({size}).', { size })
+        : t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size })
   })
 }
 
@@ -388,10 +394,11 @@ export async function restoreAsZip(entries: TreeEntry[]): Promise<void> {
     link.click()
     // The browser needs the URL until it has taken the file; a minute is ample.
     setTimeout(() => URL.revokeObjectURL(url), 60_000)
-    app.notice = t('{files} files ({size}) are in a .zip file in your downloads.', {
-      files: done.files.toLocaleString(),
-      size: formatBytes(done.bytes),
-    })
+    const size = formatBytes(done.bytes)
+    app.notice =
+      done.files === 1
+        ? t('1 file ({size}) is in a .zip file in your downloads.', { size })
+        : t('{files} files ({size}) are in a .zip file in your downloads.', { files: done.files.toLocaleString(), size })
   })
 }
 
@@ -400,10 +407,11 @@ export async function checkSnapshot(snapshot: Snapshot): Promise<void> {
   const entries: TreeEntry[] = snapshot.roots.map((r) => ({ name: r.name, type: 'dir', subtree: r.tree }))
   await runJob('check', async (job) => {
     const done = await engine.call('check', { entries }, job)
-    app.notice = t('Checked {files} files ({size}): every one is intact.', {
-      files: done.files.toLocaleString(),
-      size: formatBytes(done.bytes),
-    })
+    const size = formatBytes(done.bytes)
+    app.notice =
+      done.files === 1
+        ? t('Checked 1 file ({size}): it is intact.', { size })
+        : t('Checked {files} files ({size}): every one is intact.', { files: done.files.toLocaleString(), size })
   })
 }
 

@@ -17,6 +17,7 @@ export const ptPT: Record<string, string> = {
   'Today, {time}': 'Hoje, {time}',
   'Yesterday, {time}': 'Ontem, {time}',
   '{files} files': '{files} ficheiros',
+  '1 file': '1 ficheiro',
 
   // Errors
   'That is not the right password or recovery key.': 'A palavra-passe ou a chave de recuperação não está correta.',
@@ -43,11 +44,14 @@ export const ptPT: Record<string, string> = {
     'O XkyHold precisa novamente da tua permissão para ler as pastas.',
 
   // Notices
+  'Backup complete: 1 file, {sent} sent to Google Drive.': 'Cópia concluída: 1 ficheiro, {sent} enviados para o Google Drive.',
   'Backup complete: {files} files, {sent} sent to Google Drive.':
     'Cópia concluída: {files} ficheiros, {sent} enviados para o Google Drive.',
   '{n} could not be read.': 'Não foi possível ler {n}.',
   'Restored {files} files ({size}).': '{files} ficheiros restaurados ({size}).',
+  'Restored 1 file ({size}).': '1 ficheiro restaurado ({size}).',
   'Checked {files} files ({size}): every one is intact.': '{files} ficheiros verificados ({size}): estão todos intactos.',
+  'Checked 1 file ({size}): it is intact.': '1 ficheiro verificado ({size}): está intacto.',
   '{platform} computer': 'Computador {platform}',
   'My computer': 'O meu computador',
 
@@ -133,6 +137,7 @@ export const ptPT: Record<string, string> = {
   'This browser can restore files. To make backups, open XkyHold in Chrome or Edge on a computer.':
     'Este navegador pode restaurar ficheiros. Para fazer cópias, abre o XkyHold no Chrome ou no Edge num computador.',
   '{n} files could not be read in the last backup.': 'Não foi possível ler {n} ficheiros na última cópia.',
+  '1 file could not be read in the last backup.': 'Não foi possível ler 1 ficheiro na última cópia.',
 
   // Restore
   'Checking your backup…': 'A verificar a cópia de segurança…',
@@ -151,6 +156,7 @@ export const ptPT: Record<string, string> = {
   'Files restored to a folder get today’s date. A .zip keeps their original dates.':
     'Os ficheiros restaurados para uma pasta ficam com a data de hoje. O .zip mantém as datas originais.',
   'The .zip file keeps the original dates of your files.': 'O ficheiro .zip mantém as datas originais dos teus ficheiros.',
+  '1 file ({size}) is in a .zip file in your downloads.': '1 ficheiro ({size}) está num ficheiro .zip nas tuas transferências.',
   '{files} files ({size}) are in a .zip file in your downloads.':
     '{files} ficheiros ({size}) estão num ficheiro .zip nas tuas transferências.',
   'There is not enough free space on this device for the .zip file.':

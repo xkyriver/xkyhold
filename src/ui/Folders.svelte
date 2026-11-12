@@ -3,7 +3,7 @@
   import { scanFolder } from '../fs/scan'
   import type { ScanResult } from '../fs/scan'
   import { formatBytes } from '../lib/format'
-  import { t } from '../lib/i18n.svelte'
+  import { fileCount, t } from '../lib/i18n.svelte'
   import { app, refreshFolders } from '../state/app.svelte'
   import type { FolderStatus } from '../state/app.svelte'
 
@@ -55,7 +55,7 @@
             {#if status.permission !== 'granted'}
               {t('Needs your permission to be read')}
             {:else if scan}
-              {t('{files} files', { files: scan.files.toLocaleString() })} · {formatBytes(scan.bytes)}
+              {fileCount(scan.files)} · {formatBytes(scan.bytes)}
             {:else}
               {t('Counting files…')}
             {/if}

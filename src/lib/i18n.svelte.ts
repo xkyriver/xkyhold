@@ -44,6 +44,9 @@ export function translate(lang: Lang, key: string, vars: Record<string, string |
 /** Translates `key` into the current language. Reactive in templates. */
 export const t = (key: string, vars?: Record<string, string | number>): string => translate(i18n.lang, key, vars)
 
+/** "1 file" or "3 files", in the current language. */
+export const fileCount = (n: number): string => (n === 1 ? t('1 file') : t('{files} files', { files: n.toLocaleString() }))
+
 /** "Today, 09:12", "Yesterday, 18:40" or a full date. */
 export function formatWhen(iso: string, now: Date = clockNow(), lang: Lang = i18n.lang): string {
   const date = new Date(iso)

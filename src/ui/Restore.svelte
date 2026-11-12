@@ -2,7 +2,7 @@
   // Pick a backup by date, browse its folders, tick what to bring back.
   import type { Snapshot, TreeEntry } from '../engine/repo'
   import { formatBytes } from '../lib/format'
-  import { formatWhen, t } from '../lib/i18n.svelte'
+  import { fileCount, formatWhen, t } from '../lib/i18n.svelte'
   import { app, caps, checkSnapshot, explain, loadTree, restoreAsZip, restoreToFolder, signIn, stopJob } from '../state/app.svelte'
 
   interface Level {
@@ -61,7 +61,7 @@
 {#if working && app.job}
   <section class="card center stack">
     <h1>{app.job.kind === 'check' ? t('Checking your backup…') : t('Restoring…')}</h1>
-    <p class="muted">{t('{files} files', { files: app.job.files.toLocaleString() })} · {formatBytes(app.job.bytes)}</p>
+    <p class="muted">{fileCount(app.job.files)} · {formatBytes(app.job.bytes)}</p>
     <p class="small muted current">{app.job.current || ' '}</p>
     <div><button class="btn" onclick={stopJob}>{t('Stop')}</button></div>
   </section>
@@ -86,7 +86,7 @@
             <button class="pick grow" onclick={() => open(s)}>
               <strong>{formatWhen(s.time)}</strong>
               <span class="small muted">
-                {t('{files} files', { files: s.stats.files.toLocaleString() })} · {formatBytes(s.stats.bytes)}
+                {fileCount(s.stats.files)} · {formatBytes(s.stats.bytes)}
               </span>
             </button>
             <button class="link small" onclick={() => checkSnapshot(s)} disabled={!!app.job}>{t('Check')}</button>
