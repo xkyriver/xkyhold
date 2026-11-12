@@ -159,3 +159,14 @@ Feitos os pontos 1 e 2 da lista acima: as chaves ficam guardadas no browser (nã
 Notado: um backup de 101 KB demora 10 a 15 segundos, pelo número de pedidos sequenciais ao Drive. A tratar com o ponto 3 (Worker e paralelismo).
 
 Feito também o ponto 3: o motor corre num Web Worker (`src/engine/worker.ts`), a página fala com ele por mensagens (`client.ts` / `host.ts`), os pacotes são enviados até três de cada vez e o restauro descarrega vários ficheiros e blocos em paralelo. O destino Drive abre com menos pedidos e repete operações em falhas temporárias. No Chrome, um backup sem alterações passou a demorar menos de 3 segundos. Por testar: um backup real com volume (centenas de MB), para ver os envios em paralelo a funcionar contra o Drive.
+
+### Atualização (12/11/2026)
+
+Feito o bloco de retenção e lembretes:
+
+- **Decisão de produto:** o XkyHold nunca inicia uma cópia sozinho. Quem abre a app para restaurar um ficheiro, ou tem pouco tempo, não pode encontrar a ligação ocupada com algo que não pediu. Quando uma cópia está em atraso, a app avisa (no Início e, nos outros ecrãs, numa faixa com "Fazer cópia agora" e "Agora não") e o utilizador decide. Isto substitui o "arranca sozinho se estiver em atraso" da secção 5.4.
+- Frequência do lembrete nas Definições: todos os dias (por omissão), a cada 2 ou 3 dias, todas as semanas, ou nunca.
+- "Manter cópias": para sempre (por omissão), pelo menos 3, 6 ou 12 meses. As cópias mais antigas são removidas depois de cada nova cópia e o espaço é libertado (prune), com locks entre dispositivos.
+- A limpeza é testada com uma falha em cada escrita e em cada remoção: o repositório continua sempre restaurável.
+
+Por testar contra o Drive real: a remoção de cópias antigas (precisa de cópias com mais de 3 meses, ou de um teste dedicado).

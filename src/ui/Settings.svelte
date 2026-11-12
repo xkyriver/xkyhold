@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n.svelte'
-  import { app, caps, changePassword, disconnect, explain, forgetDevice, signIn } from '../state/app.svelte'
+  import { KEEP_CHOICES, REMINDER_CHOICES } from '../lib/reminder'
+  import { app, caps, changePassword, disconnect, explain, forgetDevice, savePreferences, signIn } from '../state/app.svelte'
   import Folders from './Folders.svelte'
 
   const MIN_PASSWORD = 8
@@ -13,6 +14,11 @@
   let busy = $state(false)
   let message = $state<{ ok: boolean; text: string } | null>(null)
   let confirmForget = $state(false)
+
+  const reminderLabel = (days: number) =>
+    days === 0 ? t('Never') : days === 1 ? t('Every day') : days === 7 ? t('Every week') : t('Every {n} days', { n: days })
+  const keepLabel = (months: number) =>
+    months === 0 ? t('Forever') : months === 12 ? t('At least a year') : t('At least {n} months', { n: months })
 
   async function savePassword() {
     busy = true
@@ -34,6 +40,26 @@
   <section class="card stack">
     <h2>{t('Folders to save')}</h2>
     <Folders />
+  </section>
+{/if}
+
+{#if caps.folderAccess}
+  <section class="card stack">
+    <h2>{t('Backups')}</h2>
+    <div>
+      <label for="remind">{t('Remind me to back up')}</label>
+      <select id="remind" value={app.remindDays} onchange={(e) => savePreferences({ remindDays: Number(e.currentTarget.value) })}>
+        {#each REMINDER_CHOICES as days}<option value={days}>{reminderLabel(days)}</option>{/each}
+      </select>
+      <p class="small muted">{t('XkyHold never starts a backup by itself. It tells you when one is due and you decide.')}</p>
+    </div>
+    <div>
+      <label for="keep">{t('Keep backups')}</label>
+      <select id="keep" value={app.keepMonths} onchange={(e) => savePreferences({ keepMonths: Number(e.currentTarget.value) })}>
+        {#each KEEP_CHOICES as months}<option value={months}>{keepLabel(months)}</option>{/each}
+      </select>
+      <p class="small muted">{t('Older backups are removed after each new backup. They stay in the Google Drive trash for 30 days.')}</p>
+    </div>
   </section>
 {/if}
 

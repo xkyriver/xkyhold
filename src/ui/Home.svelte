@@ -1,19 +1,21 @@
 <script lang="ts">
   import { formatBytes } from '../lib/format'
   import { formatWhen, t } from '../lib/i18n.svelte'
+  import { reminder } from '../lib/reminder'
   import { allowFolders, app, backupNow, caps, retryOpen, signIn, stopJob } from '../state/app.svelte'
 
-  const last = $derived(app.snapshots.at(-1))
+  const last = $derived(app.lastBackup)
   const blocked = $derived(app.folders.filter((f) => f.permission !== 'granted').length)
   const working = $derived(app.job?.kind === 'backup')
+  const overdue = $derived(!!last && reminder(last.time, app.remindDays).due)
 </script>
 
-{#if !app.connected}
+{#if !app.connected && !last}
   <div class="banner info">
     <span>{t('Connect to Google Drive to back up or restore.')}</span>
     <button class="btn primary" onclick={signIn}>{t('Continue with Google')}</button>
   </div>
-{:else if !app.loaded && !app.opening}
+{:else if app.connected && !app.loaded && !app.opening}
   <div class="banner warn">
     <span>{t('Your backup could not be opened.')}</span>
     <button class="btn" onclick={retryOpen}>{t('Try again')}</button>
@@ -28,9 +30,11 @@
 {/if}
 
 <section class="card center stack">
-  <div class="mark" class:ok={!!last && !working} class:busy={working} aria-hidden="true">
+  <div class="mark" class:ok={!!last && !working && !overdue} class:due={overdue && !working} class:busy={working} aria-hidden="true">
     {#if working}
       <span class="spinner"></span>
+    {:else if overdue}
+      !
     {:else if last}
       ✓
     {:else}
@@ -38,7 +42,10 @@
     {/if}
   </div>
 
-  {#if working && app.job}
+  {#if working && app.job?.cleaning}
+    <h1>{t('Removing old backups…')}</h1>
+    <p class="small muted">{t('Your new backup is already safe.')}</p>
+  {:else if working && app.job}
     <h1>{t('Backing up…')}</h1>
     <p class="muted">
       {t('{files} files', { files: app.job.files.toLocaleString() })} · {formatBytes(app.job.bytes)}
@@ -49,12 +56,21 @@
   {:else}
     {#if app.opening}
       <h1>{t('Opening your backup…')}</h1>
+    {:else if last && overdue}
+      <h1>{t('Time for a backup')}</h1>
+      <p class="muted">
+        {t('Last backup: {when}', { when: formatWhen(last.time) })}<br />
+        {t('{files} files', { files: last.files.toLocaleString() })} · {formatBytes(last.bytes)}
+      </p>
     {:else if last}
       <h1>{t('Your files are safe')}</h1>
       <p class="muted">
         {t('Last backup: {when}', { when: formatWhen(last.time) })}<br />
-        {t('{files} files', { files: last.stats.files.toLocaleString() })} · {formatBytes(last.stats.bytes)}
+        {t('{files} files', { files: last.files.toLocaleString() })} · {formatBytes(last.bytes)}
       </p>
+    {:else if !app.loaded}
+      <h1>{t('Welcome back')}</h1>
+      <p class="muted">{t('Connect to Google Drive to see your backups.')}</p>
     {:else}
       <h1>{t('No backup yet')}</h1>
       <p class="muted">{t('Make your first backup now.')}</p>
@@ -62,7 +78,7 @@
 
     {#if caps.folderAccess}
       <div>
-        <button class="btn primary big" onclick={backupNow} disabled={!app.loaded || !!app.job}>{t('Back up now')}</button>
+        <button class="btn primary big" onclick={backupNow} disabled={!!app.job || app.opening}>{t('Back up now')}</button>
       </div>
     {:else}
       <p class="small muted">{t('This browser can restore files. To make backups, open XkyHold in Chrome or Edge on a computer.')}</p>
@@ -70,8 +86,8 @@
   {/if}
 </section>
 
-{#if last?.stats.skipped}
-  <p class="small muted">{t('{n} files could not be read in the last backup.', { n: last.stats.skipped })}</p>
+{#if last?.skipped}
+  <p class="small muted">{t('{n} files could not be read in the last backup.', { n: last.skipped })}</p>
 {/if}
 
 <style>
@@ -91,6 +107,11 @@
   .mark.ok {
     color: var(--ok);
     background: var(--ok-soft);
+  }
+
+  .mark.due {
+    color: var(--warn);
+    background: var(--warn-soft);
   }
 
   .mark.busy {

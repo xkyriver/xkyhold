@@ -353,33 +353,53 @@ to the trash, always keeping the most recent one.
 Prune then reclaims space:
 
 1. Take the exclusive lock (10.4).
-2. Collect every blob reachable from the remaining snapshots.
-3. Packs with no reachable blob are unused. Packs where less than half the
-   bytes are reachable are rewritten: their live blobs go into new packs.
-4. Write the new packs, then a new index that no longer mentions the old
-   ones, **then** trash the old index files, **then** trash the old packs.
+2. Read the index and the list of snapshots again from the destination.
+   Another device may have backed up since this one last looked, and its
+   data must not be mistaken for garbage.
+3. Collect every blob reachable from the remaining snapshots. If any folder
+   listing cannot be read, stop here: nothing is removed on a guess.
+4. Mark for removal:
+   - packs with no reachable blob;
+   - packs where less than half the bytes are reachable, after writing
+     their live blobs into new packs;
+   - packs that no index mentions. With the lock held, these can only be
+     left over from a backup that never finished.
+5. Upload the new packs and their index. Then write **one** index holding
+   everything that remains, and trash the other index files. **Then** trash
+   the marked packs.
 
 At every point in that order, each index file present refers only to packs
-that still exist. An interruption leaves extra files, never missing ones.
+that still exist. An interruption leaves extra files, never missing ones,
+and the next prune finishes the job. The implementation is tested by
+failing at every single write and trash in turn.
+
+Prune runs right after a backup, and only when retention has something to
+remove. It is best effort: if it cannot take the lock or fails, the backup
+that just finished is still reported as the success it is.
 
 ### 10.4 Locks
 
-Drive has no atomic "create if absent", so locks are advisory:
+Drive has no atomic "create if absent", so locks are advisory. A lock is a
+small plaintext JSON object with a random name in `locks/`:
 
 ```json
 { "kind": "backup", "device": "orestes", "time": "2026-11-11T14:05:00Z" }
 ```
 
-- A lock is refreshed every 5 minutes and is stale after 30 minutes
-  without refresh.
-- Backup writes a `backup` lock, **then** lists all locks. If a fresh `prune`
-  lock exists it waits; otherwise it proceeds.
-- Prune writes a `prune` lock, **then** lists all locks. If any other fresh
-  lock exists, it removes its own and gives up until later. Writing before
-  checking means two simultaneous prunes both back off.
-- Both sides write before they check, so a backup and a prune that start
-  together cannot both go ahead: prune must never trash a pack that a
-  running backup has just decided not to re-upload.
+- A lock is refreshed every 5 minutes and is stale after 30 minutes without
+  refresh. Objects are write-once, so refreshing means writing a new lock
+  and trashing the previous one. Stale locks older than a day are trashed
+  by whoever sees them.
+- Both sides write their lock first and list the others second, so two
+  operations that start together both see each other.
+- **Backup** gives way to a fresh `prune` lock: it fails with "another
+  device is using this backup" instead of waiting. Two backups may run
+  together.
+- **Prune** gives way to any other fresh lock, and is simply skipped.
+- After taking its lock, a backup compares the index files in the
+  destination with the ones it has read, and reloads the index if they
+  differ. Without this it could skip data that a prune on another device
+  has just removed.
 
 ### 10.5 Check and repair
 

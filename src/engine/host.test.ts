@@ -13,6 +13,7 @@ const FAST = { memoryKiB: 64, iterations: 1, parallelism: 1 }
 /** A page and an engine in one thread, talking only through messages. */
 function connect() {
   const destinations = new Map<string, MemoryDestination>()
+  const clock = { now: new Date('2026-11-12T10:00:00Z') }
   let toClient: (message: Response) => void = () => {}
   const handle = createHost(
     {
@@ -27,6 +28,7 @@ function connect() {
         return [...destinations.keys()].sort()
       },
       repository: { packSize: 4096, indexEvery: 2, argon2: FAST },
+      now: () => clock.now,
     },
     (message) => queueMicrotask(() => toClient(message)),
   )
@@ -34,7 +36,7 @@ function connect() {
     post: (message: Request) => queueMicrotask(() => handle(message)),
     listen: (onMessage) => (toClient = onMessage),
   })
-  return { client, destinations }
+  return { client, destinations, clock }
 }
 
 const tree = () =>
@@ -63,7 +65,7 @@ describe('engine over messages', () => {
     const seen: number[] = []
     const { snapshot, sentBytes } = await client.call(
       'backup',
-      { roots: roots(tree()), device: 'laptop' },
+      { roots: roots(tree()), device: 'laptop', keepMonths: 0 },
       { onProgress: (p) => seen.push(p.files) },
     )
     expect(snapshot.stats).toEqual({ files: 3, bytes: 23_011, skipped: 0 })
@@ -78,8 +80,8 @@ describe('engine over messages', () => {
     const { client } = page
     await client.call('create', { repoName: 'laptop', password: 'correct horse' })
     const files = tree()
-    const first = await client.call('backup', { roots: roots(files), device: 'laptop' })
-    const second = await client.call('backup', { roots: roots(files), device: 'laptop' })
+    const first = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 0 })
+    const second = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 0 })
     expect(second.sentBytes).toBe(0)
     expect(second.snapshot.parent).toBe(first.snapshot.id)
   })
@@ -87,7 +89,7 @@ describe('engine over messages', () => {
   it('reconnects from another device with the password or the recovery key, then reopens with the keys', async () => {
     const { client } = page
     const { recoveryKey } = await client.call('create', { repoName: 'laptop', password: 'correct horse' })
-    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop' })
+    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })
     await client.call('close', undefined)
 
     const byPassword = await client.call('connect', { repoName: 'laptop', credential: { password: 'correct horse' } })
@@ -121,13 +123,13 @@ describe('engine over messages', () => {
     await expect(again).rejects.toBeInstanceOf(EngineError)
     await expect(again).rejects.toMatchObject({ kind: 'exists' })
 
-    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop' })
+    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })
     const dest = destinations.get('laptop')!
     dest.failPutsFrom = dest.puts + 1
     const changed = tree()
     changed.file('notes.txt').data = utf8('changed!!!!')
     changed.file('notes.txt').mtime += 1
-    await expect(client.call('backup', { roots: roots(changed), device: 'laptop' })).rejects.toMatchObject({ kind: 'network' })
+    await expect(client.call('backup', { roots: roots(changed), device: 'laptop', keepMonths: 0 })).rejects.toMatchObject({ kind: 'network' })
     dest.failPutsFrom = null
 
     for (const name of dest.names('packs')) await dest.trash('packs', name)
@@ -135,7 +137,7 @@ describe('engine over messages', () => {
 
     const unreadable = tree()
     unreadable.unreadable = true
-    await expect(client.call('backup', { roots: roots(unreadable), device: 'laptop' })).rejects.toMatchObject({ kind: 'read' })
+    await expect(client.call('backup', { roots: roots(unreadable), device: 'laptop', keepMonths: 0 })).rejects.toMatchObject({ kind: 'read' })
   })
 
   it('refuses to work without a Google session', async () => {
@@ -150,6 +152,56 @@ describe('engine over messages', () => {
     await expect(page.client.call('loadTree', { tree: 'x' })).rejects.toMatchObject({ kind: 'other' })
   })
 
+  it('removes old backups after a new one, when asked to keep only some months', async () => {
+    const { client, destinations } = page
+    await client.call('create', { repoName: 'laptop', password: 'correct horse' })
+    const files = tree()
+
+    page.clock.now = new Date('2026-01-10T10:00:00Z')
+    const january = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 3 })
+    expect(january.removed).toBe(0)
+
+    files.children = files.children.filter((c) => c.name !== 'big.bin')
+    page.clock.now = new Date('2026-11-12T10:00:00Z')
+    const november = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 3 })
+    expect(november.removed).toBe(1)
+    expect(november.freedBytes).toBeGreaterThan(20_000)
+    expect(november.snapshots.map((s) => s.id)).toEqual([november.snapshot.id])
+    expect(destinations.get('laptop')!.names('locks')).toEqual([])
+    expect(await client.call('check', { entries: asDirs(november.snapshot) })).toEqual({ files: 2, bytes: 3011 })
+
+    // "Forever" keeps everything.
+    page.clock.now = new Date('2030-01-01T10:00:00Z')
+    const later = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 0 })
+    expect(later.removed).toBe(0)
+    expect(later.snapshots).toHaveLength(2)
+  })
+
+  it('still reports a good backup when tidying up cannot run', async () => {
+    const { client, destinations } = page
+    await client.call('create', { repoName: 'laptop', password: 'correct horse' })
+    const files = tree()
+    page.clock.now = new Date('2026-01-10T10:00:00Z')
+    await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 3 })
+
+    // Another device holds a fresh backup lock, so prune must give way.
+    page.clock.now = new Date('2026-11-12T10:00:00Z')
+    const dest = destinations.get('laptop')!
+    await dest.put('locks', 'other', utf8(JSON.stringify({ kind: 'backup', device: 'desktop', time: new Date().toISOString() })))
+    const result = await client.call('backup', { roots: roots(files), device: 'laptop', keepMonths: 3 })
+    expect(result.removed).toBe(0)
+    expect(result.snapshots).toHaveLength(2)
+  })
+
+  it('refuses to back up while another device is tidying the backup', async () => {
+    const { client, destinations } = page
+    await client.call('create', { repoName: 'laptop', password: 'correct horse' })
+    const dest = destinations.get('laptop')!
+    await dest.put('locks', 'other', utf8(JSON.stringify({ kind: 'prune', device: 'desktop', time: new Date().toISOString() })))
+    await expect(client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })).rejects.toMatchObject({ kind: 'busy' })
+    expect(dest.names('snapshots')).toEqual([])
+  })
+
   it('stops a running backup when asked, and leaves no snapshot', async () => {
     const { client, destinations } = page
     await client.call('create', { repoName: 'laptop', password: 'correct horse' })
@@ -157,7 +209,7 @@ describe('engine over messages', () => {
     const controller = new AbortController()
     const running = client.call(
       'backup',
-      { roots: roots(tree()), device: 'laptop' },
+      { roots: roots(tree()), device: 'laptop', keepMonths: 0 },
       { signal: controller.signal, onProgress: () => controller.abort() },
     )
     await expect(running).rejects.toMatchObject({ kind: 'aborted' })
@@ -165,7 +217,7 @@ describe('engine over messages', () => {
 
     // The engine is still usable afterwards.
     destinations.get('laptop')!.putDelayMs = 0
-    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop' })
+    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })
     expect(snapshot.stats.files).toBe(3)
   })
 })

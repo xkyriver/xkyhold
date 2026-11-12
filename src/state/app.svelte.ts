@@ -13,6 +13,7 @@ import type { PermissionState } from '../fs/handles'
 import { detectCapabilities } from '../lib/capabilities'
 import { formatBytes } from '../lib/format'
 import { t } from '../lib/i18n.svelte'
+import { DEFAULT_KEEP_MONTHS, DEFAULT_REMINDER_DAYS } from '../lib/reminder'
 import { clearStore, settings } from './db'
 
 export type View = 'home' | 'restore' | 'settings'
@@ -23,6 +24,22 @@ export interface Job {
   files: number
   bytes: number
   current: string
+  /** Old backups are being removed after a backup. */
+  cleaning?: boolean
+}
+
+/** What is known about the latest backup without asking Google Drive. */
+export interface LastBackup {
+  time: string
+  files: number
+  bytes: number
+  skipped: number
+}
+
+/** Choices the user makes in Settings, kept on this device. */
+interface Preferences {
+  remindDays: number
+  keepMonths: number
 }
 
 export interface FolderStatus {
@@ -53,8 +70,16 @@ export const app = $state({
   loaded: false,
   opening: false,
   snapshots: [] as Snapshot[],
+  /** The latest backup as last seen on this device; known before connecting. */
+  lastBackup: null as LastBackup | null,
   folders: [] as FolderStatus[],
   job: null as Job | null,
+  /** Remind to back up after this many days; 0 never reminds. */
+  remindDays: DEFAULT_REMINDER_DAYS,
+  /** Remove backups older than this many months; 0 keeps them all. */
+  keepMonths: DEFAULT_KEEP_MONTHS,
+  /** The user said "not now" to the reminder during this visit. */
+  reminderDismissed: false,
   notice: null as string | null,
   error: null as string | null,
 })
@@ -65,6 +90,14 @@ const engine = new EngineClient(
 )
 let keys: RepoKeys | null = null
 let abort: AbortController | null = null
+
+/** Takes the history from the engine and remembers its latest entry. */
+function setSnapshots(snapshots: Snapshot[]): void {
+  app.snapshots = snapshots
+  const last = snapshots.at(-1)
+  app.lastBackup = last ? { time: last.time, ...last.stats } : null
+  void settings.set('lastBackup', $state.snapshot(app.lastBackup)).catch(console.error)
+}
 
 /** Gives the engine the current Google token, or tells it there is none. */
 function shareToken(): void {
@@ -95,6 +128,8 @@ export function explain(err: unknown): string {
       return t('Part of this backup is damaged or missing in Google Drive.')
     case 'read':
       return t('A folder could not be read. Check that it still exists.')
+    case 'busy':
+      return t('Another device is using this backup right now. Try again in a few minutes.')
     case 'refused':
       return t('Google Drive refused the request. Your Drive may be full.')
     case 'network':
@@ -131,7 +166,7 @@ export async function signIn(): Promise<boolean> {
     await googleAuth.signIn(app.account ?? undefined)
     shareToken()
     app.account = (await whoAmI()) ?? app.account
-    if (app.configured) void openBackup()
+    if (app.configured) await openBackup()
     return true
   } catch (err) {
     if (err instanceof AuthError && err.code === 'cancelled') return false
@@ -154,6 +189,12 @@ export async function start(): Promise<void> {
       app.repoName = saved.repoName
       app.account = saved.account
       app.configured = true
+    }
+    app.lastBackup = (await settings.get<LastBackup>('lastBackup')) ?? null
+    const prefs = await settings.get<Preferences>('preferences')
+    if (prefs) {
+      app.remindDays = prefs.remindDays
+      app.keepMonths = prefs.keepMonths
     }
     shareToken()
     await refreshFolders()
@@ -187,7 +228,7 @@ async function remember(repoName: string, repoKeys: RepoKeys, snapshots: Snapsho
   keys = repoKeys
   await settings.set('setup', { repoName, account: app.account, keys } satisfies SavedSetup)
   app.repoName = repoName
-  app.snapshots = snapshots
+  setSnapshots(snapshots)
   app.configured = true
   app.loaded = true
 }
@@ -210,7 +251,7 @@ async function openBackup(): Promise<void> {
   app.opening = true
   app.error = null
   try {
-    app.snapshots = (await engine.call('open', { repoName: app.repoName, keys })).snapshots
+    setSnapshots((await engine.call('open', { repoName: app.repoName, keys })).snapshots)
     app.loaded = true
   } catch (err) {
     noteSession(err)
@@ -243,7 +284,14 @@ async function runJob(kind: JobKind, work: (job: { signal: AbortSignal; onProgre
 
 export const stopJob = () => abort?.abort()
 
+/** Backs up now. From a click: it may need to open Google's window first. */
 export async function backupNow(): Promise<void> {
+  if (app.job) return
+  if (!app.loaded) {
+    if (app.connected) await openBackup()
+    else if (!(await signIn())) return
+    if (!app.loaded) return
+  }
   await refreshFolders()
   if (app.folders.length === 0) {
     app.error = t('Choose at least one folder to save, in Settings.')
@@ -255,13 +303,19 @@ export async function backupNow(): Promise<void> {
   }
   const roots = app.folders.map(({ folder }) => ({ name: folder.name, handle: folder.handle }))
   await runJob('backup', async (job) => {
-    const { snapshot, sentBytes } = await engine.call('backup', { roots, device: app.repoName }, job)
-    app.snapshots = [...app.snapshots, snapshot]
-    app.notice =
+    const done = await engine.call('backup', { roots, device: app.repoName, keepMonths: app.keepMonths }, job)
+    const { snapshot } = done
+    setSnapshots(done.snapshots)
+    app.notice = [
       t('Backup complete: {files} files, {sent} sent to Google Drive.', {
         files: snapshot.stats.files.toLocaleString(),
-        sent: formatBytes(sentBytes),
-      }) + (snapshot.stats.skipped ? ` ${t('{n} could not be read.', { n: snapshot.stats.skipped })}` : '')
+        sent: formatBytes(done.sentBytes),
+      }),
+      snapshot.stats.skipped ? t('{n} could not be read.', { n: snapshot.stats.skipped }) : '',
+      done.removed ? t('{n} old backups removed.', { n: done.removed }) : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
   })
 }
 
@@ -299,6 +353,11 @@ export async function checkSnapshot(snapshot: Snapshot): Promise<void> {
 
 // --- Settings -------------------------------------------------------------
 
+export async function savePreferences(change: Partial<Preferences>): Promise<void> {
+  Object.assign(app, change)
+  await settings.set('preferences', { remindDays: app.remindDays, keepMonths: app.keepMonths } satisfies Preferences)
+}
+
 export const changePassword = (credential: Credential, newPassword: string): Promise<void> =>
   engine.call('changePassword', { repoName: app.repoName, credential, newPassword })
 
@@ -327,7 +386,11 @@ export async function forgetDevice(): Promise<void> {
     connected: false,
     loaded: false,
     snapshots: [],
+    lastBackup: null,
     folders: [],
+    remindDays: DEFAULT_REMINDER_DAYS,
+    keepMonths: DEFAULT_KEEP_MONTHS,
+    reminderDismissed: false,
     notice: null,
     error: null,
   })

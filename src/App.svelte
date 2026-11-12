@@ -1,7 +1,8 @@
 <script lang="ts">
   import { i18n, LANGUAGES, setLanguage, t } from './lib/i18n.svelte'
   import type { Lang } from './lib/i18n.svelte'
-  import { app, caps, start } from './state/app.svelte'
+  import { reminder } from './lib/reminder'
+  import { app, backupNow, caps, start } from './state/app.svelte'
   import type { View } from './state/app.svelte'
   import Home from './ui/Home.svelte'
   import Restore from './ui/Restore.svelte'
@@ -32,6 +33,20 @@
   $effect(() => {
     document.documentElement.lang = i18n.lang
   })
+
+  // A backup is never started for the user. When one is due they are told,
+  // on whichever screen they are, and choose.
+  const due = $derived(reminder(app.lastBackup?.time, app.remindDays))
+  // Home already says it, with its own button.
+  const remind = $derived(
+    // Before connecting, only what this device remembers is known.
+    caps.folderAccess && (app.loaded || !!app.lastBackup) && !app.job && !app.opening && due.due && !app.reminderDismissed && app.view !== 'home',
+  )
+
+  function backUpFromReminder() {
+    app.view = 'home'
+    void backupNow()
+  }
 </script>
 
 <div class="shell">
@@ -69,6 +84,22 @@
         <div class="banner ok" role="status">
           <span>{app.notice}</span>
           <button class="link" onclick={() => (app.notice = null)}>{t('Dismiss')}</button>
+        </div>
+      {/if}
+
+      {#if remind}
+        <div class="banner info" role="status">
+          <span>
+            {#if due.days === null}
+              {t('You have not made a backup yet.')}
+            {:else if due.days <= 1}
+              {t('Your last backup was more than a day ago.')}
+            {:else}
+              {t('Your last backup was {n} days ago.', { n: due.days })}
+            {/if}
+          </span>
+          <button class="btn primary" onclick={backUpFromReminder}>{t('Back up now')}</button>
+          <button class="btn" onclick={() => (app.reminderDismissed = true)}>{t('Not now')}</button>
         </div>
       {/if}
 

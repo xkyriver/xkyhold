@@ -3,7 +3,7 @@
   import type { Snapshot, TreeEntry } from '../engine/repo'
   import { formatBytes } from '../lib/format'
   import { formatWhen, t } from '../lib/i18n.svelte'
-  import { app, caps, checkSnapshot, explain, loadTree, restoreToFolder, stopJob } from '../state/app.svelte'
+  import { app, caps, checkSnapshot, explain, loadTree, restoreToFolder, signIn, stopJob } from '../state/app.svelte'
 
   interface Level {
     name: string
@@ -69,6 +69,9 @@
   <section class="card stack">
     <h1>{t('Restore')}</h1>
     <p class="muted">{app.opening ? t('Opening your backup…') : t('Connect to Google Drive to back up or restore.')}</p>
+    {#if !app.opening && !app.connected}
+      <div><button class="btn primary" onclick={signIn}>{t('Continue with Google')}</button></div>
+    {/if}
   </section>
 {:else if !snapshot}
   <section class="card stack">

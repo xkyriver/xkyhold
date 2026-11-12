@@ -10,6 +10,8 @@ import { NotFoundError } from '../storage/destination'
 import { backup } from './backup'
 import type { Argon2Params, Credential, RepoKeys } from './crypto'
 import { classify, EngineError } from './errors'
+import { Lock } from './lock'
+import { expired, forget, prune } from './prune'
 import type { SerializedError } from './errors'
 import { Repository } from './repo'
 import type { RepositoryOptions, Snapshot, TreeEntry } from './repo'
@@ -19,6 +21,8 @@ export interface Progress {
   files: number
   bytes: number
   current: string
+  /** Set while old backups are being removed after a backup. */
+  cleaning?: boolean
 }
 
 /** Every call the page can make, with its arguments and its result. */
@@ -28,7 +32,12 @@ export interface EngineApi {
   connect(args: { repoName: string; credential: Credential }): { keys: RepoKeys; snapshots: Snapshot[] }
   open(args: { repoName: string; keys: RepoKeys }): { snapshots: Snapshot[] }
   close(args: void): void
-  backup(args: { roots: { name: string; handle: DirHandleLike }[]; device: string }): { snapshot: Snapshot; sentBytes: number }
+  backup(args: {
+    roots: { name: string; handle: DirHandleLike }[]
+    device: string
+    /** Remove backups older than this many months afterwards; 0 keeps all. */
+    keepMonths: number
+  }): { snapshot: Snapshot; snapshots: Snapshot[]; sentBytes: number; removed: number; freedBytes: number }
   loadTree(args: { tree: string }): TreeEntry[]
   restore(args: { entries: TreeEntry[]; folder: unknown }): { files: number; bytes: number }
   check(args: { entries: TreeEntry[] }): { files: number; bytes: number }
@@ -53,6 +62,7 @@ export interface HostEnvironment {
   listBackups(token: () => Promise<string>): Promise<string[]>
   /** Test hooks: cheaper key derivation and smaller packs. */
   repository?: RepositoryOptions & { argon2?: Argon2Params }
+  now?: () => Date
 }
 
 export function createHost(env: HostEnvironment, post: (message: Response) => void): (message: Request) => void {
@@ -124,17 +134,52 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
       snapshots = []
     },
 
-    async backup({ roots, device }, { signal, progress }) {
+    async backup({ roots, device, keepMonths }, { signal, progress }) {
       const r = opened()
+      const now = env.now ?? (() => new Date())
       const before = r.uploadedBytes
-      const snapshot = await backup(r, roots, {
-        device,
-        parent: snapshots.at(-1) ?? null,
-        signal,
-        onProgress: (p) => progress({ files: p.files, bytes: p.bytes, current: p.current }),
-      })
-      snapshots = [...snapshots, snapshot]
-      return { snapshot, sentBytes: r.uploadedBytes - before }
+      let snapshot: Snapshot
+      let last = { files: 0, bytes: 0, current: '' }
+
+      const lock = await Lock.acquire(r.dest, 'backup', device)
+      try {
+        // Another device may have backed up or tidied since we last looked.
+        await r.refreshIndex()
+        snapshots = await r.listSnapshots()
+        snapshot = await backup(r, roots, {
+          device,
+          parent: snapshots.at(-1) ?? null,
+          signal,
+          now,
+          onProgress: (p) => progress((last = { files: p.files, bytes: p.bytes, current: p.current })),
+        })
+        snapshots = [...snapshots, snapshot]
+      } finally {
+        await lock.release()
+      }
+      const sentBytes = r.uploadedBytes - before
+
+      // Tidying up is best effort: the backup above is already safe, so a
+      // failure here must not turn a good backup into an error.
+      let removed = 0
+      let freedBytes = 0
+      if (expired(snapshots, keepMonths, now()).length > 0) {
+        progress({ ...last, current: '', cleaning: true })
+        try {
+          const pruning = await Lock.acquire(r.dest, 'prune', device)
+          try {
+            const forgotten = await forget(r, await r.listSnapshots(), keepMonths, now())
+            snapshots = forgotten.kept
+            removed = forgotten.removed.length
+            freedBytes = (await prune(r, { signal })).bytesFreed
+          } finally {
+            await pruning.release()
+          }
+        } catch (err) {
+          console.warn('Tidying up old backups was skipped', err)
+        }
+      }
+      return { snapshot, snapshots, sentBytes, removed, freedBytes }
     },
 
     loadTree: ({ tree }) => opened().loadTree(tree),

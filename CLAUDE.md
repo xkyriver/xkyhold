@@ -9,6 +9,9 @@ engine must match it; change the spec first, then the code.
 
 - Target users are non-technical. If a feature needs explanation, it is
   probably wrong. Plain verbs, sentence case, no jargon.
+- Never act for the user. XkyHold does not start a backup by itself: it
+  says when one is due and the user decides. Someone who opened the app to
+  restore one file must not find their connection busy.
 - No server. Static site only; nothing but the user's browser and Google
   Drive ever sees data, and Drive only sees ciphertext.
 - The backup engine is the product. Format changes need a written spec, a

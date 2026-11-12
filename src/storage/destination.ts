@@ -17,7 +17,8 @@ export interface Destination {
   put(dir: Dir, name: string, data: Uint8Array, signal?: AbortSignal): Promise<void>
   /** Reads a whole object, or `length` bytes from `offset`. */
   get(dir: Dir, name: string, range?: { offset: number; length: number }): Promise<Bytes>
-  list(dir: Dir): Promise<StoredObject[]>
+  /** `fresh` asks the storage again instead of trusting what this session already saw. */
+  list(dir: Dir, fresh?: boolean): Promise<StoredObject[]>
   /** Moves an object to the trash. Never deletes permanently. */
   trash(dir: Dir, name: string): Promise<void>
 }

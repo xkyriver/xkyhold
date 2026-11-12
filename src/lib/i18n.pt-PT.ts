@@ -123,6 +123,8 @@ export const ptPT: Record<string, string> = {
   'Keep this page open until the backup finishes.': 'Mantenha esta página aberta até a cópia terminar.',
   'Your files are safe': 'Os seus ficheiros estão seguros',
   'Last backup: {when}': 'Última cópia: {when}',
+  'Welcome back': 'Bem-vindo de volta',
+  'Connect to Google Drive to see your backups.': 'Ligue-se ao Google Drive para ver as suas cópias de segurança.',
   'No backup yet': 'Ainda sem cópia de segurança',
   'Make your first backup now.': 'Faça agora a sua primeira cópia.',
   'Back up now': 'Fazer cópia agora',
@@ -148,7 +150,33 @@ export const ptPT: Record<string, string> = {
   'Restoring is not available in this browser yet. Use Chrome or Edge on a computer.':
     'O restauro ainda não está disponível neste navegador. Use o Chrome ou o Edge num computador.',
 
+  // Reminder
+  'You have not made a backup yet.': 'Ainda não fez nenhuma cópia de segurança.',
+  'Your last backup was more than a day ago.': 'A última cópia de segurança foi há mais de um dia.',
+  'Your last backup was {n} days ago.': 'A última cópia de segurança foi há {n} dias.',
+  'Not now': 'Agora não',
+  'Time for a backup': 'Está na altura de fazer uma cópia',
+  'Removing old backups…': 'A remover cópias antigas…',
+  'Your new backup is already safe.': 'A nova cópia já está segura.',
+  '{n} old backups removed.': '{n} cópias antigas removidas.',
+  'Another device is using this backup right now. Try again in a few minutes.':
+    'Outro dispositivo está a usar esta cópia de segurança neste momento. Tente novamente dentro de alguns minutos.',
+
   // Settings
+  Backups: 'Cópias de segurança',
+  'Remind me to back up': 'Lembrar-me de fazer cópia',
+  Never: 'Nunca',
+  'Every day': 'Todos os dias',
+  'Every week': 'Todas as semanas',
+  'Every {n} days': 'A cada {n} dias',
+  'XkyHold never starts a backup by itself. It tells you when one is due and you decide.':
+    'O XkyHold nunca inicia uma cópia sozinho. Avisa quando está na altura e a decisão é sua.',
+  'Keep backups': 'Manter cópias',
+  Forever: 'Para sempre',
+  'At least a year': 'Pelo menos um ano',
+  'At least {n} months': 'Pelo menos {n} meses',
+  'Older backups are removed after each new backup. They stay in the Google Drive trash for 30 days.':
+    'As cópias mais antigas são removidas depois de cada nova cópia. Ficam 30 dias no lixo do Google Drive.',
   'Google Drive': 'Google Drive',
   'Backup “{name}”': 'Cópia de segurança “{name}”',
   'Sign out of Google': 'Terminar sessão no Google',

@@ -11,6 +11,9 @@ export class MemoryDestination implements Destination {
   gets = 0
   /** When set, the put with this number (1-based) and all later ones fail. */
   failPutsFrom: number | null = null
+  trashes = 0
+  /** When set, the trash with this number (1-based) and all later ones fail. */
+  failTrashesFrom: number | null = null
   /** Makes every put take this long, to observe overlapping uploads. */
   putDelayMs = 0
   /** The most puts ever in flight at once. */
@@ -53,6 +56,8 @@ export class MemoryDestination implements Destination {
   }
 
   async trash(dir: Dir, name: string): Promise<void> {
+    this.trashes++
+    if (this.failTrashesFrom !== null && this.trashes >= this.failTrashesFrom) throw new TypeError('network down')
     const key = this.key(dir, name)
     const data = this.objects.get(key)
     if (!data) throw new NotFoundError(dir, name)

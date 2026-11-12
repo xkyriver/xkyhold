@@ -12,6 +12,7 @@ export type ErrorKind =
   | 'damaged' // data in the backup is corrupt or missing
   | 'read' // a chosen folder could not be read
   | 'refused' // Drive said no: quota, permissions
+  | 'busy' // another device is working on this backup right now
   | 'network'
   | 'aborted'
   | 'other'

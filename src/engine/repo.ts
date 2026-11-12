@@ -142,8 +142,23 @@ export class Repository {
 
   // --- Index ------------------------------------------------------------
 
+  /** The index files this instance has read or written. */
+  private indexNames = new Set<string>()
+
+  /**
+   * Re-reads the index if another device has changed it since this
+   * instance last looked: a backup elsewhere adds files, a prune elsewhere
+   * replaces them. Deduplicating against a stale index could skip data
+   * that is no longer there.
+   */
+  async refreshIndex(): Promise<void> {
+    const names = (await this.dest.list('index', true)).map((o) => o.name)
+    if (names.length === this.indexNames.size && names.every((n) => this.indexNames.has(n))) return
+    await this.loadIndex()
+  }
+
   async loadIndex(): Promise<void> {
-    const names = (await this.dest.list('index')).map((o) => o.name)
+    const names = (await this.dest.list('index', true)).map((o) => o.name)
     const files = await Promise.all(
       names.map(async (name) => {
         const sealed = await this.dest.get('index', name)
@@ -151,6 +166,7 @@ export class Repository {
       }),
     )
     this.index.clear()
+    this.indexNames = new Set(names)
     for (const file of files) {
       for (const pack of file.packs) {
         for (const blob of pack.blobs) this.index.set(blob.id, { ...blob, pack: pack.id })
@@ -173,10 +189,48 @@ export class Repository {
     this.unindexed = []
     try {
       const sealed = await seal(this.keys.encKey, await deflate(utf8(JSON.stringify({ packs: batch } satisfies IndexFile))), INDEX_AAD)
-      await this.dest.put('index', await sha256Hex(sealed), sealed, signal)
+      const name = await sha256Hex(sealed)
+      await this.dest.put('index', name, sealed, signal)
+      this.indexNames.add(name)
     } catch (err) {
       this.unindexed = [...batch, ...this.unindexed]
       throw err
+    }
+  }
+
+  /** The index grouped by pack: what each known pack holds. */
+  packs(): Map<string, BlobEntry[]> {
+    const packs = new Map<string, BlobEntry[]>()
+    for (const { pack, ...blob } of this.index.values()) {
+      const list = packs.get(pack)
+      if (list) list.push(blob)
+      else packs.set(pack, [blob])
+    }
+    return packs
+  }
+
+  /** Forgets every blob that still lives in one of these packs. */
+  dropPacks(names: Set<string>): void {
+    for (const [id, located] of this.index) if (names.has(located.pack)) this.index.delete(id)
+  }
+
+  /**
+   * Replaces all index files with a single one describing what this
+   * instance knows. The new file is written before any old one is trashed,
+   * so the index in Drive is complete at every moment.
+   */
+  async consolidateIndex(signal?: AbortSignal): Promise<void> {
+    if (this.pending.size > 0 || this.unindexed.length > 0) throw new Error('flush() must run before consolidateIndex()')
+    const old = (await this.dest.list('index', true)).map((o) => o.name)
+    const file: IndexFile = { packs: [...this.packs()].map(([id, blobs]) => ({ id, blobs })) }
+    const sealed = await seal(this.keys.encKey, await deflate(utf8(JSON.stringify(file))), INDEX_AAD)
+    const name = await sha256Hex(sealed)
+    await this.dest.put('index', name, sealed, signal)
+    this.indexNames.add(name)
+    for (const other of old) {
+      if (other === name) continue
+      await this.dest.trash('index', other)
+      this.indexNames.delete(other)
     }
   }
 
@@ -191,7 +245,21 @@ export class Repository {
     this.throwIfUploadFailed()
     const id = await blobId(this.keys, plaintext)
     if (this.has(id)) return id
+    await this.append(type, id, plaintext, signal)
+    return id
+  }
 
+  /**
+   * Writes a blob the repository already has into a new pack. Used by
+   * prune to move live data out of a pack that is mostly dead.
+   */
+  async rewriteBlob(type: BlobType, id: string, plaintext: Uint8Array, signal?: AbortSignal): Promise<void> {
+    this.throwIfUploadFailed()
+    if (this.pending.has(id)) return
+    await this.append(type, id, plaintext, signal)
+  }
+
+  private async append(type: BlobType, id: string, plaintext: Uint8Array, signal?: AbortSignal): Promise<void> {
     let writer = this.writers[type]
     if (writer && writer.count > 0 && writer.size + plaintext.length + SEAL_OVERHEAD > this.packSize) {
       await this.closePack(type, signal)
@@ -200,7 +268,6 @@ export class Repository {
     writer ??= this.writers[type] = new PackWriter(this.keys)
     this.pending.add(id)
     await writer.add(type, plaintext, id)
-    return id
   }
 
   /**
@@ -293,9 +360,14 @@ export class Repository {
     return JSON.parse(fromUtf8(await inflate(await open(this.keys.encKey, sealed, snapshotAad(id)))))
   }
 
+  /** Moves a snapshot to the trash. Its data stays until prune runs. */
+  async trashSnapshot(id: string): Promise<void> {
+    await this.dest.trash('snapshots', id)
+  }
+
   /** All snapshots, oldest first. */
   async listSnapshots(): Promise<Snapshot[]> {
-    const names = new Set((await this.dest.list('snapshots')).map((o) => o.name))
+    const names = new Set((await this.dest.list('snapshots', true)).map((o) => o.name))
     const snapshots = await Promise.all([...names].map((id) => this.loadSnapshot(id)))
     return snapshots.sort((a, b) => a.time.localeCompare(b.time))
   }

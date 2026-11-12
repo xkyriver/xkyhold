@@ -153,7 +153,9 @@ export class DriveDestination implements Destination {
     return this.retry(async () => this.drive.download(await this.token(), file.id, range))
   }
 
-  async list(dir: Dir): Promise<StoredObject[]> {
+  async list(dir: Dir, fresh = false): Promise<StoredObject[]> {
+    // Another device may have written here since this session last looked.
+    if (fresh) this.listings.delete(dir)
     return [...(await this.listing(dir)).values()].map((f) => ({
       name: f.name,
       size: Number(f.size ?? 0),
