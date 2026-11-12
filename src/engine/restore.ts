@@ -51,16 +51,33 @@ export async function restoreEntries(
 ): Promise<RestoreProgress> {
   const running = new Set<Promise<void>>()
   let failure: { error: unknown } | null = null
+  // Bytes written so far of the files in progress: shown, so that a large
+  // file does not look stuck, but only counted in the totals once done.
+  let partial = 0
+  const report = () => options.onProgress?.({ ...progress, bytes: progress.bytes + partial })
 
   async function file(entry: TreeFile, into: RestoreTarget, path: string): Promise<void> {
     while (running.size >= FILE_CONCURRENCY) await Promise.race(running)
     if (failure) return
     const job = (async () => {
       progress.current = path
-      await into.writeFile(entry, readFile(repo, entry, options.signal))
+      let mine = 0
+      const counted = async function* (chunks: AsyncIterable<Bytes>) {
+        for await (const chunk of chunks) {
+          yield chunk
+          mine += chunk.length
+          partial += chunk.length
+          report()
+        }
+      }
+      try {
+        await into.writeFile(entry, counted(readFile(repo, entry, options.signal)))
+      } finally {
+        partial -= mine
+      }
       progress.files++
       progress.bytes += entry.size
-      options.onProgress?.({ ...progress })
+      report()
     })()
       .catch((error) => void (failure ??= { error }))
       .finally(() => running.delete(job))

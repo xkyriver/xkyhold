@@ -52,7 +52,10 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
   const chunkSize = options.chunkSize ?? CHUNK_SIZE
   const { signal } = options
   const progress: BackupProgress = { files: 0, bytes: 0, skipped: 0, filesRead: 0, current: '' }
-  const report = () => options.onProgress?.({ ...progress })
+  // Bytes read so far of the file being stored: shown, so that a large file
+  // does not look stuck, but only counted in the totals once it is done.
+  let inFile = 0
+  const report = () => options.onProgress?.({ ...progress, bytes: progress.bytes + inFile })
 
   async function previous(tree: string | undefined): Promise<Map<string, TreeEntry>> {
     const map = new Map<string, TreeEntry>()
@@ -77,15 +80,22 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     }
     progress.current = path
     progress.filesRead++
+    report()
     const content: string[] = []
     let size = 0
-    for (let offset = 0; offset < file.size; offset += chunkSize) {
-      signal?.throwIfAborted()
-      const end = Math.min(offset + chunkSize, file.size)
-      const chunk = new Uint8Array(await reading(path, () => file.slice(offset, end).arrayBuffer()))
-      if (chunk.length === 0) break // the file shrank while being read
-      content.push(await repo.saveBlob('data', chunk, signal))
-      size += chunk.length
+    try {
+      for (let offset = 0; offset < file.size; offset += chunkSize) {
+        signal?.throwIfAborted()
+        const end = Math.min(offset + chunkSize, file.size)
+        const chunk = new Uint8Array(await reading(path, () => file.slice(offset, end).arrayBuffer()))
+        if (chunk.length === 0) break // the file shrank while being read
+        content.push(await repo.saveBlob('data', chunk, signal))
+        size += chunk.length
+        inFile = size
+        report()
+      }
+    } finally {
+      inFile = 0
     }
     return { name: handle.name, type: 'file', size, mtime: file.lastModified, content }
   }

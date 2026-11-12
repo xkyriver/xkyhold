@@ -120,6 +120,29 @@ describe('incremental backups', () => {
     expect(second.stats).toEqual(first.stats)
   })
 
+  it('shows progress inside a large file, without changing the totals', async () => {
+    const seen: { files: number; bytes: number }[] = []
+    const snapshot = await backup(repo, [{ name: tree.name, handle: tree }], {
+      device: 'test',
+      chunkSize: CHUNK,
+      onProgress: (p) => seen.push({ files: p.files, bytes: p.bytes }),
+    })
+    // big.bin (10 000 bytes, 10 chunks) moves the count before it is done
+    expect(seen.some((p, i) => i > 0 && p.files === seen[i - 1].files && p.bytes > seen[i - 1].bytes)).toBe(true)
+    expect(seen.at(-1)!.bytes).toBe(snapshot.stats.bytes)
+    expect(seen.every((p, i) => i === 0 || p.bytes >= seen[i - 1].bytes)).toBe(true)
+
+    const restored: { files: number; bytes: number }[] = []
+    const target = new MemoryTarget()
+    const root = snapshot.roots[0]
+    const total = await restoreEntries(repo, await repo.loadTree(root.tree), await target.createDir(root.name), {
+      onProgress: (p) => restored.push({ files: p.files, bytes: p.bytes }),
+    })
+    expect(total.bytes).toBe(snapshot.stats.bytes)
+    expect(restored.some((p) => p.bytes > 0 && p.bytes < total.bytes && p.files === 0)).toBe(true)
+    expect(restored.at(-1)!.bytes).toBe(total.bytes)
+  })
+
   it('uploads only the changed chunk of a modified file', async () => {
     const first = await run()
     const big = tree.file('big.bin')
