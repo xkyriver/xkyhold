@@ -26,6 +26,15 @@ export class DriveDestination implements Destination {
   private readonly folders = new Map<Dir, Promise<string>>()
   /** name -> file id, per folder, filled on first use. */
   private readonly listings = new Map<Dir, Promise<Map<string, DriveFile>>>()
+  /**
+   * What this session wrote and trashed, per folder. Drive's listings lag
+   * behind writes for a moment, so a fresh listing can miss a file written
+   * a second ago or still show one just trashed. Without this, a lock could
+   * not be released (it is not "there") and a released one would still
+   * look taken, which made tidying up old backups give way to itself.
+   */
+  private readonly written = new Map<Dir, Map<string, DriveFile>>()
+  private readonly trashed = new Map<Dir, Set<string>>()
   /** The repository's sub-folders that already exist, from one listing. */
   private existing: Promise<Map<string, string>> | null = null
   /** Waits between retries; replaced in tests. */
@@ -99,17 +108,19 @@ export class DriveDestination implements Destination {
     await Promise.all(SUBFOLDERS.filter((d) => d !== 'locks').map((dir) => this.listing(dir)))
   }
 
-  private listing(dir: Dir): Promise<Map<string, DriveFile>> {
+  private listing(dir: Dir, fresh = false): Promise<Map<string, DriveFile>> {
     let listing = this.listings.get(dir)
     if (!listing) {
       listing = (async () => {
-        const created = !(await this.subfolders()).has(dir) && dir !== ''
+        const created = !fresh && !(await this.subfolders()).has(dir) && dir !== ''
         const folder = await this.folder(dir)
         // A folder this session just created is known to be empty.
         const files = created ? [] : await this.retry(async () => this.drive.listChildren(await this.token(), folder))
         const map = new Map<string, DriveFile>()
         // Drive allows duplicate names; any one will do (see FORMAT.md, 3).
-        for (const file of files) if (file.mimeType !== DRIVE_FOLDER_MIME) map.set(file.name, file)
+        const gone = this.trashed.get(dir)
+        for (const file of files) if (file.mimeType !== DRIVE_FOLDER_MIME && !gone?.has(file.name)) map.set(file.name, file)
+        for (const [name, file] of this.written.get(dir) ?? []) if (!map.has(name)) map.set(name, file)
         return map
       })()
       this.listings.set(dir, listing)
@@ -144,7 +155,11 @@ export class DriveDestination implements Destination {
         return uploadResumable(this.drive, session, blob, options)
       }, signal)
     }
-    listing.set(name, { id: file.id, name, size: String(data.length) })
+    const stored = { id: file.id, name, size: String(data.length) }
+    listing.set(name, stored)
+    if (!this.written.has(dir)) this.written.set(dir, new Map())
+    this.written.get(dir)!.set(name, stored)
+    this.trashed.get(dir)?.delete(name)
   }
 
   async get(dir: Dir, name: string, range?: { offset: number; length: number }): Promise<Bytes> {
@@ -156,7 +171,7 @@ export class DriveDestination implements Destination {
   async list(dir: Dir, fresh = false): Promise<StoredObject[]> {
     // Another device may have written here since this session last looked.
     if (fresh) this.listings.delete(dir)
-    return [...(await this.listing(dir)).values()].map((f) => ({
+    return [...(await this.listing(dir, fresh)).values()].map((f) => ({
       name: f.name,
       size: Number(f.size ?? 0),
       sha256: f.sha256Checksum,
@@ -169,5 +184,8 @@ export class DriveDestination implements Destination {
     if (!file) throw new NotFoundError(dir, name)
     await this.retry(async () => this.drive.trashFile(await this.token(), file.id))
     listing.delete(name)
+    this.written.get(dir)?.delete(name)
+    if (!this.trashed.has(dir)) this.trashed.set(dir, new Set())
+    this.trashed.get(dir)!.add(name)
   }
 }

@@ -24,6 +24,11 @@ function fakeDrive() {
   }
   const describeNode = (n: Node) => ({ id: n.id, name: n.name, size: String(n.data.length), mimeType: n.mimeType })
 
+  // Drive's listings lag behind writes: ids here are left out of, or still
+  // shown in, the answer to a listing.
+  const unlisted = new Set<string>()
+  const stillListed = new Set<string>()
+
   let failing = { count: 0, status: 500 }
   const failNext = (count: number, status: number) => (failing = { count, status })
 
@@ -42,7 +47,10 @@ function fakeDrive() {
       const parent = q.match(/'([^']+)' in parents/)![1]
       const name = q.match(/name = '([^']+)'/)?.[1]
       const files = [...nodes.values()].filter(
-        (n) => n.parent === parent && !n.trashed && (!name || (n.name === name && n.mimeType === DRIVE_FOLDER_MIME)),
+        (n) =>
+          n.parent === parent &&
+          (stillListed.has(n.id) || (!n.trashed && !unlisted.has(n.id))) &&
+          (!name || (n.name === name && n.mimeType === DRIVE_FOLDER_MIME)),
       )
       return Response.json({ files: files.map(describeNode) })
     }
@@ -72,7 +80,7 @@ function fakeDrive() {
     }
     return new Response(null, { status: 404 })
   })
-  return { drive, nodes, log, create, failNext }
+  return { drive, nodes, log, create, failNext, unlisted, stillListed }
 }
 
 const token = async () => 't'
@@ -168,6 +176,28 @@ describe('DriveDestination', () => {
     await expect(dest.get('packs', 'p1')).rejects.toMatchObject({ status: 404 })
     fake.failNext(10, 503)
     await expect(dest.get('packs', 'p1')).rejects.toMatchObject({ status: 503 })
+  })
+
+  it('keeps its own writes and removals when a fresh listing lags behind', async () => {
+    const fake = fakeDrive()
+    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const node = (name: string) => [...fake.nodes.values()].find((n) => n.name === name)!
+
+    // Just written, not yet in Drive's listing: still known, and can be trashed.
+    await dest.put('locks', 'mine', utf8('lock'))
+    fake.unlisted.add(node('mine').id)
+    expect((await dest.list('locks', true)).map((o) => o.name)).toEqual(['mine'])
+    await dest.trash('locks', 'mine')
+    expect(node('mine').trashed).toBe(true)
+
+    // Just trashed, still in Drive's listing: gone for this session.
+    fake.stillListed.add(node('mine').id)
+    expect(await dest.list('locks', true)).toEqual([])
+    await expect(dest.get('locks', 'mine')).rejects.toThrow(NotFoundError)
+
+    // Another device's file shows up as usual.
+    fake.create('theirs', node('locks').id, 'application/octet-stream', utf8('x'))
+    expect((await dest.list('locks', true)).map((o) => o.name)).toEqual(['theirs'])
   })
 
   it('lists repositories, ignoring loose files', async () => {
