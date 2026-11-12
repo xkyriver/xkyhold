@@ -211,7 +211,7 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 |---|---|---|
 | 1.1 | Ficheiros de vários GB | Por fazer |
 | 1.2 | Sessão Google a expirar a meio | Por fazer |
-| 1.3 | Remoção de cópias antigas no Drive real | Por fazer (precisa do proprietário: entrar com a Google e escolher uma pasta de teste) |
+| 1.3 | Remoção de cópias antigas no Drive real | Em curso. Primeira tentativa (12/11/2026, backup `XkyHold test 1-3`, pasta de teste de 4,8 MB, cópia com `?pretend-now=2026-06-01` e depois duas cópias "hoje" com "Pelo menos 3 meses"): **a cópia de junho não foi removida**. Causa encontrada no Drive: o lock da primeira cópia ficou ativo, porque a listagem do Drive logo a seguir à escrita ainda não o mostrava e a libertação falhou em silêncio; a limpeza via esse lock e desistia. Sem risco para os dados (fica a mais, nunca a menos). Corrigido em `f944c15`, com teste. Falta repetir no Drive real |
 | 1.4 | Aviso de cópia em atraso | **Passou** (12/11/2026, Chrome do proprietário, `localhost:5173`, backup `XkyHold test 2`, última cópia às 02:58 desse dia). Com `?pretend-now=2026-11-15`: o Início diz "Está na altura de fazer uma cópia"; no Restaurar aparece a faixa "A última cópia de segurança foi há 3 dias." com "Fazer cópia agora" e "Agora não"; "Agora não" esconde-a. Sem o parâmetro, o Início diz "Os teus ficheiros estão seguros". Não foi carregado "Fazer cópia agora" |
 | 1.5 | Alterar a password | Por fazer (precisa do proprietário para entrar com a Google) |
 | 1.6 | Windows | Por fazer (proprietário) |
