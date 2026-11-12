@@ -36,9 +36,16 @@ npm run dev
 Open http://localhost:5173 (not 127.0.0.1 — the origin must match exactly)
 and click "Sign in with Google".
 
+## Current state (12 November 2026)
+
+- Project `xkyhold`, client "XkyHold web".
+- Authorized JavaScript origins: `http://localhost:5173` and
+  `https://xkyhold.xkyriver.com`.
+- Audience: External, publishing status **Testing**. Only accounts listed
+  as test users can sign in.
+
 ## Before going public
 
-- Add the production origin to the client.
 - **Audience → Publish app** ("In production"), so any Google account can
   sign in without being listed as a test user.
 - Branding verification needs a home page and a privacy policy on a domain

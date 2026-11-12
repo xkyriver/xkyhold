@@ -170,3 +170,7 @@ Feito o bloco de retenção e lembretes:
 - A limpeza é testada com uma falha em cada escrita e em cada remoção: o repositório continua sempre restaurável.
 
 Por testar contra o Drive real: a remoção de cópias antigas (precisa de cópias com mais de 3 meses, ou de um teste dedicado).
+
+Publicado em 12/11/2026 em https://xkyhold.xkyriver.com (Worker `xkyhold-site` no Cloudflare, só ficheiros estáticos, como o xkyriver.com). O deploy é feito pelo dono com `npm run deploy`. A origem de produção está autorizada no cliente OAuth e o login foi testado no site publicado. A app continua em modo "Testing" na Google: só contas listadas como utilizadores de teste conseguem entrar.
+
+Por fazer para abrir a outras pessoas: publicar a app na consola Google ("In production"), verificar o domínio e a marca, criar a caixa `support@xkyhold.xkyriver.com`, e trocar o email de suporte do ecrã de consentimento.
