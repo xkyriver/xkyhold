@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { adoptAbout, showAboutIn } from './lib/about'
   import { i18n, LANGUAGES, setLanguage, t } from './lib/i18n.svelte'
   import type { Lang } from './lib/i18n.svelte'
   import { reminder } from './lib/reminder'
@@ -32,6 +33,7 @@
 
   $effect(() => {
     document.documentElement.lang = i18n.lang
+    showAboutIn(i18n.lang)
   })
 
   // A backup is never started for the user. When one is due they are told,
@@ -69,6 +71,7 @@
         <h1>{t('This browser is not supported')}</h1>
         <p class="muted">{t('Open XkyHold in a recent version of Chrome, Edge, Firefox or Safari.')}</p>
       </section>
+      <div use:adoptAbout></div>
     {:else if !app.ready}
       <p class="muted">{t('Loading…')}</p>
     {:else if inWizard}

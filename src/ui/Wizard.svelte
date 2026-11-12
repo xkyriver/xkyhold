@@ -1,6 +1,7 @@
 <script lang="ts">
   // First-run setup: Google -> which backup -> (folders -> password ->
   // recovery key) for a new one, or just the password for an existing one.
+  import { adoptAbout } from '../lib/about'
   import { t } from '../lib/i18n.svelte'
   import { app, caps, connectBackup, createBackup, defaultBackupName, explain, listBackups, signIn } from '../state/app.svelte'
   import type { View } from '../state/app.svelte'
@@ -227,6 +228,11 @@
 
   {#if error}<div class="banner warn" role="alert"><span>{error}</span></div>{/if}
 </div>
+
+{#if step === 'google'}
+  <!-- What XkyHold is, for someone who has just arrived (static, from index.html). -->
+  <div use:adoptAbout></div>
+{/if}
 
 <style>
   .dots {
