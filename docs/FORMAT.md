@@ -1,8 +1,21 @@
-# XkyHold repository format — version 1 (draft)
+# XkyHold repository format — version 1
 
-Status: **draft, not yet implemented.** Nothing here is frozen until the
-engine passes round-trip tests against it. After the first public release,
-any incompatible change needs a new format version.
+Status: **frozen** on 12 November 2026, with XkyHold 1.0.0. The engine
+implements this document and passes round-trip tests against it, and real
+repositories of several gigabytes have been written, checked and restored
+in Google Drive.
+
+The rule from here on:
+
+- Version 1 does not change in incompatible ways. Anything a repository
+  written today contains must stay readable, byte for byte, by every later
+  version of XkyHold.
+- An incompatible change is format version 2, with its own written spec
+  and round-trip tests. The app must keep reading version 1.
+- The fixtures `src/engine/golden-v1.json` and `golden-v1-repo.json` are
+  never regenerated. If a test against them fails, the change is wrong.
+- Wording in this document may be clarified, as long as it describes the
+  same bytes.
 
 This document is the contract between the backup engine and the data it
 leaves in Google Drive. If the code and this document disagree, one of them
@@ -418,6 +431,9 @@ small plaintext JSON object with a random name in `locks/`:
 - Nothing about file names, folder structure or contents.
 
 ## 12. Open questions
+
+Items 1 and 2 would change what is written, so they belong to a future
+format version; the others do not change the format.
 
 1. **Content-defined chunking.** Fixed chunks re-upload everything after an
    insertion near the start of a large file. Acceptable for documents and
