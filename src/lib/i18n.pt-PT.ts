@@ -196,5 +196,6 @@ export const ptPT: Record<string, string> = {
     'Remove as definições do XkyHold deste navegador. A cópia de segurança continua no Google Drive, e podes voltar a ligar-te a ela com a palavra-passe.',
   'Remove from this browser…': 'Remover deste navegador…',
   Terms: 'Termos',
+  'Source code': 'Código-fonte',
   'Yes, remove': 'Sim, remover',
 }

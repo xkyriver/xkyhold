@@ -198,7 +198,7 @@ A parte que faltava foi feita pelo proprietário a 12/11/2026, no site publicado
 |---|---|
 | D1 | Congelar o formato como versão 1 (depois do teste 1.1) |
 | D2 | Contacto na privacidade e nos termos: `privacy@xkyhold.xkyriver.com`. "User support email" na consola Google: o Gmail da conta |
-| D3 | Repositório público, com as issues desligadas e depois de uma vistoria ao histórico. Licença AGPL-3.0 em ponderação |
+| D3 | Repositório público, com as issues desligadas e depois de uma vistoria ao histórico. Licença AGPL-3.0-only |
 | D4 | Termos de utilização curtos |
 | D5 | Listar no xkyriver.com, no fim |
 | D6 | Logótipo: o ícone atual |
@@ -224,3 +224,4 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - 2.3 Privacidade revista: passa a listar a data e o tamanho da última cópia, o acesso temporário da Google guardado no separador e o último `.zip` no armazenamento privado do browser. "Remover deste navegador" passou a apagar também esse `.zip`; só fica a língua escolhida.
 - 2.2 Termos de utilização em `public/terms.html` (EN e pt-PT), no molde da privacidade, com ligações no rodapé da app, na página inicial e na privacidade.
 - 2.8 Logótipo para a Google: `docs/google-logo-120.png`, 120×120 px, 2,8 KB, exportado de `public/favicon.svg`. Carregar só na etapa 5.
+- 2.7 Licença AGPL-3.0-only: `LICENSE` com o texto oficial da GNU, campo `license` no `package.json`, secção no `README.md`, ligação "Código-fonte" no rodapé da app e na página inicial. Histórico revisto (sem segredos); a frase sobre o cliente OAuth do BackMa saiu do `PLAN.md`. Issues desligadas no GitHub. Falta tornar o repositório público (com o "sim" do proprietário).
