@@ -125,13 +125,13 @@ const sessionExpired = (err: unknown) => err instanceof AuthError || (err instan
 /** A sentence for the user. The raw error goes to the console. */
 export function explain(err: unknown): string {
   console.error(err)
-  if (err instanceof AuthError) return t('Your Google session expired.')
+  if (err instanceof AuthError) return t('Your Google session expired. Sign in again to continue: nothing already sent is lost.')
   if (!(err instanceof EngineError)) return t('Something went wrong. Please try again.')
   switch (err.kind) {
     case 'wrong-key':
       return t('That is not the right password or recovery key.')
     case 'session':
-      return t('Your Google session expired.')
+      return t('Your Google session expired. Sign in again to continue: nothing already sent is lost.')
     case 'format':
       return t('This is not an XkyHold backup, or it was made by a newer version.')
     case 'exists':
@@ -302,9 +302,11 @@ export const stopJob = () => abort?.abort()
 /** Backs up now. From a click: it may need to open Google's window first. */
 export async function backupNow(): Promise<void> {
   if (app.job) return
+  // The session can expire while the backup stays open (after an hour, or
+  // halfway through a long backup): sign in again first, from this click.
+  if (!app.connected && !(await signIn())) return
   if (!app.loaded) {
-    if (app.connected) await openBackup()
-    else if (!(await signIn())) return
+    await openBackup()
     if (!app.loaded) return
   }
   await refreshFolders()

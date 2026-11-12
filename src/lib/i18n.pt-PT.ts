@@ -20,7 +20,8 @@ export const ptPT: Record<string, string> = {
 
   // Errors
   'That is not the right password or recovery key.': 'A palavra-passe ou a chave de recuperação não está correta.',
-  'Your Google session expired.': 'A tua sessão Google expirou.',
+  'Your Google session expired. Sign in again to continue: nothing already sent is lost.':
+    'A tua sessão Google expirou. Entra outra vez para continuar: o que já foi enviado não se perde.',
   'Part of this backup is damaged or missing in Google Drive.':
     'Parte desta cópia de segurança está danificada ou em falta no Google Drive.',
   'A folder could not be read. Check that it still exists.': 'Não foi possível ler uma pasta. Verifica se ainda existe.',
