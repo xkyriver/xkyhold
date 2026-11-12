@@ -2,6 +2,7 @@
 // languages map each key to its translation; a missing entry falls back to
 // English, so the app never shows a blank label.
 
+import { now as clockNow } from './clock'
 import { ptPT } from './i18n.pt-PT'
 
 export type Lang = 'en' | 'pt-PT'
@@ -44,7 +45,7 @@ export function translate(lang: Lang, key: string, vars: Record<string, string |
 export const t = (key: string, vars?: Record<string, string | number>): string => translate(i18n.lang, key, vars)
 
 /** "Today, 09:12", "Yesterday, 18:40" or a full date. */
-export function formatWhen(iso: string, now: Date = new Date(), lang: Lang = i18n.lang): string {
+export function formatWhen(iso: string, now: Date = clockNow(), lang: Lang = i18n.lang): string {
   const date = new Date(iso)
   const time = new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit' }).format(date)
   const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()

@@ -11,6 +11,7 @@ import { checkPermission, listFolders, pickRestoreFolder, requestPermission } fr
 import type { SavedFolder } from '../fs/folders'
 import type { PermissionState } from '../fs/handles'
 import { detectCapabilities } from '../lib/capabilities'
+import { pretendOffset, setClockOffset } from '../lib/clock'
 import { formatBytes } from '../lib/format'
 import { t } from '../lib/i18n.svelte'
 import { DEFAULT_KEEP_MONTHS, DEFAULT_REMINDER_DAYS } from '../lib/reminder'
@@ -90,9 +91,15 @@ export const app = $state({
 })
 
 /** The backup engine, in its own thread so the page never freezes. */
-const engine = new EngineClient(
-  workerTransport(new Worker(new URL('../engine/worker.ts', import.meta.url), { type: 'module' })),
-)
+const engineWorker = new Worker(new URL('../engine/worker.ts', import.meta.url), { type: 'module' })
+const engine = new EngineClient(workerTransport(engineWorker))
+
+/** Development only: `?pretend-now=2026-01-10` moves the clock of the page and the engine. */
+if (import.meta.env.DEV) {
+  const offset = pretendOffset(location.search)
+  setClockOffset(offset)
+  engineWorker.postMessage({ type: 'clock', offset })
+}
 let keys: RepoKeys | null = null
 let abort: AbortController | null = null
 
