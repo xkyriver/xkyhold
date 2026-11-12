@@ -189,3 +189,25 @@ Feito também a 12/11/2026: restauro em `.zip` e modo só restauro. O arquivo é
 Testado num Firefox 158 real (12/11/2026), em modo invisível e com um perfil descartável, através de uma página de teste temporária que correu o motor verdadeiro com um destino em memória: o browser é detetado como "só restauro"; criar o repositório (Argon2id real, 550 ms), fazer a cópia, reabrir com a password e restaurar para `.zip` funcionam; o arquivo de 9,3 MB foi escrito no armazenamento privado (OPFS), lido de volta com o tamanho certo e validado com `unzip`. Ficou de fora o que depende da conta Google do proprietário: o login e o Drive no Firefox, e a transferência vista no ecrã.
 
 A parte que faltava foi feita pelo proprietário a 12/11/2026, no site publicado e num Firefox com a conta Google dele: entrar, ligar a um backup existente com a password e transferir um `.zip` funcionou. O modo só restauro fica assim confirmado no Firefox. Por testar: Safari e telemóvel.
+
+## 11. Abertura ao público (`LAUNCH.md`), a partir de 12/11/2026
+
+### Etapa 1 — resultados dos testes
+
+Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um instante ISO completo) adianta ou atrasa o relógio da página e do motor (lembretes, datas no ecrã, hora das cópias novas, retenção). Só é lido atrás de `import.meta.env.DEV`; confirmado que `pretend-now` não aparece em `dist/` depois de `npm run build`.
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1.1 | Ficheiros de vários GB | Por fazer |
+| 1.2 | Sessão Google a expirar a meio | Por fazer |
+| 1.3 | Remoção de cópias antigas no Drive real | Por fazer (precisa do proprietário: entrar com a Google e escolher uma pasta de teste) |
+| 1.4 | Aviso de cópia em atraso | **Passou** (12/11/2026, Chrome do proprietário, `localhost:5173`, backup `XkyHold test 2`, última cópia às 02:58 desse dia). Com `?pretend-now=2026-11-15`: o Início diz "Está na altura de fazer uma cópia"; no Restaurar aparece a faixa "A última cópia de segurança foi há 3 dias." com "Fazer cópia agora" e "Agora não"; "Agora não" esconde-a. Sem o parâmetro, o Início diz "Os teus ficheiros estão seguros". Não foi carregado "Fazer cópia agora" |
+| 1.5 | Alterar a password | Por fazer (precisa do proprietário para entrar com a Google) |
+| 1.6 | Windows | Por fazer (proprietário) |
+| 1.7 | Safari e telemóvel | Por fazer (proprietário) |
+| 1.8 | Dois computadores | Por fazer (proprietário) |
+
+### Etapa 2 — feito
+
+- 2.1 Página inicial com conteúdo estático em `index.html` (EN e pt-PT): o que a app faz, três passos, o que a Google vê e não vê, browsers, limitações, ligação para a privacidade. Legível sem JavaScript; a app mostra-a por baixo do primeiro passo do assistente, só na língua escolhida, e esconde-a quando há um backup configurado. Visto no browser em modo claro e escuro, em largura de telemóvel, e no build de produção servido pelo Wrangler com os cabeçalhos reais, sem erros na consola.
+- 2.3 Privacidade revista: passa a listar a data e o tamanho da última cópia, o acesso temporário da Google guardado no separador e o último `.zip` no armazenamento privado do browser. "Remover deste navegador" passou a apagar também esse `.zip`; só fica a língua escolhida.
