@@ -1,0 +1,13 @@
+{
+  // xkyhold.xkyriver.com: static assets only, no Worker code. Deploy with: npm run deploy
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xkyhold-site",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "xkyhold.xkyriver.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false
+}

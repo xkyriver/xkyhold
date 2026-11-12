@@ -8,6 +8,7 @@ export const ptPT: Record<string, string> = {
   Settings: 'Definições',
   Sections: 'Secções',
   Language: 'Idioma',
+  Privacy: 'Privacidade',
   'Loading…': 'A carregar…',
   Dismiss: 'Fechar',
   'This browser is not supported': 'Este navegador não é suportado',

@@ -30,3 +30,6 @@ dist-ssr
 
 # Claude Code local settings
 .claude/
+
+# Cloudflare
+.wrangler/

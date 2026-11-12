@@ -47,7 +47,6 @@ interface GoogleOAuth2 {
     error_callback?: (error: { type: string }) => void
     login_hint?: string
   }): TokenClient
-  revoke(token: string, done?: () => void): void
 }
 
 declare global {
@@ -176,13 +175,14 @@ export class GoogleAuth {
     session.save(null)
   }
 
-  /** Forgets the token and revokes the app's access at Google. */
-  async signOut(): Promise<void> {
-    const token = this.token
+  /**
+   * Forgets the token on this device. The app's access is deliberately not
+   * revoked at Google: the grant is shared by every device the user set
+   * up, and revoking it here would sign all of them out. The user can
+   * remove access in their Google account at any time.
+   */
+  signOut(): void {
     this.invalidate()
-    if (!token) return
-    const oauth2 = await loadGis()
-    await new Promise<void>((resolve) => oauth2.revoke(token.accessToken, resolve))
   }
 }
 

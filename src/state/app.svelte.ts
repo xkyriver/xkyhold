@@ -363,7 +363,7 @@ export const changePassword = (credential: Credential, newPassword: string): Pro
 
 /** Signs out of Google on this device. The backup stays set up. */
 export async function disconnect(): Promise<void> {
-  await googleAuth.signOut().catch(console.error)
+  googleAuth.signOut()
   shareToken()
   await engine.call('close', undefined)
   app.loaded = false
@@ -372,7 +372,7 @@ export async function disconnect(): Promise<void> {
 /** Removes everything XkyHold keeps in this browser. Drive is untouched. */
 export async function forgetDevice(): Promise<void> {
   stopJob()
-  await googleAuth.signOut().catch(console.error)
+  googleAuth.signOut()
   shareToken()
   await engine.call('close', undefined)
   await clearStore('settings')

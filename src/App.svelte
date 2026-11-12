@@ -115,6 +115,7 @@
 
   <footer class="footer">
     <span>XkyHold v{__APP_VERSION__}</span>
+    <a href="/privacy.html">{t('Privacy')}</a>
     <select
       aria-label={t('Language')}
       value={i18n.lang}

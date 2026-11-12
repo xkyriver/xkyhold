@@ -346,6 +346,10 @@ progress {
   color: var(--muted);
 }
 
+.footer a {
+  color: inherit;
+}
+
 .footer select {
   width: auto;
   padding: 2px 6px;
