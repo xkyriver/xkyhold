@@ -25,7 +25,7 @@ Data: 11/11/2026 · Origem analisada: BackMa v1.0.4 (`B-O-S-R/backma`, commit `2
 App Windows (Go + Wails v2, frontend HTML/CSS/JS sem framework) que imita o Déjà Dup:
 
 - **Motor:** `restic` e `rclone` como subprocessos; repositório `rclone:gdrive:<pasta>`.
-- **Autenticação:** OAuth do Google feito pelo rclone, cliente Internal da Linkare.
+- **Autenticação:** OAuth do Google feito pelo rclone.
 - **Residência:** ícone no tray, arranque com o Windows, agendador em processo (1/2/3/7 dias).
 - **Estado:** `config.json` em `%APPDATA%`; password do repositório no Credential Manager.
 - **Ecrãs:** Overview, assistente (Pastas → Google Drive → Password), Restore (datas → navegar → escolher), Preferences, About.
