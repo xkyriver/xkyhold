@@ -427,6 +427,7 @@ export async function forgetDevice(): Promise<void> {
   await engine.call('close', undefined)
   await clearStore('settings')
   await clearStore('folders')
+  await removeTemporaryZips()
   keys = null
   Object.assign(app, {
     view: 'home',
