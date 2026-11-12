@@ -339,8 +339,10 @@ progress {
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  align-items: center;
+  gap: 6px 12px;
   padding: 16px;
   font-size: 0.8125rem;
   color: var(--muted);

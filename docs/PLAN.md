@@ -229,4 +229,5 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 ### Etapa 3 — caixa de correio
 
 - 12/11/2026: subdomínio `xkyhold.xkyriver.com` acrescentado ao Email Routing da zona `xkyriver.com` (painel do Cloudflare, ao lado do `xkynext.xkyriver.com` que já existia). Regra `privacy@xkyhold.xkyriver.com` → Gmail do proprietário, criada com `wrangler email routing rules create`; o destino já estava confirmado. `dig MX xkyhold.xkyriver.com` devolve os três servidores do Cloudflare, o SPF está publicado, e `xkyhold.xkyriver.com` e `xkyriver.com` continuam a responder 200.
-- Falta: o email de teste enviado pelo proprietário de outra conta.
+- **Fechada:** o proprietário enviou um email de teste de outra conta para `privacy@xkyhold.xkyriver.com` e confirmou que chegou ao Gmail (12/11/2026).
+- 2.4 Ligação "Contacto" (`mailto:privacy@xkyhold.xkyriver.com`) no rodapé da app.

@@ -120,6 +120,7 @@
     <span>XkyHold v{__APP_VERSION__}</span>
     <a href="/privacy.html">{t('Privacy')}</a>
     <a href="/terms.html">{t('Terms')}</a>
+    <a href="mailto:privacy@xkyhold.xkyriver.com">{t('Contact')}</a>
     <a href="https://github.com/xkyriver/xkyhold">{t('Source code')}</a>
     <select
       aria-label={t('Language')}
