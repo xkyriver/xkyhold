@@ -231,3 +231,7 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - 12/11/2026: subdomínio `xkyhold.xkyriver.com` acrescentado ao Email Routing da zona `xkyriver.com` (painel do Cloudflare, ao lado do `xkynext.xkyriver.com` que já existia). Regra `privacy@xkyhold.xkyriver.com` → Gmail do proprietário, criada com `wrangler email routing rules create`; o destino já estava confirmado. `dig MX xkyhold.xkyriver.com` devolve os três servidores do Cloudflare, o SPF está publicado, e `xkyhold.xkyriver.com` e `xkyriver.com` continuam a responder 200.
 - **Fechada:** o proprietário enviou um email de teste de outra conta para `privacy@xkyhold.xkyriver.com` e confirmou que chegou ao Gmail (12/11/2026).
 - 2.4 Ligação "Contacto" (`mailto:privacy@xkyhold.xkyriver.com`) no rodapé da app.
+
+### Etapa 4 — posse do domínio
+
+- **Fechada a 12/11/2026.** Na Google Search Console, com a conta dona do projeto `xkyhold`, foi criada uma propriedade do tipo Domínio para `xkyriver.com`. Verificação por registo TXT acrescentado à mão no Cloudflare (`@`, `google-site-verification=…`), ao lado do SPF, que não mudou; não se usou a autorização automática da Google ao Cloudflare. A Search Console mostra "Ownership verified" (método: Domain name provider). O registo tem de ficar no DNS.
