@@ -28,6 +28,7 @@ tests use an in-memory fake, never real Google Drive.
 ## Conventions
 
 - Code, comments, commit messages, technical docs: English.
-- UI strings: English source, pt-PT translation.
+- UI strings: English source, pt-PT translation. Portuguese addresses the
+  user as "tu", like the other XKYRIVER apps; never "você" or "o seu".
 - Errors shown to users are actionable sentences; raw errors go to the log.
 - Keep dependencies few and small.
