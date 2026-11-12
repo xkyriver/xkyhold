@@ -192,6 +192,17 @@ A parte que faltava foi feita pelo proprietário a 12/11/2026, no site publicado
 
 ## 11. Abertura ao público (`LAUNCH.md`), a partir de 12/11/2026
 
+### Decisões do proprietário (12/11/2026)
+
+| # | Decisão |
+|---|---|
+| D1 | Congelar o formato como versão 1 (depois do teste 1.1) |
+| D2 | Contacto de suporte: `support@xkyhold.xkyriver.com`. No campo da Google, que não aceita esse endereço, por confirmar |
+| D3 | Por decidir: o proprietário prefere privado e pediu as vantagens e desvantagens |
+| D4 | Termos de utilização curtos |
+| D5 | Listar no xkyriver.com, no fim |
+| D6 | Logótipo: o ícone atual |
+
 ### Etapa 1 — resultados dos testes
 
 Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um instante ISO completo) adianta ou atrasa o relógio da página e do motor (lembretes, datas no ecrã, hora das cópias novas, retenção). Só é lido atrás de `import.meta.env.DEV`; confirmado que `pretend-now` não aparece em `dist/` depois de `npm run build`.
@@ -211,3 +222,5 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 
 - 2.1 Página inicial com conteúdo estático em `index.html` (EN e pt-PT): o que a app faz, três passos, o que a Google vê e não vê, browsers, limitações, ligação para a privacidade. Legível sem JavaScript; a app mostra-a por baixo do primeiro passo do assistente, só na língua escolhida, e esconde-a quando há um backup configurado. Visto no browser em modo claro e escuro, em largura de telemóvel, e no build de produção servido pelo Wrangler com os cabeçalhos reais, sem erros na consola.
 - 2.3 Privacidade revista: passa a listar a data e o tamanho da última cópia, o acesso temporário da Google guardado no separador e o último `.zip` no armazenamento privado do browser. "Remover deste navegador" passou a apagar também esse `.zip`; só fica a língua escolhida.
+- 2.2 Termos de utilização em `public/terms.html` (EN e pt-PT), no molde da privacidade, com ligações no rodapé da app, na página inicial e na privacidade.
+- 2.8 Logótipo para a Google: `docs/google-logo-120.png`, 120×120 px, 2,8 KB, exportado de `public/favicon.svg`. Carregar só na etapa 5.
