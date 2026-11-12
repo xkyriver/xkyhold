@@ -197,8 +197,8 @@ A parte que faltava foi feita pelo proprietário a 12/11/2026, no site publicado
 | # | Decisão |
 |---|---|
 | D1 | Congelar o formato como versão 1 (depois do teste 1.1) |
-| D2 | Contacto de suporte: `support@xkyhold.xkyriver.com`. No campo da Google, que não aceita esse endereço, por confirmar |
-| D3 | Por decidir: o proprietário prefere privado e pediu as vantagens e desvantagens |
+| D2 | Contacto na privacidade e nos termos: `privacy@xkyhold.xkyriver.com`. "User support email" na consola Google: o Gmail da conta |
+| D3 | Repositório público, com as issues desligadas e depois de uma vistoria ao histórico. Licença AGPL-3.0 em ponderação |
 | D4 | Termos de utilização curtos |
 | D5 | Listar no xkyriver.com, no fim |
 | D6 | Logótipo: o ícone atual |

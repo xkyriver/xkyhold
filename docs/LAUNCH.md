@@ -12,7 +12,7 @@ Foi escrito para ser executado por um agente que não acompanhou o desenvolvimen
 
 1. Uma conta Google que nunca foi utilizador de teste entra em https://xkyhold.xkyriver.com, cria um backup, faz uma cópia e restaura um ficheiro, sem ver nenhum aviso da Google.
 2. O ecrã de consentimento da Google mostra o nome "XkyHold" e o logótipo.
-3. Um email enviado para `support@xkyhold.xkyriver.com` chega ao proprietário.
+3. Um email enviado para `privacy@xkyhold.xkyriver.com` (contacto da privacidade e dos termos, decisão D2) chega ao proprietário.
 4. O formato do repositório está congelado como versão 1 e a app tem a versão `1.0.0`.
 5. O checkpoint do projeto reflete o novo estado.
 
@@ -134,11 +134,11 @@ Fecha quando: o site publicado mostra a página inicial nova, `/privacy` e `/ter
 
 ### Etapa 3 — Caixa de correio de suporte
 
-Objetivo: `support@xkyhold.xkyriver.com` entrega ao proprietário. A página de privacidade já indica este endereço, por isso hoje há um contacto publicado que não funciona; por isso esta etapa pode e deve correr cedo, em paralelo com as outras.
+Objetivo: `privacy@xkyhold.xkyriver.com` entrega ao proprietário (era `support@` no plano original; mudou com a decisão D2). A página de privacidade e os termos já indicam este endereço, por isso hoje há um contacto publicado que não funciona; por isso esta etapa pode e deve correr cedo, em paralelo com as outras.
 
 1. Pede o "sim" ao proprietário: vais acrescentar o subdomínio `xkyhold` ao Email Routing da zona `xkyriver.com`, o que cria registos DNS no subdomínio.
 2. No painel do Cloudflare: Compute → Email Service → Email Routing → zona `xkyriver.com` → Settings → Subdomains → acrescentar `xkyhold.xkyriver.com`. Em alternativa, `npx wrangler email --help` (em beta; só se oferecer este caso de forma clara).
-3. Quando os registos propagarem, cria a regra `support@xkyhold.xkyriver.com` → o endereço de destino que o proprietário indicar. Subdomínios só aceitam regras literais; não há "apanha-tudo".
+3. Quando os registos propagarem, cria a regra `privacy@xkyhold.xkyriver.com` → o endereço de destino que o proprietário indicar. Subdomínios só aceitam regras literais; não há "apanha-tudo".
 4. Um endereço de destino novo tem de ser confirmado por email pelo proprietário.
 
 Verificação: `dig +short MX xkyhold.xkyriver.com` devolve os servidores do Cloudflare; o proprietário envia um email de outra conta para o endereço e confirma que chegou. Confirma também, com `curl -I https://xkyhold.xkyriver.com/`, que o site continua a responder: o subdomínio serve o site e o email ao mesmo tempo.
