@@ -327,7 +327,11 @@ export async function backupNow(): Promise<void> {
         sent: formatBytes(done.sentBytes),
       }),
       snapshot.stats.skipped ? t('{n} could not be read.', { n: snapshot.stats.skipped }) : '',
-      done.removed ? t('{n} old backups removed.', { n: done.removed }) : '',
+      done.removed === 1
+        ? t('1 old backup removed.')
+        : done.removed
+          ? t('{n} old backups removed.', { n: done.removed })
+          : '',
     ]
       .filter(Boolean)
       .join(' ')

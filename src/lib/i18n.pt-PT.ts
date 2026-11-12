@@ -163,6 +163,7 @@ export const ptPT: Record<string, string> = {
   'Time for a backup': 'Está na altura de fazer uma cópia',
   'Removing old backups…': 'A remover cópias antigas…',
   'Your new backup is already safe.': 'A nova cópia já está segura.',
+  '1 old backup removed.': '1 cópia antiga removida.',
   '{n} old backups removed.': '{n} cópias antigas removidas.',
   'Another device is using this backup right now. Try again in a few minutes.':
     'Outro dispositivo está a usar esta cópia de segurança neste momento. Tenta novamente dentro de alguns minutos.',
