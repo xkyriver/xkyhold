@@ -14,6 +14,7 @@ const FAST = { memoryKiB: 64, iterations: 1, parallelism: 1 }
 function connect() {
   const destinations = new Map<string, MemoryDestination>()
   const clock = { now: new Date('2026-11-12T10:00:00Z') }
+  const zips = { discarded: 0 }
   let toClient: (message: Response) => void = () => {}
   const handle = createHost(
     {
@@ -27,6 +28,14 @@ function connect() {
         await token()
         return [...destinations.keys()].sort()
       },
+      openZip: async () => {
+        const parts: Uint8Array[] = []
+        return {
+          write: (bytes) => void parts.push(bytes.slice()),
+          finish: async () => ({ blob: new Blob(parts as BlobPart[]) }),
+          discard: async () => void zips.discarded++,
+        }
+      },
       repository: { packSize: 4096, indexEvery: 2, argon2: FAST },
       now: () => clock.now,
     },
@@ -36,7 +45,7 @@ function connect() {
     post: (message: Request) => queueMicrotask(() => handle(message)),
     listen: (onMessage) => (toClient = onMessage),
   })
-  return { client, destinations, clock }
+  return { client, destinations, clock, zips }
 }
 
 const tree = () =>
@@ -103,6 +112,24 @@ describe('engine over messages', () => {
     expect(top.map((e) => e.name)).toEqual(['Photos', 'big.bin', 'notes.txt'])
     const photos = top.find((e): e is TreeDir => e.type === 'dir')!
     expect((await client.call('loadTree', { tree: photos.subtree })).map((e) => e.name)).toEqual(['a.jpg'])
+  })
+
+  it('restores into a ZIP archive, and discards it when the restore fails', async () => {
+    const { client, destinations, zips } = page
+    await client.call('create', { repoName: 'laptop', password: 'correct horse' })
+    const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })
+
+    const done = await client.call('restoreZip', { entries: asDirs(snapshot) })
+    expect(done).toMatchObject({ files: 3, bytes: 23_011 })
+    const archive = new Uint8Array(await done.blob!.arrayBuffer())
+    expect(archive.length).toBeGreaterThan(23_011)
+    expect(new TextDecoder().decode(archive.subarray(0, 2))).toBe('PK')
+    expect(zips.discarded).toBe(0)
+
+    const dest = destinations.get('laptop')!
+    for (const name of dest.names('packs')) await dest.trash('packs', name)
+    await expect(client.call('restoreZip', { entries: asDirs(snapshot) })).rejects.toMatchObject({ kind: 'damaged' })
+    expect(zips.discarded).toBe(1)
   })
 
   it('changes the password', async () => {

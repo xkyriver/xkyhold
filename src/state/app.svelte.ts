@@ -54,7 +54,12 @@ interface SavedSetup {
   keys: RepoKeys
 }
 
-export const caps = detectCapabilities()
+/** Development only: `?restore-only` shows the app as a browser without folder access sees it. */
+const pretendRestoreOnly = import.meta.env.DEV && new URLSearchParams(location.search).has('restore-only')
+
+export const caps = pretendRestoreOnly
+  ? detectCapabilities({ isSecureContext, crypto, indexedDB, Worker })
+  : detectCapabilities()
 
 export const app = $state({
   /** False until the saved setup has been read. */
@@ -128,6 +133,8 @@ export function explain(err: unknown): string {
       return t('Part of this backup is damaged or missing in Google Drive.')
     case 'read':
       return t('A folder could not be read. Check that it still exists.')
+    case 'space':
+      return t('There is not enough free space on this device for the .zip file.')
     case 'busy':
       return t('Another device is using this backup right now. Try again in a few minutes.')
     case 'refused':
@@ -198,6 +205,7 @@ export async function start(): Promise<void> {
     }
     shareToken()
     await refreshFolders()
+    void removeTemporaryZips()
   } catch (err) {
     console.error(err)
   }
@@ -336,6 +344,41 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
   await runJob('restore', async (job) => {
     const done = await engine.call('restore', { entries: plain, folder }, job)
     app.notice = t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size: formatBytes(done.bytes) })
+  })
+}
+
+const ZIP_PREFIX = 'restore-'
+
+/** Removes temporary archives left in the browser's private storage. */
+async function removeTemporaryZips(): Promise<void> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const names: string[] = []
+    for await (const name of (root as unknown as { keys(): AsyncIterable<string> }).keys()) names.push(name)
+    for (const name of names) if (name.startsWith(ZIP_PREFIX)) await root.removeEntry(name).catch(() => {})
+  } catch {
+    // no private storage in this browser: nothing was left there
+  }
+}
+
+/** Restores the chosen entries into a ZIP archive and downloads it. */
+export async function restoreAsZip(entries: TreeEntry[]): Promise<void> {
+  const plain = $state.snapshot(entries) as TreeEntry[]
+  await runJob('restore', async (job) => {
+    await removeTemporaryZips()
+    const done = await engine.call('restoreZip', { entries: plain }, job)
+    const archive = done.blob ?? (await (await (await navigator.storage.getDirectory()).getFileHandle(done.file!)).getFile())
+    const url = URL.createObjectURL(archive)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `XkyHold ${new Date().toISOString().slice(0, 10)}.zip`
+    link.click()
+    // The browser needs the URL until it has taken the file; a minute is ample.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    app.notice = t('{files} files ({size}) are in a .zip file in your downloads.', {
+      files: done.files.toLocaleString(),
+      size: formatBytes(done.bytes),
+    })
   })
 }
 

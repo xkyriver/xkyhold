@@ -12,6 +12,7 @@ export type ErrorKind =
   | 'damaged' // data in the backup is corrupt or missing
   | 'read' // a chosen folder could not be read
   | 'refused' // Drive said no: quota, permissions
+  | 'space' // this device has no room for a temporary file
   | 'busy' // another device is working on this backup right now
   | 'network'
   | 'aborted'
@@ -44,6 +45,7 @@ export function classify(err: unknown): SerializedError {
   if (named('AuthenticationError') || named('MissingBlobError')) return { kind: 'damaged', message }
   if (named('FileReadError')) return { kind: 'read', message }
   if (named('AbortError')) return { kind: 'aborted', message }
+  if (named('QuotaExceededError')) return { kind: 'space', message }
   if (named('AuthError') || status === 401) return { kind: 'session', message }
   if (status === 403) return { kind: 'refused', message }
   if (err instanceof TypeError || status === 429 || (typeof status === 'number' && status >= 500)) {

@@ -3,7 +3,7 @@
   import type { Snapshot, TreeEntry } from '../engine/repo'
   import { formatBytes } from '../lib/format'
   import { formatWhen, t } from '../lib/i18n.svelte'
-  import { app, caps, checkSnapshot, explain, loadTree, restoreToFolder, signIn, stopJob } from '../state/app.svelte'
+  import { app, caps, checkSnapshot, explain, loadTree, restoreAsZip, restoreToFolder, signIn, stopJob } from '../state/app.svelte'
 
   interface Level {
     name: string
@@ -139,17 +139,29 @@
 
     <div class="row between">
       <button class="btn" onclick={back}>{t('Back')}</button>
-      {#if caps.folderAccess}
-        <button class="btn primary" onclick={() => restoreToFolder(chosen)} disabled={chosen.length === 0 || !!app.job}>
-          {chosen.length === 0 ? t('Restore…') : t('Restore {n} selected…', { n: chosen.length })}
+      <div class="row">
+        <button
+          class="btn"
+          class:primary={!caps.folderAccess}
+          onclick={() => restoreAsZip(chosen)}
+          disabled={chosen.length === 0 || !!app.job}
+        >
+          {t('Download as .zip')}
         </button>
-      {/if}
+        {#if caps.folderAccess}
+          <button class="btn primary" onclick={() => restoreToFolder(chosen)} disabled={chosen.length === 0 || !!app.job}>
+            {chosen.length === 0 ? t('Restore to a folder…') : t('Restore {n} to a folder…', { n: chosen.length })}
+          </button>
+        {/if}
+      </div>
     </div>
-    {#if caps.folderAccess}
-      <p class="small muted">{t('You will choose where to put them. Restored files get today’s date.')}</p>
-    {:else}
-      <p class="small muted">{t('Restoring is not available in this browser yet. Use Chrome or Edge on a computer.')}</p>
-    {/if}
+    <p class="small muted">
+      {#if caps.folderAccess}
+        {t('Files restored to a folder get today’s date. A .zip keeps their original dates.')}
+      {:else}
+        {t('The .zip file keeps the original dates of your files.')}
+      {/if}
+    </p>
   </section>
 {/if}
 

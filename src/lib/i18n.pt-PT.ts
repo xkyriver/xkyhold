@@ -144,12 +144,16 @@ export const ptPT: Record<string, string> = {
   'Tick the files and folders you want back.': 'Assinala os ficheiros e as pastas que queres recuperar.',
   'Select all': 'Selecionar tudo',
   'Select none': 'Limpar seleção',
-  'Restore…': 'Restaurar…',
-  'Restore {n} selected…': 'Restaurar {n} selecionados…',
-  'You will choose where to put them. Restored files get today’s date.':
-    'Vais escolher onde os colocar. Os ficheiros restaurados ficam com a data de hoje.',
-  'Restoring is not available in this browser yet. Use Chrome or Edge on a computer.':
-    'O restauro ainda não está disponível neste navegador. Usa o Chrome ou o Edge num computador.',
+  'Download as .zip': 'Transferir em .zip',
+  'Restore to a folder…': 'Restaurar para uma pasta…',
+  'Restore {n} to a folder…': 'Restaurar {n} para uma pasta…',
+  'Files restored to a folder get today’s date. A .zip keeps their original dates.':
+    'Os ficheiros restaurados para uma pasta ficam com a data de hoje. O .zip mantém as datas originais.',
+  'The .zip file keeps the original dates of your files.': 'O ficheiro .zip mantém as datas originais dos teus ficheiros.',
+  '{files} files ({size}) are in a .zip file in your downloads.':
+    '{files} ficheiros ({size}) estão num ficheiro .zip nas tuas transferências.',
+  'There is not enough free space on this device for the .zip file.':
+    'Não há espaço livre suficiente neste dispositivo para o ficheiro .zip.',
 
   // Reminder
   'You have not made a backup yet.': 'Ainda não fizeste nenhuma cópia de segurança.',

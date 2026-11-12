@@ -25,6 +25,12 @@ only through `EngineClient` (`src/state/app.svelte.ts`). Errors cross that
 boundary as a `kind` string (`src/engine/errors.ts`). Storage sits behind a `Destination` interface;
 tests use an in-memory fake, never real Google Drive.
 
+## Development
+
+`npm run dev` must stay on port 5173 (the only local origin the Google
+client accepts). Add `?restore-only` to the address to see the app as a
+browser without folder access sees it.
+
 ## Conventions
 
 - Code, comments, commit messages, technical docs: English.

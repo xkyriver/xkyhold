@@ -16,6 +16,8 @@ import type { SerializedError } from './errors'
 import { Repository } from './repo'
 import type { RepositoryOptions, Snapshot, TreeEntry } from './repo'
 import { restoreEntries } from './restore'
+import { ZipTarget, ZipWriter } from './zip'
+import type { ZipSink } from './zip'
 
 export interface Progress {
   files: number
@@ -41,6 +43,8 @@ export interface EngineApi {
   loadTree(args: { tree: string }): TreeEntry[]
   restore(args: { entries: TreeEntry[]; folder: unknown }): { files: number; bytes: number }
   check(args: { entries: TreeEntry[] }): { files: number; bytes: number }
+  /** Restores into a ZIP archive, for browsers that cannot write to folders. */
+  restoreZip(args: { entries: TreeEntry[] }): { files: number; bytes: number } & ZipResult
   changePassword(args: { repoName: string; credential: Credential; newPassword: string }): void
 }
 
@@ -56,7 +60,18 @@ export type Response =
   | { type: 'error'; id: number; error: SerializedError }
   | { type: 'progress'; id: number; progress: Progress }
 
+/** Where a finished archive ended up: a temporary file, or memory. */
+export type ZipResult = { file: string; blob?: undefined } | { blob: Blob; file?: undefined }
+
+/** Somewhere to put an archive while it is being written. */
+export interface ZipOutput extends ZipSink {
+  finish(): Promise<ZipResult>
+  /** Throws away whatever was written. */
+  discard(): Promise<void>
+}
+
 export interface HostEnvironment {
+  openZip(): Promise<ZipOutput>
   /** The storage for the backup called `repoName`. */
   destination(repoName: string, token: () => Promise<string>): Promise<Destination & { warm?(): Promise<void> }>
   listBackups(token: () => Promise<string>): Promise<string[]>
@@ -192,6 +207,20 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     async check({ entries }, { signal, progress }) {
       const total = await restoreEntries(opened(), entries, new VerifyTarget(), { signal, onProgress: progress })
       return { files: total.files, bytes: total.bytes }
+    },
+
+    async restoreZip({ entries }, { signal, progress }) {
+      const r = opened()
+      const output = await env.openZip()
+      try {
+        const zip = new ZipWriter(output)
+        const total = await restoreEntries(r, entries, ZipTarget.root(zip), { signal, onProgress: progress })
+        await zip.finish()
+        return { files: total.files, bytes: total.bytes, ...(await output.finish()) }
+      } catch (err) {
+        await output.discard()
+        throw err
+      }
     },
 
     async changePassword({ repoName, credential, newPassword }) {

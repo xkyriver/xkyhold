@@ -8,7 +8,7 @@ Data: 11/11/2026 · Origem analisada: BackMa v1.0.4 (`B-O-S-R/backma`, commit `2
 > - **Alojamento (5.1):** Cloudflare (Worker `xkyhold-site`, só ficheiros estáticos) em `xkyhold.xkyriver.com`, não GitHub Pages.
 > - **Chave de recuperação:** incluída na versão 1 (o resumo em 5.3 não a menciona).
 > - **Formato (5.3):** vale a especificação em [FORMAT.md](FORMAT.md).
-> - **Interface (6):** feita como descrito, com uma diferença: não há pesquisa por nome no restauro, e o restauro em `.zip` ainda está por fazer.
+> - **Interface (6):** feita como descrito, com uma diferença: não há pesquisa por nome no restauro.
 > - **Questões em aberto (8):** repositório privado; domínio `xkyhold.xkyriver.com`; identidade visual limitada ao verde-água e ao ícone do xkyriver.com; português com "tu". Falta decidir a licença.
 
 ## 1. Decisões já tomadas
@@ -183,3 +183,5 @@ Por testar contra o Drive real: a remoção de cópias antigas (precisa de cópi
 Publicado em 12/11/2026 em https://xkyhold.xkyriver.com (Worker `xkyhold-site` no Cloudflare, só ficheiros estáticos, como o xkyriver.com). O deploy é feito pelo dono com `npm run deploy`. A origem de produção está autorizada no cliente OAuth e o login foi testado no site publicado. A app continua em modo "Testing" na Google: só contas listadas como utilizadores de teste conseguem entrar.
 
 Por fazer para abrir a outras pessoas: publicar a app na consola Google ("In production"), verificar o domínio e a marca, criar a caixa `support@xkyhold.xkyriver.com`, e trocar o email de suporte do ecrã de consentimento.
+
+Feito também a 12/11/2026: restauro em `.zip` e modo só restauro. O arquivo é escrito em fluxo (`src/engine/zip.ts`), sem compressão, com ZIP64 só quando necessário e com as datas originais dos ficheiros. O Worker escreve-o num ficheiro temporário no armazenamento privado da origem (OPFS), para não ter de caber em memória, e a página entrega-o ao browser como transferência; sem OPFS, fica em memória. Validado com Python `zipfile`, `unzip`, `7z` e `bsdtar`, e no Chrome com um ficheiro real. Em browsers sem acesso a pastas, o Restaurar mostra só "Transferir em .zip". Em desenvolvimento, `?restore-only` no endereço simula esse modo. Por testar: Firefox e Safari reais, e arquivos de vários GB.
