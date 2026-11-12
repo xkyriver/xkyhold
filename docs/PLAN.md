@@ -2,6 +2,15 @@
 
 Data: 11/11/2026 · Origem analisada: BackMa v1.0.4 (`B-O-S-R/backma`, commit `20560d8`)
 
+> **Ler primeiro.** As secções 1 a 8 são o plano inicial, de 11/11/2026, e ficam como registo. O que mudou desde então está nas secções 9 e 10, que prevalecem. As diferenças principais:
+>
+> - **Agendamento (5.4 e ponto 2 da secção 4):** a app **nunca inicia uma cópia sozinha**. Avisa quando está em atraso e o utilizador decide.
+> - **Alojamento (5.1):** Cloudflare (Worker `xkyhold-site`, só ficheiros estáticos) em `xkyhold.xkyriver.com`, não GitHub Pages.
+> - **Chave de recuperação:** incluída na versão 1 (o resumo em 5.3 não a menciona).
+> - **Formato (5.3):** vale a especificação em [FORMAT.md](FORMAT.md).
+> - **Interface (6):** feita como descrito, com uma diferença: não há pesquisa por nome no restauro, e o restauro em `.zip` ainda está por fazer.
+> - **Questões em aberto (8):** repositório privado; domínio `xkyhold.xkyriver.com`; identidade visual limitada ao verde-água e ao ícone do xkyriver.com; português com "tu". Falta decidir a licença.
+
 ## 1. Decisões já tomadas
 
 | Tema | Decisão |
