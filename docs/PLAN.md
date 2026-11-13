@@ -247,3 +247,11 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - 13/11/2026: o proprietário submeteu a verificação da marca ("Verify branding"). Minutos depois, o Verification Center mostra "Your branding has been verified and is being shown to users". **Marca verificada**; não ficou nada pendente na Google.
 - 13/11/2026, teste com uma segunda conta: o proprietário usou uma conta Google Workspace de empresa e o acesso foi bloqueado pela política da organização. Ao aprovar a app na consola de administração do Workspace por ID de cliente, a consola só propôs os scopes de início de sessão e não o `drive.file`, que tem de ser acrescentado à mão ("Add more OAuth scopes"). Do lado do XkyHold está certo: em Data Access, o `drive.file` é o único scope declarado. A página inicial passou a avisar que, em contas de trabalho ou escola, o administrador pode ter de aprovar a app, e a página de privacidade diz o que aprovar (ID de cliente e scope).
 - 13/11/2026, teste com uma conta Gmail pessoal, depois do deploy das notas para administradores: **passou, segundo o proprietário** ("Publicado e testado"). O ecrã de consentimento da Google mostrou o nome e o logótipo, sem avisos. **Etapa 5 fechada.**
+
+### Etapa 6 — fecho
+
+- 13/11/2026, limpeza: o proprietário aceitou apagar no Drive as pastas de teste (`XkyHold test`, `XkyHold test 2`, `XkyHold test 1-3`, `XkyHold-test`, `Windows test`) e esvaziar o lixo; é ele que o faz. Por confirmar.
+- 13/11/2026, xkyriver.com (D5): o XkyHold entrou no showcase como terceira app no ar, em verde-lima; o marcador passou a "Module 05" e o contador a "03". Imagens de partilha refeitas. Visto em pré-visualização local a 1440 px, 900 px e largura de telemóvel (no telemóvel o rio mostra menos apps; o índice lista todas). Commit `430b07c` no repositório do site; **falta o proprietário publicar** (`npm run deploy` nesse repositório).
+- `docs/OAUTH.md` com o estado final da Google.
+
+Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome e logótipo) cumpridos, segundo o proprietário; 3 (email para `privacy@`) e 4 (formato v1, app 1.0.0) cumpridos nas etapas 3 e 2; 5 (checkpoint) no fim desta etapa.

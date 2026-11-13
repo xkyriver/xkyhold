@@ -36,17 +36,36 @@ npm run dev
 Open http://localhost:5173 (not 127.0.0.1 — the origin must match exactly)
 and click "Sign in with Google".
 
-## Current state (12 November 2026)
+## Current state (13 November 2026)
 
 - Project `xkyhold`, client "XkyHold web".
 - Authorized JavaScript origins: `http://localhost:5173` and
   `https://xkyhold.xkyriver.com`.
-- Audience: External, publishing status **Testing**. Only accounts listed
-  as test users can sign in.
+- Audience: External, publishing status **In production**. Any Google
+  account can sign in. There is no user cap, because `drive.file` is not a
+  sensitive scope.
+- Branding: home page `https://xkyhold.xkyriver.com`, privacy
+  `/privacy`, terms `/terms`, authorized domain `xkyriver.com` (verified in
+  Search Console through a TXT record on the zone; keep that record).
+  Logo: `docs/google-logo-120.png`.
+- Verification Center: branding **verified**, shown to users. Data access
+  needs no verification. Nothing is pending at Google.
+- The owner checked with a personal Gmail account that was never a test user: the
+  consent screen shows the name and the logo, with no warnings, and
+  sign-in, backup and restore work.
 
-## Before going public
+## Work or school accounts
 
-- **Audience → Publish app** ("In production"), so any Google account can
-  sign in without being listed as a test user.
-- Branding verification needs a home page and a privacy policy on a domain
-  verified in Search Console.
+A Google Workspace organisation can block third-party apps. Its admin then
+approves XkyHold in the Admin console (Security → Access and data control →
+API controls → Manage Third-Party App Access), by client ID. The console
+proposes only the sign-in scopes; `drive.file` has to be added with "Add
+more OAuth scopes". The privacy page tells admins what to approve
+(`/privacy#admins`).
+
+## If something changes
+
+- A new logo, name or link in Branding has to be verified again before
+  users see it.
+- Adding any sensitive or restricted scope would bring back data-access
+  verification and the user cap. Don't.
