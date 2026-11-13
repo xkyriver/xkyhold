@@ -237,3 +237,10 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - **Fechada a 12/11/2026.** Na Google Search Console, com a conta dona do projeto `xkyhold`, foi criada uma propriedade do tipo Domínio para `xkyriver.com`. Verificação por registo TXT acrescentado à mão no Cloudflare (`@`, `google-site-verification=…`), ao lado do SPF, que não mudou; não se usou a autorização automática da Google ao Cloudflare. A Search Console mostra "Ownership verified" (método: Domain name provider). O registo tem de ficar no DNS.
 - 2.5 Formato do repositório congelado como versão 1 em `docs/FORMAT.md` (decisão D1), depois do teste 1.1. Ficheiros `golden` intactos.
 - 2.6 Versão `1.0.0` em `package.json`; aparece no rodapé ("XkyHold v1.0.0").
+
+### Etapa 5 — Google
+
+- 13/11/2026, Branding: página inicial `https://xkyhold.xkyriver.com`, privacidade `/privacy` e termos `/terms` gravados. O domínio autorizado (`xkyriver.com`) e o email de suporte (Gmail) já estavam certos. Logótipo `docs/google-logo-120.png` (o ícone novo) carregado e gravado.
+- 13/11/2026, Audience: **app publicada pelo proprietário** ("Push to production?" → Confirm). Estado: "In production", tipo External. Aviso no topo: "Your app requires verification."
+- OAuth user cap: a consola diz que o limite só se aplica a scopes sensíveis ou restritos não aprovados. Como o `drive.file` não é sensível, não há limite para o XkyHold (mostra "1 user / 100 user cap").
+- Verification Center: "Data access status": não é precisa verificação, porque a app não pede scopes sensíveis nem restritos. "Branding status": a marca não é mostrada aos utilizadores enquanto não for verificada.
