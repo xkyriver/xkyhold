@@ -78,6 +78,8 @@ export const ptPT: Record<string, string> = {
   Continue: 'Continuar',
   Back: 'Voltar',
   'Leave out…': 'Deixar de fora…',
+  'Your browser does not let you choose your whole personal folder, because it contains system files. Choose the folders inside it, such as Documents or Pictures.':
+    'O navegador não deixa escolher a tua pasta pessoal inteira, porque tem ficheiros de sistema. Escolhe as pastas que estão dentro dela, como Documentos ou Fotografias.',
   'Left out: {list}': 'De fora: {list}',
   'Untick the folders you do not want in your backup.': 'Desmarca as pastas que não queres na cópia de segurança.',
   'Files already in earlier backups stay there until those backups are removed.':

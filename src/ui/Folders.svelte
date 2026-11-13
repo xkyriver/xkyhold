@@ -114,6 +114,9 @@
 {/if}
 
 <div><button class="btn" onclick={add}>{t('Add folder…')}</button></div>
+<p class="small muted">
+  {t('Your browser does not let you choose your whole personal folder, because it contains system files. Choose the folders inside it, such as Documents or Pictures.')}
+</p>
 {#if error}<p class="small" style:color="var(--warn)" role="alert">{error}</p>{/if}
 
 <style>
