@@ -201,7 +201,7 @@ A parte que faltava foi feita pelo proprietário a 12/11/2026, no site publicado
 | D3 | Repositório público, com as issues desligadas e depois de uma vistoria ao histórico. Licença AGPL-3.0-only |
 | D4 | Termos de utilização curtos |
 | D5 | Listar no xkyriver.com, no fim |
-| D6 | Logótipo: o ícone atual |
+| D6 | Logótipo: o ícone atual. Mudado a 13/11/2026, a pedido do proprietário, antes de carregar o logótipo na Google: um cofre com uma porta e um X ao centro, desenhado em SVG a partir da imagem que ele deu |
 
 ### Etapa 1 — resultados dos testes
 
