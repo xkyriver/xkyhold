@@ -198,7 +198,9 @@ describe('incremental backups', () => {
 
 describe('parallel uploads', () => {
   it('uploads several packs at once, never more than the limit, and still restores exactly', async () => {
-    dest.putDelayMs = 5
+    // Long enough that the next packs are ready before the first ones
+    // finish, even on a busy machine; 5 ms was not.
+    dest.putDelayMs = 50
     const limited = new Repository(dest, repo.keys, { ...SIZES, uploads: 3 })
     const snapshot = await run(null, limited)
     expect(dest.maxConcurrentPuts).toBe(3)
