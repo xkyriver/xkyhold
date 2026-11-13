@@ -28,8 +28,11 @@ tests use an in-memory fake, never real Google Drive.
 ## Development
 
 `npm run dev` must stay on port 5173 (the only local origin the Google
-client accepts). Add `?restore-only` to the address to see the app as a
-browser without folder access sees it.
+client accepts). Pages: the landing page at `/` (English) and `/pt/`
+(Portuguese), plain HTML with `src/landing/`; the app at `/app/`
+(`app/index.html`). Keep both landing pages saying the same thing. Add
+`?restore-only` to `/app/` to see the app as a browser without folder
+access sees it.
 
 ## Conventions
 

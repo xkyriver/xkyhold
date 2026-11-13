@@ -9,6 +9,17 @@ export default defineConfig({
   },
   // The OAuth client only accepts registered origins, so the dev port is fixed.
   server: { port: 5173, strictPort: true },
+  // Three pages: the landing page in English (/) and Portuguese (/pt/), and
+  // the app itself (/app/).
+  build: {
+    rollupOptions: {
+      input: {
+        landing: 'index.html',
+        'landing-pt': 'pt/index.html',
+        app: 'app/index.html',
+      },
+    },
+  },
   test: {
     include: ['src/**/*.test.ts'],
   },

@@ -1,7 +1,8 @@
-// The description of XkyHold lives as static HTML in index.html (#about),
-// so it can be read before and without JavaScript, which Google's review
-// of the home page needs. The app moves it into its first screen while no
-// backup is set up, and shows only the block in the current language.
+// The description of XkyHold lives as static HTML in app/index.html
+// (#about), so it can be read before and without JavaScript. The landing
+// page (/ and /pt/) is the full description; the app moves this shorter one
+// into its first screen while no backup is set up, and shows only the block
+// in the current language.
 
 import type { Lang } from './i18n.svelte'
 

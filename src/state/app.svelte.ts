@@ -15,6 +15,7 @@ import { pretendOffset, setClockOffset } from '../lib/clock'
 import { formatBytes } from '../lib/format'
 import { t } from '../lib/i18n.svelte'
 import { DEFAULT_KEEP_MONTHS, DEFAULT_REMINDER_DAYS } from '../lib/reminder'
+import { markReturning } from '../lib/returning'
 import { clearStore, settings } from './db'
 
 export type View = 'home' | 'restore' | 'settings'
@@ -204,6 +205,7 @@ export async function start(): Promise<void> {
       app.account = saved.account
       app.configured = true
     }
+    markReturning(!!saved)
     app.lastBackup = (await settings.get<LastBackup>('lastBackup')) ?? null
     const prefs = await settings.get<Preferences>('preferences')
     if (prefs) {
@@ -245,6 +247,7 @@ async function remember(repoName: string, repoKeys: RepoKeys, snapshots: Snapsho
   app.repoName = repoName
   setSnapshots(snapshots)
   app.configured = true
+  markReturning(true)
   app.loaded = true
 }
 
@@ -441,6 +444,7 @@ export async function forgetDevice(): Promise<void> {
   await engine.call('close', undefined)
   await clearStore('settings')
   await clearStore('folders')
+  markReturning(false)
   await removeTemporaryZips()
   keys = null
   Object.assign(app, {

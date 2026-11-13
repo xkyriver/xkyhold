@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#02090b" />
+    <meta name="description" content="Simple, encrypted backups of your folders to your own Google Drive. Nothing to install." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>XkyHold — encrypted backups to your own Google Drive</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <!--
+      What XkyHold is, readable before (and without) JavaScript. While no
+      backup is set up, the app moves this into its first screen and shows
+      only the block in the chosen language. Both languages are written
+      here because the page is static; keep them saying the same thing.
+    -->
+    <div id="about" class="about">
+      <p class="about-brand"><img src="/favicon.svg" alt="" width="26" height="26" /> XkyHold</p>
+
+      <section lang="en" data-lang="en">
+        <h1>Encrypted backups of your folders, in your own Google Drive</h1>
+        <p>
+          XkyHold is a free web app that copies the folders you choose, such as documents, pictures or work, to your
+          Google Drive. Your files are encrypted on your computer before they leave it, so Google keeps them but cannot
+          read them. There is nothing to install and no XkyHold account.
+        </p>
+
+        <h2>How it works</h2>
+        <ol>
+          <li><strong>Sign in with Google.</strong> XkyHold can only see the files it creates itself in your Drive.</li>
+          <li>
+            <strong>Choose your folders and a password.</strong> You also get a recovery key, in case you forget the
+            password.
+          </li>
+          <li>
+            <strong>Back up when XkyHold reminds you.</strong> Only what changed is sent. Restore one file or everything,
+            whenever you need it.
+          </li>
+        </ol>
+
+        <h2>What Google can and cannot see</h2>
+        <ul>
+          <li>Google sees that you have a folder called “XkyHold”, how much space it takes and when you back up.</li>
+          <li>Google cannot see what your files contain, what they are called or how your folders are organised.</li>
+        </ul>
+
+        <h2>Which browsers</h2>
+        <ul>
+          <li>To make backups: Chrome or Edge on a computer. They are the browsers that can read your folders.</li>
+          <li>To restore: also other browsers, such as Firefox, or Safari and Chrome on a phone. They give you your files as a .zip download.</li>
+          <li>On an iPhone or iPad, Chrome keeps downloads in the Files app, in the Chrome folder.</li>
+        </ul>
+
+        <h2>Good to know</h2>
+        <ul>
+          <li>
+            XkyHold backs up personal files, not a whole computer. It does not keep file permissions or shortcuts
+            (symbolic links).
+          </li>
+          <li>A backup runs only while the XkyHold page is open. XkyHold never starts one by itself.</li>
+          <li>
+            Only your password or your recovery key can open your backup. If you lose both, nobody can open it, not
+            even us.
+          </li>
+          <li>
+            With a work or school account, your administrator may have to approve XkyHold first.
+            <a href="/privacy.html#admins">What to approve</a>.
+          </li>
+        </ul>
+
+        <p class="about-links"><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms of use</a> ·
+          <a href="https://github.com/xkyriver/xkyhold">Source code</a> (AGPL-3.0)
+        </p>
+      </section>
+
+      <section lang="pt-PT" data-lang="pt-PT">
+        <h1>Cópias de segurança encriptadas das tuas pastas, no teu próprio Google Drive</h1>
+        <p>
+          O XkyHold é uma app web gratuita que copia as pastas que escolheres, como documentos, fotografias ou
+          trabalho, para o teu Google Drive. Os ficheiros são encriptados no teu computador antes de saírem dele, por isso
+          a Google guarda-os mas não os consegue ler. Não há nada para instalar nem conta do XkyHold.
+        </p>
+
+        <h2>Como funciona</h2>
+        <ol>
+          <li>
+            <strong>Entra com a tua conta Google.</strong> O XkyHold só vê os ficheiros que ele próprio cria no teu
+            Drive.
+          </li>
+          <li>
+            <strong>Escolhe as pastas e uma palavra-passe.</strong> Recebes também uma chave de recuperação, para o
+            caso de te esqueceres da palavra-passe.
+          </li>
+          <li>
+            <strong>Faz uma cópia quando o XkyHold te lembrar.</strong> Só é enviado o que mudou. Restaura um ficheiro
+            ou tudo, quando precisares.
+          </li>
+        </ol>
+
+        <h2>O que a Google vê e não vê</h2>
+        <ul>
+          <li>A Google vê que tens uma pasta chamada “XkyHold”, quanto espaço ocupa e quando fazes cópias.</li>
+          <li>A Google não vê o conteúdo dos teus ficheiros, os nomes deles nem como estão organizadas as pastas.</li>
+        </ul>
+
+        <h2>Que navegadores</h2>
+        <ul>
+          <li>Para fazer cópias: Chrome ou Edge num computador. São os navegadores que conseguem ler as tuas pastas.</li>
+          <li>Para restaurar: também outros navegadores, como o Firefox, ou o Safari e o Chrome num telemóvel. Recebes os ficheiros numa transferência .zip.</li>
+          <li>No iPhone ou no iPad, o Chrome guarda as transferências na app Ficheiros, na pasta Chrome.</li>
+        </ul>
+
+        <h2>Bom saber</h2>
+        <ul>
+          <li>
+            O XkyHold guarda ficheiros pessoais, não um computador inteiro. Não guarda as permissões dos ficheiros nem
+            atalhos (ligações simbólicas).
+          </li>
+          <li>Uma cópia só corre enquanto a página do XkyHold está aberta. O XkyHold nunca começa uma sozinho.</li>
+          <li>
+            Só a tua palavra-passe ou a tua chave de recuperação abrem a cópia de segurança. Se perderes as duas,
+            ninguém a consegue abrir, nem nós.
+          </li>
+          <li>
+            Numa conta de trabalho ou escola, o administrador pode ter de aprovar o XkyHold primeiro.
+            <a href="/privacy.html#admins-pt">O que aprovar</a>.
+          </li>
+        </ul>
+
+        <p class="about-links"><a href="/privacy.html#pt">Privacidade</a> · <a href="/terms.html#pt">Termos de utilização</a> ·
+          <a href="https://github.com/xkyriver/xkyhold">Código-fonte</a> (AGPL-3.0)
+        </p>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

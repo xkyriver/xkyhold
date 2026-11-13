@@ -256,3 +256,11 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 
 Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome e logótipo) cumpridos, segundo o proprietário; 3 (email para `privacy@`) e 4 (formato v1, app 1.0.0) cumpridos nas etapas 3 e 2; 5 (checkpoint) no fim desta etapa.
 - 13/11/2026, depois do fecho: segundo o proprietário, a conta Workspace da empresa funcionou em tudo depois de o administrador acrescentar o `drive.file`. Apagou também a pasta `XkyHold` inteira do Drive (não só as subpastas de teste) e as pastas locais de teste.
+
+## 12. Landing page (13/11/2026)
+
+- Pedido do proprietário: uma landing page como a da XkyNext e a da XkySpan. Decidiu: a landing fica na raiz e a app passa para `/app/`; o destaque do topo é uma pré-visualização do ecrã de Início da app.
+- `/` (EN) e `/pt/` (PT), em HTML estático com `src/landing/landing.css` e `landing.ts`; imagens de partilha `og.png` e `og-pt.png`. A app está em `/app/` (`app/index.html`). O manifesto mantém `id: "/"` e abre em `/app/`.
+- `public/landing-redirect.js` corre antes da página: quem já tem um backup configurado neste browser vai para `/app/` (marca `xkyhold.returning` posta pela app, e, para browsers configurados antes disto, uma consulta ao IndexedDB só se a base já existir); em `/`, um dispositivo em português vai para `/pt/`, salvo se escolheu inglês (mesma chave `xkyhold.lang` da app).
+- O login Google não muda: só depende da origem. O endereço da página inicial na Google continua a ser `https://xkyhold.xkyriver.com`, agora com a landing.
+- Visto pelo agente em pré-visualização local: EN e PT a 1366 px e no telemóvel, troca de língua, redirecionamento para a app pelas duas vias, `/app/` a abrir, e sem erros de CSP com os cabeçalhos de produção (`wrangler dev`). Não testado: entrar com a Google a partir de `/app/` no site publicado.

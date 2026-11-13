@@ -17,6 +17,15 @@ Working app, being opened to the public. See [docs/PLAN.md](docs/PLAN.md)
 [docs/LAUNCH.md](docs/LAUNCH.md) (Portuguese) for the launch, and
 [docs/FORMAT.md](docs/FORMAT.md) for the repository format.
 
+## Pages
+
+- `/` and `/pt/`: the landing page in English and Portuguese
+  (`index.html`, `pt/index.html`, `src/landing/`, share images
+  `public/og.png` and `public/og-pt.png`). `public/landing-redirect.js`
+  sends a browser that already has a backup set up to the app, and a
+  device in Portuguese from `/` to `/pt/`.
+- `/app/`: the app (`app/index.html`).
+
 ## Browser support
 
 - **Back up and restore:** Chrome, Edge, Brave, Opera on desktop (needs the
