@@ -244,3 +244,4 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - 13/11/2026, Audience: **app publicada pelo proprietário** ("Push to production?" → Confirm). Estado: "In production", tipo External. Aviso no topo: "Your app requires verification."
 - OAuth user cap: a consola diz que o limite só se aplica a scopes sensíveis ou restritos não aprovados. Como o `drive.file` não é sensível, não há limite para o XkyHold (mostra "1 user / 100 user cap").
 - Verification Center: "Data access status": não é precisa verificação, porque a app não pede scopes sensíveis nem restritos. "Branding status": a marca não é mostrada aos utilizadores enquanto não for verificada.
+- 13/11/2026: o proprietário submeteu a verificação da marca ("Verify branding"). Minutos depois, o Verification Center mostra "Your branding has been verified and is being shown to users". **Marca verificada**; não ficou nada pendente na Google.
