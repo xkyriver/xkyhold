@@ -78,8 +78,8 @@ export const ptPT: Record<string, string> = {
   Continue: 'Continuar',
   Back: 'Voltar',
   'Leave out…': 'Deixar de fora…',
-  'Your browser does not let you choose your whole personal folder, because it contains system files. Choose the folders inside it, such as Documents or Pictures.':
-    'O navegador não deixa escolher a tua pasta pessoal inteira, porque tem ficheiros de sistema. Escolhe as pastas que estão dentro dela, como Documentos ou Fotografias.',
+  'Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.':
+    'O navegador não deixa escolher algumas pastas inteiras, como a tua pasta pessoal, Documentos ou Ambiente de trabalho, porque podem ter ficheiros de sistema. Escolhe antes as pastas que estão dentro delas.',
   'Left out: {list}': 'De fora: {list}',
   'Untick the folders you do not want in your backup.': 'Desmarca as pastas que não queres na cópia de segurança.',
   'Files already in earlier backups stay there until those backups are removed.':
@@ -131,8 +131,8 @@ export const ptPT: Record<string, string> = {
   Remove: 'Remover',
   'Remove {name}': 'Remover {name}',
   'Add folder…': 'Adicionar pasta…',
-  'That folder cannot be used. Choose a folder such as Documents or Pictures.':
-    'Essa pasta não pode ser usada. Escolhe uma pasta como Documentos ou Imagens.',
+  'That folder cannot be used. Choose another one, such as a folder inside Documents.':
+    'Essa pasta não pode ser usada. Escolhe outra, por exemplo uma pasta dentro de Documentos.',
 
   // Home
   'Connect to Google Drive to back up or restore.': 'Liga-te ao Google Drive para fazer cópias ou restaurar.',

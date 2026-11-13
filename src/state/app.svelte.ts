@@ -358,7 +358,7 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
     folder = await pickRestoreFolder()
   } catch (err) {
     console.error(err)
-    app.error = t('That folder cannot be used. Choose a folder such as Documents or Pictures.')
+    app.error = t('That folder cannot be used. Choose another one, such as a folder inside Documents.')
     return
   }
   if (!folder) return

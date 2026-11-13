@@ -53,7 +53,7 @@
       await refreshFolders()
     } catch (err) {
       console.error(err)
-      error = t('That folder cannot be used. Choose a folder such as Documents or Pictures.')
+      error = t('That folder cannot be used. Choose another one, such as a folder inside Documents.')
     }
   }
 
@@ -115,7 +115,7 @@
 
 <div><button class="btn" onclick={add}>{t('Add folder…')}</button></div>
 <p class="small muted">
-  {t('Your browser does not let you choose your whole personal folder, because it contains system files. Choose the folders inside it, such as Documents or Pictures.')}
+  {t('Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.')}
 </p>
 {#if error}<p class="small" style:color="var(--warn)" role="alert">{error}</p>{/if}
 
