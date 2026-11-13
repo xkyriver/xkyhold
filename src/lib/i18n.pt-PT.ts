@@ -78,6 +78,18 @@ export const ptPT: Record<string, string> = {
   Continue: 'Continuar',
   Back: 'Voltar',
   'Leave out…': 'Deixar de fora…',
+  'Drop folders here': 'Larga pastas aqui',
+  'Drop the folders to add them': 'Larga as pastas para as adicionar',
+  'Or drag folders here from your file manager. You can drag many at once.':
+    'Ou arrasta pastas para aqui a partir do gestor de ficheiros. Podes arrastar várias de uma vez.',
+  '1 folder added.': '1 pasta adicionada.',
+  '{n} folders added.': '{n} pastas adicionadas.',
+  'Only folders can be saved, so 1 file was not added.': 'Só se podem guardar pastas, por isso 1 ficheiro não foi adicionado.',
+  'Only folders can be saved, so {n} files were not added.':
+    'Só se podem guardar pastas, por isso {n} ficheiros não foram adicionados.',
+  'The browser did not allow 1 folder.': 'O navegador não permitiu 1 pasta.',
+  'The browser did not allow {n} folders.': 'O navegador não permitiu {n} pastas.',
+  'Those folders were already in the list.': 'Essas pastas já estavam na lista.',
   'Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.':
     'O navegador não deixa escolher algumas pastas inteiras, como a tua pasta pessoal, Documentos ou Ambiente de trabalho, porque podem ter ficheiros de sistema. Escolhe antes as pastas que estão dentro delas.',
   'Left out: {list}': 'De fora: {list}',

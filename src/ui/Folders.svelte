@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addFolder, removeFolder, requestPermission, setLeftOut } from '../fs/folders'
+  import { addDropped, addFolder, canDropFolders, removeFolder, requestPermission, setLeftOut } from '../fs/folders'
   import { scanFolder } from '../fs/scan'
   import type { ScanResult } from '../fs/scan'
   import { formatBytes } from '../lib/format'
@@ -11,6 +11,10 @@
   /** Sizes are counted once per folder and kept while the page is open. */
   let scans = $state<Record<string, ScanResult | undefined>>({})
   let error = $state<string | null>(null)
+  /** What the last drop did, shown under the drop area. */
+  let dropNote = $state<string | null>(null)
+  let dragging = $state(false)
+  const dropAllowed = canDropFolders()
   /** The folder whose sub-folders are being chosen, if any. */
   let choosing = $state<string | null>(null)
   const started = new Set<string>()
@@ -51,6 +55,37 @@
     try {
       await addFolder()
       await refreshFolders()
+    } catch (err) {
+      console.error(err)
+      error = t('That folder cannot be used. Choose another one, such as a folder inside Documents.')
+    }
+  }
+
+  function dragOver(event: DragEvent) {
+    if (!event.dataTransfer?.types.includes('Files')) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    dragging = true
+  }
+
+  async function drop(event: DragEvent) {
+    event.preventDefault()
+    dragging = false
+    error = null
+    dropNote = null
+    if (!event.dataTransfer) return
+    try {
+      const result = await addDropped(event.dataTransfer.items)
+      await refreshFolders()
+      const notes: string[] = []
+      if (result.added === 1) notes.push(t('1 folder added.'))
+      else if (result.added > 1) notes.push(t('{n} folders added.', { n: result.added }))
+      if (result.files === 1) notes.push(t('Only folders can be saved, so 1 file was not added.'))
+      else if (result.files > 1) notes.push(t('Only folders can be saved, so {n} files were not added.', { n: result.files }))
+      if (result.refused === 1) notes.push(t('The browser did not allow 1 folder.'))
+      else if (result.refused > 1) notes.push(t('The browser did not allow {n} folders.', { n: result.refused }))
+      if (notes.length === 0) notes.push(t('Those folders were already in the list.'))
+      dropNote = notes.join(' ')
     } catch (err) {
       console.error(err)
       error = t('That folder cannot be used. Choose another one, such as a folder inside Documents.')
@@ -114,6 +149,20 @@
 {/if}
 
 <div><button class="btn" onclick={add}>{t('Add folder…')}</button></div>
+{#if dropAllowed}
+  <div
+    class="drop small"
+    class:dragging
+    role="region"
+    aria-label={t('Drop folders here')}
+    ondragover={dragOver}
+    ondragleave={() => (dragging = false)}
+    ondrop={drop}
+  >
+    {dragging ? t('Drop the folders to add them') : t('Or drag folders here from your file manager. You can drag many at once.')}
+  </div>
+  {#if dropNote}<p class="small muted" role="status">{dropNote}</p>{/if}
+{/if}
 <p class="small muted">
   {t('Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.')}
 </p>
@@ -122,5 +171,19 @@
 <style>
   .chooser {
     display: block;
+  }
+
+  .drop {
+    padding: 18px 14px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .drop.dragging {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
   }
 </style>
