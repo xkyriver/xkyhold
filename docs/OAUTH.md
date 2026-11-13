@@ -61,7 +61,8 @@ approves XkyHold in the Admin console (Security → Access and data control →
 API controls → Manage Third-Party App Access), by client ID. The console
 proposes only the sign-in scopes; `drive.file` has to be added with "Add
 more OAuth scopes". The privacy page tells admins what to approve
-(`/privacy#admins`).
+(`/privacy#admins`). The owner confirmed on 13 November 2026 that a
+company account works end to end once `drive.file` is added.
 
 ## If something changes
 

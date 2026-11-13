@@ -255,3 +255,4 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 - `docs/OAUTH.md` com o estado final da Google.
 
 Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome e logótipo) cumpridos, segundo o proprietário; 3 (email para `privacy@`) e 4 (formato v1, app 1.0.0) cumpridos nas etapas 3 e 2; 5 (checkpoint) no fim desta etapa.
+- 13/11/2026, depois do fecho: segundo o proprietário, a conta Workspace da empresa funcionou em tudo depois de o administrador acrescentar o `drive.file`. Apagou também a pasta `XkyHold` inteira do Drive (não só as subpastas de teste) e as pastas locais de teste.
