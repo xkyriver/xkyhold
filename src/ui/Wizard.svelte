@@ -1,8 +1,8 @@
 <script lang="ts">
   // First-run setup: Google -> which backup -> (folders -> password ->
   // recovery key) for a new one, or just the password for an existing one.
-  import { adoptAbout } from '../lib/about'
   import { t } from '../lib/i18n.svelte'
+  import { landingHref } from '../lib/landing'
   import { app, caps, connectBackup, createBackup, defaultBackupName, explain, listBackups, signIn } from '../state/app.svelte'
   import type { View } from '../state/app.svelte'
   import Folders from './Folders.svelte'
@@ -120,7 +120,10 @@
     <button class="btn primary big block" onclick={google} disabled={busy}>
       {busy ? t('Waiting for Google…') : t('Continue with Google')}
     </button>
-    <p class="small muted">{t('XkyHold can only see the files it creates in your Drive. Nothing else.')}</p>
+    <p class="small muted">
+      {t('XkyHold can only see the files it creates in your Drive. Nothing else.')}
+      <a href={landingHref()}>{t('What is XkyHold?')}</a>
+    </p>
   {:else if step === 'choose'}
     <h1>{t('Your backup')}</h1>
     {#if existing === null}
@@ -228,11 +231,6 @@
 
   {#if error}<div class="banner warn" role="alert"><span>{error}</span></div>{/if}
 </div>
-
-{#if step === 'google'}
-  <!-- What XkyHold is, for someone who has just arrived (static, from index.html). -->
-  <div use:adoptAbout></div>
-{/if}
 
 <style>
   .dots {

@@ -265,3 +265,4 @@ Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome
 - O login Google não muda: só depende da origem. O endereço da página inicial na Google continua a ser `https://xkyhold.xkyriver.com`, agora com a landing.
 - Publicado pelo proprietário a 13/11/2026 (versão 50167dbc); verificado que `/`, `/pt/`, `/app/` e as imagens respondem no site.
 - Visto pelo agente em pré-visualização local: EN e PT a 1366 px e no telemóvel, troca de língua, redirecionamento para a app pelas duas vias, `/app/` a abrir, e sem erros de CSP com os cabeçalhos de produção (`wrangler dev`). O proprietário entrou com a Google a partir de `/app/` no site publicado, sem problemas.
+- 13/11/2026, a pedido do proprietário: a descrição longa saiu da app (`/app/`), que ficou só com o primeiro passo do assistente e uma ligação "O que é o XkyHold?" para a landing na língua da app. A nota sobre o Chrome no iPhone passou para as perguntas da landing.

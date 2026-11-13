@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { adoptAbout, showAboutIn } from './lib/about'
   import { i18n, LANGUAGES, setLanguage, t } from './lib/i18n.svelte'
   import type { Lang } from './lib/i18n.svelte'
+  import { landingHref } from './lib/landing'
   import { reminder } from './lib/reminder'
   import { app, backupNow, caps, start } from './state/app.svelte'
   import type { View } from './state/app.svelte'
@@ -33,7 +33,6 @@
 
   $effect(() => {
     document.documentElement.lang = i18n.lang
-    showAboutIn(i18n.lang)
   })
 
   // A backup is never started for the user. When one is due they are told,
@@ -70,8 +69,8 @@
       <section class="card stack">
         <h1>{t('This browser is not supported')}</h1>
         <p class="muted">{t('Open XkyHold in a recent version of Chrome, Edge, Firefox or Safari.')}</p>
+        <p class="small"><a href={landingHref()}>{t('What is XkyHold?')}</a></p>
       </section>
-      <div use:adoptAbout></div>
     {:else if !app.ready}
       <p class="muted">{t('Loading…')}</p>
     {:else if inWizard}

@@ -380,65 +380,12 @@ progress {
   }
 }
 
-/* What XkyHold is: static HTML from index.html, readable without JavaScript. */
-.about {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 32px 16px 48px;
-  color: var(--muted);
-}
-
-.about.adopted {
-  padding: 8px 4px 0;
-}
-
-.about-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.about.adopted .about-brand {
-  display: none;
-}
-
-.about h1 {
-  margin-bottom: 12px;
-  font-size: 1.375rem;
-  color: var(--text);
-}
-
-.about.adopted h1 {
-  font-size: 1.125rem;
-}
-
-.about h2 {
-  margin: 24px 0 8px;
-  font-size: 1rem;
-  color: var(--text);
-}
-
-.about ol,
-.about ul {
-  margin: 0;
-  padding-left: 1.25em;
-}
-
-.about li + li {
-  margin-top: 6px;
-}
-
-.about strong {
-  color: var(--text);
-}
-
-.about a {
+.page a {
   color: var(--accent);
 }
 
-.about-links {
-  margin-top: 24px;
+.noscript {
+  max-width: 600px;
+  margin: 48px auto;
+  padding: 0 16px;
 }

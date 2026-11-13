@@ -64,6 +64,7 @@ export const ptPT: Record<string, string> = {
     'Este navegador pode restaurar ficheiros de uma cópia de segurança. Para fazer cópias, abre o XkyHold no Chrome ou no Edge num computador.',
   'Waiting for Google…': 'À espera do Google…',
   'Continue with Google': 'Continuar com o Google',
+  'What is XkyHold?': 'O que é o XkyHold?',
   'XkyHold can only see the files it creates in your Drive. Nothing else.':
     'O XkyHold só vê os ficheiros que ele próprio cria no teu Drive. Mais nada.',
   'Your backup': 'A tua cópia de segurança',
