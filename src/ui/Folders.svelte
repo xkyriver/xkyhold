@@ -241,9 +241,9 @@
           group={group.name}
           hint={t('Or drag folders or files into {name} from your file manager.', { name: group.name })}
         />
-        {#if canPickFiles()}
-          <p class="small muted">{t('Files added one by one stay as they are: new files next to them are not added by themselves.')}</p>
-        {/if}
+        <p class="small muted">
+          {t('New folders and files next to the ones you chose are not added by themselves. To have them saved, keep them inside one of the folders you chose.')}
+        </p>
       </div>
     {/if}
   </div>

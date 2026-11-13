@@ -96,8 +96,8 @@ export const ptPT: Record<string, string> = {
   'Or drag folders or files into {name} from your file manager.':
     'Ou arrasta pastas ou ficheiros para dentro de {name} a partir do gestor de ficheiros.',
   'Add files…': 'Adicionar ficheiros…',
-  'Files added one by one stay as they are: new files next to them are not added by themselves.':
-    'Os ficheiros adicionados um a um ficam como estão: ficheiros novos ao lado deles não entram sozinhos.',
+  'New folders and files next to the ones you chose are not added by themselves. To have them saved, keep them inside one of the folders you chose.':
+    'Pastas e ficheiros novos ao lado dos que escolheste não entram sozinhos. Para que entrem, guarda-os dentro de uma das pastas escolhidas.',
   'Those files cannot be used.': 'Esses ficheiros não podem ser usados.',
   File: 'Ficheiro',
   '1 folder': '1 pasta',
