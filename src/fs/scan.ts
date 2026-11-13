@@ -8,6 +8,8 @@ export interface ScanResult {
 }
 
 export interface ScanOptions {
+  /** Sub-folders not to count, as paths inside the root ("Downloads", "Work/Old"). */
+  leaveOut?: string[]
   onProgress?: (soFar: ScanResult) => void
   signal?: AbortSignal
 }
@@ -19,15 +21,17 @@ export interface ScanOptions {
  */
 export async function scanFolder(root: DirHandleLike, options: ScanOptions = {}): Promise<ScanResult> {
   const result: ScanResult = { files: 0, bytes: 0, skipped: 0 }
-  const pending: DirHandleLike[] = [root]
+  const leaveOut = new Set(options.leaveOut ?? [])
+  const pending: { dir: DirHandleLike; rel: string }[] = [{ dir: root, rel: '' }]
 
   while (pending.length > 0) {
-    const dir = pending.pop()!
+    const { dir, rel } = pending.pop()!
     try {
       for await (const entry of dir.values()) {
         options.signal?.throwIfAborted()
         if (entry.kind === 'directory') {
-          pending.push(entry)
+          const childRel = rel ? `${rel}/${entry.name}` : entry.name
+          if (!leaveOut.has(childRel)) pending.push({ dir: entry, rel: childRel })
           continue
         }
         try {

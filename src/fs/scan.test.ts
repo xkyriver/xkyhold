@@ -30,6 +30,15 @@ describe('scanFolder', () => {
     expect(await scanFolder(root)).toEqual({ files: 3, bytes: 16, skipped: 0 })
   })
 
+  it('does not count folders left out, at any depth', async () => {
+    const root = dir('root', [
+      file('a', 10),
+      dir('Downloads', [file('big', 1000)]),
+      dir('Work', [file('b', 5), dir('Old', [file('c', 100)])]),
+    ])
+    expect(await scanFolder(root, { leaveOut: ['Downloads', 'Work/Old'] })).toEqual({ files: 2, bytes: 15, skipped: 0 })
+  })
+
   it('handles an empty folder', async () => {
     expect(await scanFolder(dir('root', []))).toEqual({ files: 0, bytes: 0, skipped: 0 })
   })

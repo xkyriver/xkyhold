@@ -196,6 +196,32 @@ describe('incremental backups', () => {
   })
 })
 
+describe('folders left out', () => {
+  const runLeavingOut = (leaveOut: string[], parent?: Snapshot | null) =>
+    backup(repo, [{ name: tree.name, handle: tree, leaveOut }], { device: 'test', parent, chunkSize: CHUNK })
+
+  it('backs up everything except the folders left out, at any depth', async () => {
+    const snapshot = await runLeavingOut(['Photos/2026', 'Empty folder'])
+    const expected = prefixed(tree)
+    expected.delete('Documents/Photos/2026/b.jpg')
+    expected.delete('Documents/Empty folder/')
+    expect((await restoreAll(repo, snapshot)).flatten()).toEqual(expected)
+    expect(snapshot.stats.files).toBe(6)
+  })
+
+  it('brings a folder back when it is no longer left out', async () => {
+    const first = await runLeavingOut(['Photos'])
+    expect([...(await restoreAll(repo, first)).flatten().keys()].some((k) => k.includes('Photos'))).toBe(false)
+    const second = await runLeavingOut([], first)
+    expect((await restoreAll(repo, second)).flatten()).toEqual(prefixed(tree))
+  })
+
+  it('leaves out only folders, never a file with the same name', async () => {
+    const snapshot = await runLeavingOut(['notes.txt'])
+    expect((await restoreAll(repo, snapshot)).flatten()).toEqual(prefixed(tree))
+  })
+})
+
 describe('parallel uploads', () => {
   it('uploads several packs at once, never more than the limit, and still restores exactly', async () => {
     // Long enough that the next packs are ready before the first ones

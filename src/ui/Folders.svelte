@@ -1,24 +1,50 @@
 <script lang="ts">
-  import { addFolder, removeFolder, requestPermission } from '../fs/folders'
+  import { addFolder, removeFolder, requestPermission, setLeftOut } from '../fs/folders'
   import { scanFolder } from '../fs/scan'
   import type { ScanResult } from '../fs/scan'
   import { formatBytes } from '../lib/format'
   import { fileCount, t } from '../lib/i18n.svelte'
   import { app, refreshFolders } from '../state/app.svelte'
   import type { FolderStatus } from '../state/app.svelte'
+  import LeaveOut from './LeaveOut.svelte'
 
   /** Sizes are counted once per folder and kept while the page is open. */
   let scans = $state<Record<string, ScanResult | undefined>>({})
   let error = $state<string | null>(null)
+  /** The folder whose sub-folders are being chosen, if any. */
+  let choosing = $state<string | null>(null)
   const started = new Set<string>()
+  /** Bumped when a folder's left-out list changes, so a stale count is ignored. */
+  const generation: Record<string, number> = {}
+
+  function count(status: FolderStatus) {
+    const { folder } = status
+    const gen = (generation[folder.id] = (generation[folder.id] ?? 0) + 1)
+    started.add(folder.id)
+    const report = (r: ScanResult) => {
+      if (generation[folder.id] === gen) scans[folder.id] = r
+    }
+    scanFolder(folder.handle, { leaveOut: [...(folder.leaveOut ?? [])], onProgress: report }).catch(() =>
+      started.delete(folder.id),
+    )
+  }
 
   $effect(() => {
-    for (const { folder, permission } of app.folders) {
-      if (permission !== 'granted' || started.has(folder.id)) continue
-      started.add(folder.id)
-      scanFolder(folder.handle, { onProgress: (r) => (scans[folder.id] = r) }).catch(() => started.delete(folder.id))
+    for (const status of app.folders) {
+      if (status.permission !== 'granted' || started.has(status.folder.id)) continue
+      count(status)
     }
   })
+
+  async function leaveOut(id: string, path: string, out: boolean) {
+    await setLeftOut(id, path, out)
+    await refreshFolders()
+    const status = app.folders.find((f) => f.folder.id === id)
+    if (status) {
+      scans[id] = undefined
+      count(status)
+    }
+  }
 
   async function add() {
     error = null
@@ -60,17 +86,38 @@
               {t('Counting files…')}
             {/if}
           </div>
+          {#if status.folder.leaveOut?.length}
+            <div class="small muted">{t('Left out: {list}', { list: status.folder.leaveOut.map((p) => p.replaceAll('/', ' / ')).join(', ') })}</div>
+          {/if}
         </div>
         {#if status.permission !== 'granted'}
           <button class="link" onclick={() => allow(status)}>{t('Allow')}</button>
+        {:else if choosing !== status.folder.id}
+          <button class="link" onclick={() => (choosing = status.folder.id)}>{t('Leave out…')}</button>
         {/if}
         <button class="link" onclick={() => remove(status)} aria-label={t('Remove {name}', { name: status.folder.name })}>
           {t('Remove')}
         </button>
       </li>
+      {#if choosing === status.folder.id && status.permission === 'granted'}
+        <li class="chooser">
+          <LeaveOut
+            root={status.folder.handle}
+            leftOut={status.folder.leaveOut ?? []}
+            change={(path, out) => leaveOut(status.folder.id, path, out)}
+            close={() => (choosing = null)}
+          />
+        </li>
+      {/if}
     {/each}
   </ul>
 {/if}
 
 <div><button class="btn" onclick={add}>{t('Add folder…')}</button></div>
 {#if error}<p class="small" style:color="var(--warn)" role="alert">{error}</p>{/if}
+
+<style>
+  .chooser {
+    display: block;
+  }
+</style>

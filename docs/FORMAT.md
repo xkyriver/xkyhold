@@ -334,6 +334,11 @@ One per completed backup. Before compression and encryption:
 2. Walk each chosen folder. For every file, compare size and `mtime` with
    the same path in the parent snapshot; if both match, reuse its `content`
    list without reading the file.
+   Sub-folders the user chose to leave out are not walked: they are
+   missing from the new snapshot's trees, as if they did not exist. The
+   list of left-out folders is a setting of the device, kept in the
+   browser; it is not stored in the repository, and older snapshots keep
+   whatever they already had.
 3. Otherwise read the file, chunk it, and for each chunk compute its id; if
    the index already has it, skip; else encrypt it and add it to the open
    pack.

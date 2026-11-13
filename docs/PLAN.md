@@ -266,3 +266,12 @@ Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome
 - Publicado pelo proprietário a 13/11/2026 (versão 50167dbc); verificado que `/`, `/pt/`, `/app/` e as imagens respondem no site.
 - Visto pelo agente em pré-visualização local: EN e PT a 1366 px e no telemóvel, troca de língua, redirecionamento para a app pelas duas vias, `/app/` a abrir, e sem erros de CSP com os cabeçalhos de produção (`wrangler dev`). O proprietário entrou com a Google a partir de `/app/` no site publicado, sem problemas.
 - 13/11/2026, a pedido do proprietário: a descrição longa saiu da app (`/app/`), que ficou só com o primeiro passo do assistente e uma ligação "O que é o XkyHold?" para a landing na língua da app. A nota sobre o Chrome no iPhone passou para as perguntas da landing.
+
+## 13. Deixar pastas de fora (13/11/2026)
+
+- Pedido do proprietário: escolher subpastas que não entram no backup (ex.: `home` sem `Downloads` e `Videos`).
+- Em Definições (e no assistente), cada pasta tem "Deixar de fora…": abre a lista das subpastas, navegável a qualquer profundidade, e desmarca-se o que fica de fora. Não abre um segundo seletor do sistema: lê a pasta pela autorização que já existe. A lista "De fora: …" aparece por baixo da pasta e a contagem de ficheiros atualiza-se.
+- Guardado no browser, no registo da pasta (`leaveOut`, caminhos relativos). O formato do repositório não muda: as pastas de fora simplesmente não entram nos snapshots novos; as cópias antigas ficam como estavam (`docs/FORMAT.md` 10.1).
+- Testes: o motor deixa de fora a qualquer profundidade, volta a incluir quando se desmarca, e não confunde um ficheiro com o mesmo nome; a contagem ignora as pastas de fora; a lista de caminhos não guarda subpastas de uma pasta já de fora. 148 testes a passar.
+- Visto pelo agente no browser (pasta de teste no armazenamento privado do browser, sem Google): desmarcar Downloads, Videos e Documents/Old, contagem e lista atualizadas. Dados de teste apagados depois. Não testado: uma cópia real no Drive com pastas de fora.
+- Por confirmar: o Chrome pode recusar escolher a própria pasta pessoal (`home`) no seletor, por conter ficheiros de sistema; nesse caso escolhe-se uma pasta abaixo dela.

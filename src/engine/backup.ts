@@ -8,6 +8,8 @@ import type { Repository, Snapshot, TreeEntry, TreeFile } from './repo'
 export interface BackupRoot {
   name: string
   handle: DirHandleLike
+  /** Sub-folders not to back up, as paths inside the root ("Downloads", "Work/Old"). */
+  leaveOut?: string[]
 }
 
 export interface BackupProgress {
@@ -100,7 +102,13 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     return { name: handle.name, type: 'file', size, mtime: file.lastModified, content }
   }
 
-  async function storeDir(dir: DirHandleLike, oldTree: string | undefined, path: string): Promise<string> {
+  async function storeDir(
+    dir: DirHandleLike,
+    oldTree: string | undefined,
+    path: string,
+    rel: string,
+    leaveOut: Set<string>,
+  ): Promise<string> {
     const old = await previous(oldTree)
     const children: (FileHandleLike | DirHandleLike)[] = []
     await reading(path, async () => {
@@ -112,10 +120,18 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     for (const child of children) {
       signal?.throwIfAborted()
       const childPath = `${path}/${child.name}`
+      const childRel = rel ? `${rel}/${child.name}` : child.name
+      if (child.kind === 'directory' && leaveOut.has(childRel)) continue
       const before = old.get(child.name)
       try {
         if (child.kind === 'directory') {
-          const subtree = await storeDir(child, before?.type === 'dir' ? before.subtree : undefined, childPath)
+          const subtree = await storeDir(
+            child,
+            before?.type === 'dir' ? before.subtree : undefined,
+            childPath,
+            childRel,
+            leaveOut,
+          )
           entries.push({ name: child.name, type: 'dir', subtree })
         } else {
           const entry = await storeFile(child, before, childPath)
@@ -138,7 +154,9 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     const parentRoots = new Map((options.parent?.roots ?? []).map((r) => [r.name, r.tree]))
     const snapshotRoots: Snapshot['roots'] = []
     for (const root of roots) {
-      snapshotRoots.push({ name: root.name, tree: await storeDir(root.handle, parentRoots.get(root.name), root.name) })
+      const leaveOut = new Set(root.leaveOut ?? [])
+      const tree = await storeDir(root.handle, parentRoots.get(root.name), root.name, '', leaveOut)
+      snapshotRoots.push({ name: root.name, tree })
     }
     await repo.flush(signal)
     return await repo.saveSnapshot(

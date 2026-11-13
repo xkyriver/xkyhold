@@ -10,6 +10,8 @@ export interface SavedFolder {
   id: string
   name: string
   handle: DirHandleLike
+  /** Sub-folders not to back up, as paths inside this folder ("Downloads", "Work/Old"). */
+  leaveOut?: string[]
 }
 
 const withFolders = <T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>) =>
@@ -21,6 +23,23 @@ export function listFolders(): Promise<SavedFolder[]> {
 
 export async function removeFolder(id: string): Promise<void> {
   await withFolders('readwrite', (store) => store.delete(id))
+}
+
+/**
+ * Leaves the sub-folder at `path` out of backups, or puts it back. Leaving
+ * a folder out also drops entries inside it, which it already covers.
+ */
+export async function setLeftOut(id: string, path: string, out: boolean): Promise<void> {
+  const folder = (await listFolders()).find((f) => f.id === id)
+  if (!folder) return
+  folder.leaveOut = toggleLeftOut(folder.leaveOut ?? [], path, out)
+  await withFolders('readwrite', (store) => store.put(folder))
+}
+
+/** The new list of left-out paths after leaving `path` out or putting it back. */
+export function toggleLeftOut(list: string[], path: string, out: boolean): string[] {
+  const kept = list.filter((p) => p !== path && !(out && p.startsWith(`${path}/`)))
+  return out ? [...kept, path].sort() : kept
 }
 
 /**

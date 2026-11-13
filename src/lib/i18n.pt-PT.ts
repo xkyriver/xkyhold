@@ -77,6 +77,16 @@ export const ptPT: Record<string, string> = {
   'Use a different name on each computer.': 'Usa um nome diferente em cada computador.',
   Continue: 'Continuar',
   Back: 'Voltar',
+  'Leave out…': 'Deixar de fora…',
+  'Left out: {list}': 'De fora: {list}',
+  'Untick the folders you do not want in your backup.': 'Desmarca as pastas que não queres na cópia de segurança.',
+  'Files already in earlier backups stay there until those backups are removed.':
+    'Os ficheiros que já estão em cópias anteriores ficam lá até essas cópias serem removidas.',
+  'This folder could not be read.': 'Não foi possível ler esta pasta.',
+  'No folders inside.': 'Não há pastas aqui dentro.',
+  'Open {name}': 'Abrir {name}',
+  Folder: 'Pasta',
+  Done: 'Concluído',
   'Folders to save': 'Pastas a guardar',
   'Choose the folders you want to keep safe. When the browser asks, pick “Allow on every visit” so you are not asked again.':
     'Escolhe as pastas que queres manter seguras. Quando o navegador perguntar, escolhe “Permitir em todas as visitas” para ele não voltar a perguntar.',
