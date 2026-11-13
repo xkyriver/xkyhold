@@ -12,6 +12,11 @@ export interface SavedFolder {
   handle: DirHandleLike
   /** Sub-folders not to back up, as paths inside this folder ("Downloads", "Work/Old"). */
   leaveOut?: string[]
+  /**
+   * The folder made in XkyHold that holds this one in the backup, if any
+   * ("Documents"). It exists only in the backup.
+   */
+  group?: string
 }
 
 const withFolders = <T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>) =>
@@ -47,7 +52,7 @@ export function toggleLeftOut(list: string[], path: string, out: boolean): strin
  * the user cancelled, and the existing entry if the folder was already
  * added. Must be called from a user gesture.
  */
-export async function addFolder(): Promise<SavedFolder | null> {
+export async function addFolder(group?: string): Promise<AddResult | null> {
   const picker = (window as unknown as { showDirectoryPicker(options?: object): Promise<DirHandleLike> })
     .showDirectoryPicker
   let handle: DirHandleLike
@@ -57,17 +62,37 @@ export async function addFolder(): Promise<SavedFolder | null> {
     if (err instanceof DOMException && err.name === 'AbortError') return null
     throw err
   }
-  return (await saveFolder(handle)).folder
+  return saveFolder(handle, group)
 }
 
-/** Saves a folder the user chose, unless it is already in the list. */
-async function saveFolder(handle: DirHandleLike): Promise<{ folder: SavedFolder; added: boolean }> {
-  for (const existing of await listFolders()) {
-    if (await existing.handle.isSameEntry?.(handle)) return { folder: existing, added: false }
+/** What happened to one folder the user chose. */
+export type AddResult = 'added' | 'already' | 'clash'
+
+/**
+ * Where a folder called `name` would clash in the backup: inside `group`,
+ * with another grouped folder of that name; at the top, with a folder or a
+ * group of that name. Two folders there cannot share a name.
+ */
+export function clashes(folders: Pick<SavedFolder, 'name' | 'group'>[], name: string, group?: string): boolean {
+  if (group) return folders.some((f) => f.group === group && f.name === name)
+  return folders.some((f) => (!f.group && f.name === name) || f.group === name)
+}
+
+/** Removes every folder held by `group`, and so the group itself. */
+export async function removeGroup(group: string): Promise<void> {
+  for (const folder of await listFolders()) if (folder.group === group) await removeFolder(folder.id)
+}
+
+/** Saves a folder the user chose, unless it is already in the list or its name is taken. */
+async function saveFolder(handle: DirHandleLike, group?: string): Promise<AddResult> {
+  const folders = await listFolders()
+  for (const existing of folders) {
+    if (await existing.handle.isSameEntry?.(handle)) return 'already'
   }
-  const folder: SavedFolder = { id: crypto.randomUUID(), name: handle.name, handle }
+  if (clashes(folders, handle.name, group)) return 'clash'
+  const folder: SavedFolder = { id: crypto.randomUUID(), name: handle.name, handle, ...(group ? { group } : {}) }
   await withFolders('readwrite', (store) => store.put(folder))
-  return { folder, added: true }
+  return 'added'
 }
 
 /** What came of dropping things on the folder list. */
@@ -78,6 +103,8 @@ export interface DropResult {
   files: number
   /** Items the browser would not hand over (for example the Documents folder itself). */
   refused: number
+  /** Folders not added because one with the same name is already there. */
+  clashed: number
 }
 
 type Dropped = { kind: 'file' | 'directory' } | null
@@ -101,7 +128,7 @@ export function sortDropped<T extends { kind: string }>(
  * Adds every folder dropped on the page, from a file manager. Must be called
  * inside the drop event: the browser only hands the items over then.
  */
-export async function addDropped(items: DataTransferItemList): Promise<DropResult> {
+export async function addDropped(items: DataTransferItemList, group?: string): Promise<DropResult> {
   // Ask for every handle before awaiting anything: the list empties as
   // soon as the drop event is over.
   const pending: Promise<Dropped>[] = []
@@ -112,8 +139,13 @@ export async function addDropped(items: DataTransferItemList): Promise<DropResul
   }
   const { dirs, files, refused } = sortDropped(await Promise.allSettled(pending))
   let added = 0
-  for (const dir of dirs) if ((await saveFolder(dir as unknown as DirHandleLike)).added) added++
-  return { added, files, refused }
+  let clashed = 0
+  for (const dir of dirs) {
+    const result = await saveFolder(dir as unknown as DirHandleLike, group)
+    if (result === 'added') added++
+    else if (result === 'clash') clashed++
+  }
+  return { added, files, refused, clashed }
 }
 
 /** Whether this browser can hand over dropped folders. */

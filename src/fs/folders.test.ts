@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sortDropped, toggleLeftOut } from './folders'
+import { clashes, sortDropped, toggleLeftOut } from './folders'
 
 describe('toggleLeftOut', () => {
   it('adds a folder once, in order', () => {
@@ -32,5 +32,23 @@ describe('sortDropped', () => {
     expect(result.dirs.map((d) => d.name)).toEqual(['Work', 'Personal'])
     expect(result.files).toBe(1)
     expect(result.refused).toBe(2)
+  })
+})
+
+describe('clashes', () => {
+  const folders = [{ name: 'Work' }, { name: 'Personal', group: 'Documents' }, { name: 'Old', group: 'Documents' }]
+
+  it('refuses a second folder with the same name in the same place', () => {
+    expect(clashes(folders, 'Personal', 'Documents')).toBe(true)
+    expect(clashes(folders, 'Work')).toBe(true)
+  })
+
+  it('allows the same name in different places', () => {
+    expect(clashes(folders, 'Work', 'Documents')).toBe(false)
+    expect(clashes(folders, 'Personal')).toBe(false)
+  })
+
+  it('refuses a loose folder named like a folder made in XkyHold', () => {
+    expect(clashes(folders, 'Documents')).toBe(true)
   })
 })

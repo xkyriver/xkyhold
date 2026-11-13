@@ -222,6 +222,48 @@ describe('folders left out', () => {
   })
 })
 
+describe('folders made in XkyHold', () => {
+  function members() {
+    return [
+      new FakeDir('Projects', [new FakeFile('plan.txt', utf8('plan')), new FakeDir('Old', [new FakeFile('x.bin', noise(800, 7))])]),
+      new FakeDir('Personal', [new FakeFile('id.pdf', noise(1500, 8))]),
+    ]
+  }
+  const grouped = (dirs: FakeDir[], parent?: Snapshot | null, leaveOut: string[] = []) =>
+    backup(repo, [{ name: 'Documents', members: dirs, leaveOut }], { device: 'test', parent, chunkSize: CHUNK })
+
+  it('backs up the grouped folders inside a folder that exists only in the backup', async () => {
+    const dirs = members()
+    const snapshot = await grouped(dirs)
+    expect(snapshot.roots.map((r) => r.name)).toEqual(['Documents'])
+    const expected = new FakeDir('Documents', dirs)
+    expect((await restoreAll(repo, snapshot)).flatten()).toEqual(prefixed(expected))
+  })
+
+  it('reads nothing again when nothing changed', async () => {
+    const dirs = members()
+    const first = await grouped(dirs)
+    const reads = (dirs[1].children[0] as FakeFile).reads
+    const second = await grouped(dirs, first)
+    expect((dirs[1].children[0] as FakeFile).reads).toBe(reads)
+    expect(second.roots).toEqual(first.roots)
+  })
+
+  it('leaves out folders inside a grouped folder', async () => {
+    const dirs = members()
+    const snapshot = await grouped(dirs, null, ['Projects/Old'])
+    const restored = (await restoreAll(repo, snapshot)).flatten()
+    expect([...restored.keys()].sort()).toEqual(['Documents/Personal/id.pdf', 'Documents/Projects/plan.txt'])
+  })
+
+  it('fails, rather than leaving it out, when a grouped folder cannot be read', async () => {
+    const dirs = members()
+    dirs[0].unreadable = true
+    await expect(grouped(dirs)).rejects.toBeInstanceOf(FileReadError)
+    expect(dest.names('snapshots')).toEqual([])
+  })
+})
+
 describe('parallel uploads', () => {
   it('uploads several packs at once, never more than the limit, and still restores exactly', async () => {
     // Long enough that the next packs are ready before the first ones

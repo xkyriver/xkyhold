@@ -5,9 +5,15 @@ import type { DirHandleLike, FileHandleLike } from '../fs/handles'
 import { CHUNK_SIZE } from './crypto'
 import type { Repository, Snapshot, TreeEntry, TreeFile } from './repo'
 
+/**
+ * One top-level folder of the snapshot: either a folder the user chose
+ * (`handle`), or a folder made in XkyHold that groups several chosen
+ * folders (`members`, with different names), which exists only in the backup.
+ */
 export interface BackupRoot {
   name: string
-  handle: DirHandleLike
+  handle?: DirHandleLike
+  members?: DirHandleLike[]
   /** Sub-folders not to back up, as paths inside the root ("Downloads", "Work/Old"). */
   leaveOut?: string[]
 }
@@ -150,12 +156,43 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     return repo.saveTree(entries, signal)
   }
 
+  /**
+   * A folder made in XkyHold: one entry per grouped folder. Each grouped
+   * folder is treated like a chosen folder, so failing to read one stops
+   * the backup instead of quietly leaving it out.
+   */
+  async function storeGroup(
+    members: DirHandleLike[],
+    oldTree: string | undefined,
+    path: string,
+    leaveOut: Set<string>,
+  ): Promise<string> {
+    const old = await previous(oldTree)
+    const entries: TreeEntry[] = []
+    for (const member of [...members].sort(byName)) {
+      signal?.throwIfAborted()
+      const before = old.get(member.name)
+      const subtree = await storeDir(
+        member,
+        before?.type === 'dir' ? before.subtree : undefined,
+        `${path}/${member.name}`,
+        member.name,
+        leaveOut,
+      )
+      entries.push({ name: member.name, type: 'dir', subtree })
+    }
+    return repo.saveTree(entries, signal)
+  }
+
   try {
     const parentRoots = new Map((options.parent?.roots ?? []).map((r) => [r.name, r.tree]))
     const snapshotRoots: Snapshot['roots'] = []
     for (const root of roots) {
       const leaveOut = new Set(root.leaveOut ?? [])
-      const tree = await storeDir(root.handle, parentRoots.get(root.name), root.name, '', leaveOut)
+      const parentTree = parentRoots.get(root.name)
+      const tree = root.members
+        ? await storeGroup(root.members, parentTree, root.name, leaveOut)
+        : await storeDir(root.handle!, parentTree, root.name, '', leaveOut)
       snapshotRoots.push({ name: root.name, tree })
     }
     await repo.flush(signal)

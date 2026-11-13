@@ -16,6 +16,7 @@ import { formatBytes } from '../lib/format'
 import { t } from '../lib/i18n.svelte'
 import { DEFAULT_KEEP_MONTHS, DEFAULT_REMINDER_DAYS } from '../lib/reminder'
 import { markReturning } from '../lib/returning'
+import { backupRoots } from './roots'
 import { clearStore, settings } from './db'
 
 export type View = 'home' | 'restore' | 'settings'
@@ -321,11 +322,7 @@ export async function backupNow(): Promise<void> {
     app.error = t('XkyHold needs your permission to read your folders again.')
     return
   }
-  const roots = app.folders.map(({ folder }) => ({
-    name: folder.name,
-    handle: folder.handle,
-    leaveOut: [...(folder.leaveOut ?? [])],
-  }))
+  const roots = backupRoots(app.folders.map((f) => f.folder))
   await runJob('backup', async (job) => {
     const done = await engine.call('backup', { roots, device: app.repoName, keepMonths: app.keepMonths }, job)
     const { snapshot } = done

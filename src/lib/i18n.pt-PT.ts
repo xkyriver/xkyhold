@@ -80,6 +80,24 @@ export const ptPT: Record<string, string> = {
   'Leave out…': 'Deixar de fora…',
   'Drop folders here': 'Larga pastas aqui',
   'Drop the folders to add them': 'Larga as pastas para as adicionar',
+  '1 folder was not added because there is already one with the same name.':
+    '1 pasta não foi adicionada porque já existe uma com o mesmo nome.',
+  '{n} folders were not added because there are already folders with the same names.':
+    '{n} pastas não foram adicionadas porque já existem pastas com os mesmos nomes.',
+  '1 folder': '1 pasta',
+  Empty: 'Vazia',
+  '{n} folders': '{n} pastas',
+  'Write a name without “/”.': 'Escreve um nome sem “/”.',
+  'There is already a folder called {name}.': 'Já existe uma pasta chamada {name}.',
+  'It only exists in your backup: nothing changes on your computer.':
+    'Só existe na cópia de segurança: nada muda no teu computador.',
+  'Or drag folders into {name} from your file manager.': 'Ou arrasta pastas para dentro de {name} a partir do gestor de ficheiros.',
+  'New folder…': 'Nova pasta…',
+  'Folder name': 'Nome da pasta',
+  'For example, Documents': 'Por exemplo, Documentos',
+  'Put several folders together in your backup. It only exists in your backup: nothing changes on your computer.':
+    'Junta várias pastas na tua cópia de segurança. Só existe na cópia: nada muda no teu computador.',
+  Create: 'Criar',
   'Or drag folders here from your file manager. You can drag many at once.':
     'Ou arrasta pastas para aqui a partir do gestor de ficheiros. Podes arrastar várias de uma vez.',
   '1 folder added.': '1 pasta adicionada.',

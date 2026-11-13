@@ -35,7 +35,7 @@ export interface EngineApi {
   open(args: { repoName: string; keys: RepoKeys }): { snapshots: Snapshot[] }
   close(args: void): void
   backup(args: {
-    roots: { name: string; handle: DirHandleLike; leaveOut?: string[] }[]
+    roots: { name: string; handle?: DirHandleLike; members?: DirHandleLike[]; leaveOut?: string[] }[]
     device: string
     /** Remove backups older than this many months afterwards; 0 keeps all. */
     keepMonths: number
