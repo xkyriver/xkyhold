@@ -3,7 +3,7 @@
   import type { Lang } from './lib/i18n.svelte'
   import { landingHref } from './lib/landing'
   import { reminder } from './lib/reminder'
-  import { app, backupNow, caps, start } from './state/app.svelte'
+  import { app, backupNow, caps, signIn, start } from './state/app.svelte'
   import type { View } from './state/app.svelte'
   import Home from './ui/Home.svelte'
   import Restore from './ui/Restore.svelte'
@@ -79,6 +79,9 @@
       {#if app.error}
         <div class="banner warn" role="alert">
           <span>{app.error}</span>
+          {#if app.configured && !app.connected}
+            <button class="btn" onclick={signIn}>{t('Sign in again')}</button>
+          {/if}
           <button class="link" onclick={() => (app.error = null)}>{t('Dismiss')}</button>
         </div>
       {/if}

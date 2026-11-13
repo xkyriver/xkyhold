@@ -3,7 +3,17 @@
   // recovery key) for a new one, or just the password for an existing one.
   import { t } from '../lib/i18n.svelte'
   import { landingHref } from '../lib/landing'
-  import { app, caps, connectBackup, createBackup, defaultBackupName, explain, listBackups, signIn } from '../state/app.svelte'
+  import {
+    app,
+    caps,
+    connectBackup,
+    createBackup,
+    defaultBackupName,
+    explain,
+    listBackups,
+    lostSession,
+    signIn,
+  } from '../state/app.svelte'
   import type { View } from '../state/app.svelte'
   import Folders from './Folders.svelte'
 
@@ -34,16 +44,35 @@
     choice === NEW ? ['google', 'choose', 'folders', 'password', 'recovery'] : ['google', 'choose', 'unlock'],
   )
 
+  /** The step that failed because the Google session ran out, to repeat after signing in again. */
+  let retry = $state<(() => Promise<void>) | null>(null)
+
   async function run(work: () => Promise<void>) {
     busy = true
     error = null
+    retry = null
     try {
       await work()
     } catch (err) {
+      if (lostSession(err)) retry = work
       error = explain(err)
     } finally {
       busy = false
     }
+  }
+
+  /** Signs in again and repeats the step, keeping everything already chosen. */
+  async function signInAgain() {
+    const work = retry
+    busy = true
+    const ok = await signIn()
+    busy = false
+    if (!ok) {
+      error = app.error ?? error
+      return
+    }
+    if (work) await run(work)
+    else error = null
   }
 
   const loadBackups = () =>
@@ -229,7 +258,14 @@
     </div>
   {/if}
 
-  {#if error}<div class="banner warn" role="alert"><span>{error}</span></div>{/if}
+  {#if error}
+    <div class="banner warn" role="alert">
+      <span>{error}</span>
+      {#if retry}
+        <button class="btn" onclick={signInAgain} disabled={busy}>{t('Sign in again')}</button>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>

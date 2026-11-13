@@ -250,6 +250,7 @@ export const ptPT: Record<string, string> = {
   'Current password': 'Palavra-passe atual',
   'New password': 'Nova palavra-passe',
   Cancel: 'Cancelar',
+  'Sign in again': 'Entrar de novo',
   'Your password was changed.': 'A palavra-passe foi alterada.',
   'This browser': 'Este navegador',
   'Removes XkyHold’s settings from this browser. Your backup stays in Google Drive, and you can connect to it again with your password.':

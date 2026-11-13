@@ -3,7 +3,18 @@
   import type { Snapshot, TreeEntry } from '../engine/repo'
   import { formatBytes } from '../lib/format'
   import { fileCount, formatWhen, t } from '../lib/i18n.svelte'
-  import { app, caps, checkSnapshot, explain, loadTree, restoreAsZip, restoreToFolder, signIn, stopJob } from '../state/app.svelte'
+  import {
+    app,
+    caps,
+    checkSnapshot,
+    explain,
+    loadTree,
+    lostSession,
+    restoreAsZip,
+    restoreToFolder,
+    signIn,
+    stopJob,
+  } from '../state/app.svelte'
 
   interface Level {
     name: string
@@ -15,6 +26,15 @@
   let ticked = $state<Record<string, boolean>>({})
   let loading = $state(false)
   let error = $state<string | null>(null)
+  /** The last error was the Google session running out. */
+  let expired = $state(false)
+
+  async function signInAgain() {
+    if (await signIn()) {
+      error = null
+      expired = false
+    } else error = app.error ?? error
+  }
 
   const newestFirst = $derived([...app.snapshots].reverse())
   const level = $derived(path.at(-1))
@@ -39,6 +59,7 @@
       path = [...path, { name: entry.name, entries }]
       ticked = {}
     } catch (err) {
+      expired = lostSession(err)
       error = explain(err)
     } finally {
       loading = false
@@ -135,7 +156,14 @@
       </ul>
     {/if}
 
-    {#if error}<div class="banner warn" role="alert"><span>{error}</span></div>{/if}
+    {#if error}
+      <div class="banner warn" role="alert">
+        <span>{error}</span>
+        {#if expired}
+          <button class="btn" onclick={signInAgain}>{t('Sign in again')}</button>
+        {/if}
+      </div>
+    {/if}
 
     <div class="row between">
       <button class="btn" onclick={back}>{t('Back')}</button>

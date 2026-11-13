@@ -163,6 +163,16 @@ function noteSession(err: unknown): void {
   shareToken()
 }
 
+/**
+ * True when `err` means the Google session ran out. The session is then
+ * forgotten, so the next sign-in asks Google again. Screens use this to
+ * offer "Sign in again" next to the message.
+ */
+export function lostSession(err: unknown): boolean {
+  noteSession(err)
+  return sessionExpired(err)
+}
+
 // --- Google session -------------------------------------------------------
 
 async function whoAmI(): Promise<string | null> {
