@@ -251,7 +251,7 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 ### Etapa 6 — fecho
 
 - 13/11/2026, limpeza: o proprietário aceitou apagar no Drive as pastas de teste (`XkyHold test`, `XkyHold test 2`, `XkyHold test 1-3`, `XkyHold-test`, `Windows test`) e esvaziar o lixo; é ele que o faz. Por confirmar.
-- 13/11/2026, xkyriver.com (D5): o XkyHold entrou no showcase como terceira app no ar, em verde-lima; o marcador passou a "Module 05" e o contador a "03". Imagens de partilha refeitas. Visto em pré-visualização local a 1440 px, 900 px e largura de telemóvel (no telemóvel o rio mostra menos apps; o índice lista todas). Commit `430b07c` no repositório do site; **falta o proprietário publicar** (`npm run deploy` nesse repositório).
+- 13/11/2026, xkyriver.com (D5): o XkyHold entrou no showcase como terceira app no ar, em verde-lima; o marcador passou a "Module 05" e o contador a "03". Imagens de partilha refeitas. Visto em pré-visualização local a 1440 px, 900 px e largura de telemóvel (no telemóvel o rio mostra menos apps; o índice lista todas). Commit `430b07c` no repositório do site, publicado pelo proprietário a 13/11/2026 (versão 37c38ff7); verificado que https://xkyriver.com/ e /pt/ mostram o XkyHold.
 - `docs/OAUTH.md` com o estado final da Google.
 
 Critérios da secção 1 do `LAUNCH.md`: 1 (segunda conta, sem avisos) e 2 (nome e logótipo) cumpridos, segundo o proprietário; 3 (email para `privacy@`) e 4 (formato v1, app 1.0.0) cumpridos nas etapas 3 e 2; 5 (checkpoint) no fim desta etapa.
