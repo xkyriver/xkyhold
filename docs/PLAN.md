@@ -216,7 +216,7 @@ Relógio só de desenvolvimento: `?pretend-now=AAAA-MM-DD` no endereço (ou um i
 | 1.5 | Alterar a password | **Passou** (12/11/2026, mesmo backup). Definições → Alterar palavra-passe, com a chave de recuperação como credencial atual e uma palavra-passe nova gerada na página (nunca escrita fora do separador): "A palavra-passe foi alterada." Depois de "Remover deste navegador": a palavra-passe antiga é recusada ("A palavra-passe ou a chave de recuperação não está correta."), a nova abre, e a chave de recuperação abre |
 | 1.6 | Windows | **Passou, segundo o proprietário** (12/11/2026, Windows 11, Google Chrome, site publicado 1.0.0): assistente, primeira cópia de uma pasta de Documentos e restauro para uma pasta funcionaram, sem nada estranho a relatar. Não acompanhado pelo agente |
 | 1.7 | Safari e telemóvel | **Passou, segundo o proprietário** (12/11/2026, iPhone 16e, site publicado 1.0.0): abrir o site, ligar a um backup existente e transferir um `.zip` funcionaram no Safari e no Chrome. No Chrome, o `.zip` não aparece em Transferências: fica na app Ficheiros, na pasta Chrome. A página inicial passou a dizê-lo. Android não testado. Não acompanhado pelo agente |
-| 1.8 | Dois computadores | Por fazer (proprietário) |
+| 1.8 | Dois computadores, um backup | **Passou, segundo o proprietário** (relatado a 13/11/2026, Linux e Windows 11 com Google Chrome, site publicado 1.0.0, backup "Windows test"): as cópias de cada computador aparecem nos dois, sem avisos. Duas cópias começadas ao mesmo tempo também não deram problema. Não acompanhado pelo agente |
 
 ### Etapa 2 — feito
 
