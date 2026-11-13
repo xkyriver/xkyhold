@@ -7,13 +7,13 @@ import type { Repository, Snapshot, TreeEntry, TreeFile } from './repo'
 
 /**
  * One top-level folder of the snapshot: either a folder the user chose
- * (`handle`), or a folder made in XkyHold that groups several chosen
- * folders (`members`, with different names), which exists only in the backup.
+ * (`handle`), or a folder made in XkyHold that groups chosen folders and
+ * files (`members`, with different names), which exists only in the backup.
  */
 export interface BackupRoot {
   name: string
   handle?: DirHandleLike
-  members?: DirHandleLike[]
+  members?: (DirHandleLike | FileHandleLike)[]
   /** Sub-folders not to back up, as paths inside the root ("Downloads", "Work/Old"). */
   leaveOut?: string[]
 }
@@ -157,12 +157,14 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
   }
 
   /**
-   * A folder made in XkyHold: one entry per grouped folder. Each grouped
-   * folder is treated like a chosen folder, so failing to read one stops
-   * the backup instead of quietly leaving it out.
+   * A folder made in XkyHold: one entry per grouped folder or file. A
+   * grouped folder is treated like a chosen folder, so failing to read one
+   * stops the backup instead of quietly leaving it out. A grouped file is
+   * treated like any other file: if it is gone or unreadable it is skipped
+   * and counted.
    */
   async function storeGroup(
-    members: DirHandleLike[],
+    members: (DirHandleLike | FileHandleLike)[],
     oldTree: string | undefined,
     path: string,
     leaveOut: Set<string>,
@@ -172,6 +174,19 @@ export async function backup(repo: Repository, roots: BackupRoot[], options: Bac
     for (const member of [...members].sort(byName)) {
       signal?.throwIfAborted()
       const before = old.get(member.name)
+      if (member.kind === 'file') {
+        try {
+          const entry = await storeFile(member, before, `${path}/${member.name}`)
+          entries.push(entry)
+          progress.files++
+          progress.bytes += entry.size
+        } catch (err) {
+          if (signal?.aborted || !(err instanceof FileReadError)) throw err
+          progress.skipped++
+        }
+        report()
+        continue
+      }
       const subtree = await storeDir(
         member,
         before?.type === 'dir' ? before.subtree : undefined,

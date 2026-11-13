@@ -11,7 +11,8 @@ export function backupRoots(folders: SavedFolder[]): BackupRoot[] {
   for (const folder of folders) {
     const leaveOut = [...(folder.leaveOut ?? [])]
     if (!folder.group) {
-      roots.push({ name: folder.name, handle: folder.handle, leaveOut })
+      // Files only live inside a folder made in XkyHold.
+      if (folder.handle.kind === 'directory') roots.push({ name: folder.name, handle: folder.handle, leaveOut })
       continue
     }
     let group = groups.get(folder.group)

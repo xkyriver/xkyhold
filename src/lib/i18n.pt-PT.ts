@@ -80,10 +80,26 @@ export const ptPT: Record<string, string> = {
   'Leave out…': 'Deixar de fora…',
   'Drop folders here': 'Larga pastas aqui',
   'Drop the folders to add them': 'Larga as pastas para as adicionar',
-  '1 folder was not added because there is already one with the same name.':
-    '1 pasta não foi adicionada porque já existe uma com o mesmo nome.',
-  '{n} folders were not added because there are already folders with the same names.':
-    '{n} pastas não foram adicionadas porque já existem pastas com os mesmos nomes.',
+  'Files go inside a folder made with “New folder…”, so 1 file was not added.':
+    'Os ficheiros vão dentro de uma pasta criada com «Nova pasta…», por isso 1 ficheiro não foi adicionado.',
+  'Files go inside a folder made with “New folder…”, so {n} files were not added.':
+    'Os ficheiros vão dentro de uma pasta criada com «Nova pasta…», por isso {n} ficheiros não foram adicionados.',
+  '1 item added.': '1 item adicionado.',
+  '{n} items added.': '{n} itens adicionados.',
+  'The browser did not allow 1 item.': 'O navegador não permitiu 1 item.',
+  'The browser did not allow {n} items.': 'O navegador não permitiu {n} itens.',
+  '1 item was not added because there is already one with the same name.':
+    '1 item não foi adicionado porque já existe outro com o mesmo nome.',
+  '{n} items were not added because there are already others with the same names.':
+    '{n} itens não foram adicionados porque já existem outros com os mesmos nomes.',
+  'They were already in the list.': 'Já estavam na lista.',
+  'Or drag folders or files into {name} from your file manager.':
+    'Ou arrasta pastas ou ficheiros para dentro de {name} a partir do gestor de ficheiros.',
+  'Add files…': 'Adicionar ficheiros…',
+  'Files added one by one stay as they are: new files next to them are not added by themselves.':
+    'Os ficheiros adicionados um a um ficam como estão: ficheiros novos ao lado deles não entram sozinhos.',
+  'Those files cannot be used.': 'Esses ficheiros não podem ser usados.',
+  File: 'Ficheiro',
   '1 folder': '1 pasta',
   Empty: 'Vazia',
   '{n} folders': '{n} pastas',
@@ -91,7 +107,6 @@ export const ptPT: Record<string, string> = {
   'There is already a folder called {name}.': 'Já existe uma pasta chamada {name}.',
   'It only exists in your backup: nothing changes on your computer.':
     'Só existe na cópia de segurança: nada muda no teu computador.',
-  'Or drag folders into {name} from your file manager.': 'Ou arrasta pastas para dentro de {name} a partir do gestor de ficheiros.',
   'New folder…': 'Nova pasta…',
   'Folder name': 'Nome da pasta',
   'For example, Documents': 'Por exemplo, Documentos',
@@ -102,12 +117,6 @@ export const ptPT: Record<string, string> = {
     'Ou arrasta pastas para aqui a partir do gestor de ficheiros. Podes arrastar várias de uma vez.',
   '1 folder added.': '1 pasta adicionada.',
   '{n} folders added.': '{n} pastas adicionadas.',
-  'Only folders can be saved, so 1 file was not added.': 'Só se podem guardar pastas, por isso 1 ficheiro não foi adicionado.',
-  'Only folders can be saved, so {n} files were not added.':
-    'Só se podem guardar pastas, por isso {n} ficheiros não foram adicionados.',
-  'The browser did not allow 1 folder.': 'O navegador não permitiu 1 pasta.',
-  'The browser did not allow {n} folders.': 'O navegador não permitiu {n} pastas.',
-  'Those folders were already in the list.': 'Essas pastas já estavam na lista.',
   'Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.':
     'O navegador não deixa escolher algumas pastas inteiras, como a tua pasta pessoal, Documentos ou Ambiente de trabalho, porque podem ter ficheiros de sistema. Escolhe antes as pastas que estão dentro delas.',
   'Left out: {list}': 'De fora: {list}',

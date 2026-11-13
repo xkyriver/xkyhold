@@ -2,7 +2,7 @@
 // Web Worker in the app, and in the same thread in tests: all it knows is
 // messages in, messages out.
 
-import type { DirHandleLike } from '../fs/handles'
+import type { DirHandleLike, FileHandleLike } from '../fs/handles'
 import { FolderTarget, VerifyTarget } from '../fs/restore-target'
 import type { WritableDir } from '../fs/restore-target'
 import type { Destination } from '../storage/destination'
@@ -35,7 +35,7 @@ export interface EngineApi {
   open(args: { repoName: string; keys: RepoKeys }): { snapshots: Snapshot[] }
   close(args: void): void
   backup(args: {
-    roots: { name: string; handle?: DirHandleLike; members?: DirHandleLike[]; leaveOut?: string[] }[]
+    roots: { name: string; handle?: DirHandleLike; members?: (DirHandleLike | FileHandleLike)[]; leaveOut?: string[] }[]
     device: string
     /** Remove backups older than this many months afterwards; 0 keeps all. */
     keepMonths: number

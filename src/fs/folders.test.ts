@@ -30,7 +30,7 @@ describe('sortDropped', () => {
       { status: 'fulfilled', value: { kind: 'directory', name: 'Personal' } },
     ])
     expect(result.dirs.map((d) => d.name)).toEqual(['Work', 'Personal'])
-    expect(result.files).toBe(1)
+    expect(result.files.map((f) => f.name)).toEqual(['notes.txt'])
     expect(result.refused).toBe(2)
   })
 })

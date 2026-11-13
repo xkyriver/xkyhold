@@ -1,6 +1,15 @@
 <script lang="ts">
-  import { addFolder, clashes, removeFolder, removeGroup, requestPermission, setLeftOut } from '../fs/folders'
-  import { scanFolder } from '../fs/scan'
+  import {
+    addFiles,
+    addFolder,
+    canPickFiles,
+    clashes,
+    removeFolder,
+    removeGroup,
+    requestPermission,
+    setLeftOut,
+  } from '../fs/folders'
+  import { scanFile, scanFolder } from '../fs/scan'
   import type { ScanResult } from '../fs/scan'
   import { formatBytes } from '../lib/format'
   import { fileCount, t } from '../lib/i18n.svelte'
@@ -42,9 +51,11 @@
     const report = (r: ScanResult) => {
       if (generation[folder.id] === gen) scans[folder.id] = r
     }
-    scanFolder(folder.handle, { leaveOut: [...(folder.leaveOut ?? [])], onProgress: report }).catch(() =>
-      started.delete(folder.id),
-    )
+    const counting =
+      folder.handle.kind === 'file'
+        ? scanFile(folder.handle).then(report)
+        : scanFolder(folder.handle, { leaveOut: [...(folder.leaveOut ?? [])], onProgress: report })
+    counting.catch(() => started.delete(folder.id))
   }
 
   $effect(() => {
@@ -54,15 +65,20 @@
     }
   })
 
-  /** "12 folders · 3,402 files · 1.2 GB", once every folder in it is counted. */
+  /** "12 folders · 3,402 files · 1.2 GB", once everything in it is counted. */
   function summary(members: FolderStatus[]): string {
     if (members.length === 0) return t('Empty')
-    const folders = members.length === 1 ? t('1 folder') : t('{n} folders', { n: members.length })
+    const dirs = members.filter((m) => m.folder.handle.kind === 'directory').length
+    const parts = dirs === 0 ? [] : [dirs === 1 ? t('1 folder') : t('{n} folders', { n: dirs })]
     const counted = members.map((m) => scans[m.folder.id])
-    if (counted.some((c) => !c)) return folders
+    if (counted.some((c) => !c)) {
+      const loose = members.length - dirs
+      if (loose > 0) parts.push(fileCount(loose))
+      return parts.join(' · ')
+    }
     const files = counted.reduce((sum, c) => sum + c!.files, 0)
     const bytes = counted.reduce((sum, c) => sum + c!.bytes, 0)
-    return `${folders} · ${fileCount(files)} · ${formatBytes(bytes)}`
+    return [...parts, fileCount(files), formatBytes(bytes)].join(' · ')
   }
 
   async function leaveOut(id: string, path: string, out: boolean) {
@@ -79,11 +95,25 @@
     error = null
     try {
       const result = await addFolder(group)
-      if (result === 'clash') error = t('1 folder was not added because there is already one with the same name.')
+      if (result === 'clash') error = t('1 item was not added because there is already one with the same name.')
       await refreshFolders()
     } catch (err) {
       console.error(err)
       error = t('That folder cannot be used. Choose another one, such as a folder inside Documents.')
+    }
+  }
+
+  async function pickFiles(group: string) {
+    error = null
+    try {
+      const result = await addFiles(group)
+      if (result?.clashed === 1) error = t('1 item was not added because there is already one with the same name.')
+      else if (result?.clashed)
+        error = t('{n} items were not added because there are already others with the same names.', { n: result.clashed })
+      await refreshFolders()
+    } catch (err) {
+      console.error(err)
+      error = t('Those files cannot be used.')
     }
   }
 
@@ -137,6 +167,8 @@
       <div class="small muted">
         {#if status.permission !== 'granted'}
           {t('Needs your permission to be read')}
+        {:else if scan && status.folder.handle.kind === 'file'}
+          {t('File')} · {formatBytes(scan.bytes)}
         {:else if scan}
           {fileCount(scan.files)} · {formatBytes(scan.bytes)}
         {:else}
@@ -151,14 +183,14 @@
     </div>
     {#if status.permission !== 'granted'}
       <button class="link" onclick={() => allow(status)}>{t('Allow')}</button>
-    {:else if choosing !== status.folder.id}
+    {:else if choosing !== status.folder.id && status.folder.handle.kind === 'directory'}
       <button class="link" onclick={() => (choosing = status.folder.id)}>{t('Leave out…')}</button>
     {/if}
     <button class="link" onclick={() => remove(status)} aria-label={t('Remove {name}', { name: status.folder.name })}>
       {t('Remove')}
     </button>
   </li>
-  {#if choosing === status.folder.id && status.permission === 'granted'}
+  {#if choosing === status.folder.id && status.permission === 'granted' && status.folder.handle.kind === 'directory'}
     <li class="chooser">
       <LeaveOut
         root={status.folder.handle}
@@ -199,8 +231,19 @@
             {/each}
           </ul>
         {/if}
-        <div><button class="btn" onclick={() => add(group.name)}>{t('Add folder…')}</button></div>
-        <DropZone group={group.name} hint={t('Or drag folders into {name} from your file manager.', { name: group.name })} />
+        <div class="row">
+          <button class="btn" onclick={() => add(group.name)}>{t('Add folder…')}</button>
+          {#if canPickFiles()}
+            <button class="btn" onclick={() => pickFiles(group.name)}>{t('Add files…')}</button>
+          {/if}
+        </div>
+        <DropZone
+          group={group.name}
+          hint={t('Or drag folders or files into {name} from your file manager.', { name: group.name })}
+        />
+        {#if canPickFiles()}
+          <p class="small muted">{t('Files added one by one stay as they are: new files next to them are not added by themselves.')}</p>
+        {/if}
       </div>
     {/if}
   </div>

@@ -4,12 +4,17 @@
 // every load.
 
 import { withStore } from '../state/db'
-import type { DirHandleLike, PermissionState } from './handles'
+import type { DirHandleLike, FileHandleLike, PermissionState } from './handles'
 
+/**
+ * A folder the user chose, or a single file they put inside a folder made
+ * in XkyHold (`handle.kind` says which). Files only live inside such a
+ * folder: the backup's top level holds folders.
+ */
 export interface SavedFolder {
   id: string
   name: string
-  handle: DirHandleLike
+  handle: DirHandleLike | FileHandleLike
   /** Sub-folders not to back up, as paths inside this folder ("Downloads", "Work/Old"). */
   leaveOut?: string[]
   /**
@@ -83,8 +88,29 @@ export async function removeGroup(group: string): Promise<void> {
   for (const folder of await listFolders()) if (folder.group === group) await removeFolder(folder.id)
 }
 
-/** Saves a folder the user chose, unless it is already in the list or its name is taken. */
-async function saveFolder(handle: DirHandleLike, group?: string): Promise<AddResult> {
+/**
+ * Opens the browser's file picker, where several files can be chosen at
+ * once, and puts them inside `group`. Returns null if the user cancelled.
+ * Must be called from a user gesture.
+ */
+export async function addFiles(group: string): Promise<DropResult | null> {
+  const picker = (window as unknown as { showOpenFilePicker(options?: object): Promise<FileHandleLike[]> })
+    .showOpenFilePicker
+  let handles: FileHandleLike[]
+  try {
+    handles = await picker.call(window, { multiple: true })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') return null
+    throw err
+  }
+  return saveAll(handles, group, 0)
+}
+
+/** Whether this browser can pick several files at once. */
+export const canPickFiles = (): boolean => typeof window !== 'undefined' && 'showOpenFilePicker' in window
+
+/** Saves a folder or file the user chose, unless it is already in the list or its name is taken. */
+async function saveFolder(handle: DirHandleLike | FileHandleLike, group?: string): Promise<AddResult> {
   const folders = await listFolders()
   for (const existing of folders) {
     if (await existing.handle.isSameEntry?.(handle)) return 'already'
@@ -95,15 +121,15 @@ async function saveFolder(handle: DirHandleLike, group?: string): Promise<AddRes
   return 'added'
 }
 
-/** What came of dropping things on the folder list. */
+/** What came of dropping or picking several things at once. */
 export interface DropResult {
-  /** Folders added to the list. */
+  /** Folders and files added to the list. */
   added: number
-  /** Files: only folders are backed up. */
+  /** Files dropped where only folders can go (outside a folder made in XkyHold). */
   files: number
   /** Items the browser would not hand over (for example the Documents folder itself). */
   refused: number
-  /** Folders not added because one with the same name is already there. */
+  /** Items not added because one with the same name is already there. */
   clashed: number
 }
 
@@ -112,21 +138,38 @@ type Dropped = { kind: 'file' | 'directory' } | null
 /** Sorts what the browser handed over for a drop: folders, files, and what it refused. */
 export function sortDropped<T extends { kind: string }>(
   results: PromiseSettledResult<T | null>[],
-): { dirs: T[]; files: number; refused: number } {
+): { dirs: T[]; files: T[]; refused: number } {
   const dirs: T[] = []
-  let files = 0
+  const files: T[] = []
   let refused = 0
   for (const r of results) {
     if (r.status === 'rejected' || !r.value) refused++
     else if (r.value.kind === 'directory') dirs.push(r.value)
-    else files++
+    else files.push(r.value)
   }
   return { dirs, files, refused }
 }
 
+async function saveAll(
+  handles: (DirHandleLike | FileHandleLike)[],
+  group: string | undefined,
+  refused: number,
+): Promise<DropResult> {
+  let added = 0
+  let clashed = 0
+  for (const handle of handles) {
+    const result = await saveFolder(handle, group)
+    if (result === 'added') added++
+    else if (result === 'clash') clashed++
+  }
+  return { added, files: 0, refused, clashed }
+}
+
 /**
- * Adds every folder dropped on the page, from a file manager. Must be called
- * inside the drop event: the browser only hands the items over then.
+ * Adds everything dropped on the page from a file manager: folders, and
+ * files too when dropped inside a folder made in XkyHold (`group`). Must
+ * be called inside the drop event: the browser only hands the items over
+ * then.
  */
 export async function addDropped(items: DataTransferItemList, group?: string): Promise<DropResult> {
   // Ask for every handle before awaiting anything: the list empties as
@@ -138,14 +181,9 @@ export async function addDropped(items: DataTransferItemList, group?: string): P
     pending.push(get ? get.call(item) : Promise.resolve(null))
   }
   const { dirs, files, refused } = sortDropped(await Promise.allSettled(pending))
-  let added = 0
-  let clashed = 0
-  for (const dir of dirs) {
-    const result = await saveFolder(dir as unknown as DirHandleLike, group)
-    if (result === 'added') added++
-    else if (result === 'clash') clashed++
-  }
-  return { added, files, refused, clashed }
+  const accepted = (group ? [...dirs, ...files] : dirs) as unknown as (DirHandleLike | FileHandleLike)[]
+  const result = await saveAll(accepted, group, refused)
+  return { ...result, files: group ? 0 : files.length }
 }
 
 /** Whether this browser can hand over dropped folders. */

@@ -17,4 +17,14 @@ describe('backupRoots', () => {
     expect(roots[1].leaveOut).toEqual(['Projects/Old', 'Projects/Tmp/Cache'])
     expect(roots[1].handle).toBeUndefined()
   })
+
+  it('puts grouped files with the folders, and never makes a loose file a top-level folder', () => {
+    const file = (name: string) => ({ kind: 'file', name }) as unknown as DirHandleLike
+    const roots = backupRoots([
+      { id: '1', name: 'take.m4a', handle: file('take.m4a'), group: 'Audio' },
+      { id: '2', name: 'stray.txt', handle: file('stray.txt') },
+    ])
+    expect(roots.map((r) => r.name)).toEqual(['Audio'])
+    expect(roots[0].members?.map((m) => m.name)).toEqual(['take.m4a'])
+  })
 })

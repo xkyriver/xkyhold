@@ -15,6 +15,9 @@ export interface FileHandleLike {
   readonly kind: 'file'
   readonly name: string
   getFile(): Promise<FileLike>
+  queryPermission?(descriptor: { mode: 'read' }): Promise<PermissionState>
+  requestPermission?(descriptor: { mode: 'read' }): Promise<PermissionState>
+  isSameEntry?(other: DirHandleLike | FileHandleLike): Promise<boolean>
 }
 
 export interface DirHandleLike {
@@ -23,5 +26,5 @@ export interface DirHandleLike {
   values(): AsyncIterable<FileHandleLike | DirHandleLike>
   queryPermission?(descriptor: { mode: 'read' }): Promise<PermissionState>
   requestPermission?(descriptor: { mode: 'read' }): Promise<PermissionState>
-  isSameEntry?(other: DirHandleLike): Promise<boolean>
+  isSameEntry?(other: DirHandleLike | FileHandleLike): Promise<boolean>
 }

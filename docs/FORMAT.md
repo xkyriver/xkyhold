@@ -324,8 +324,9 @@ One per completed backup. Before compression and encryption:
 - A root can also be a folder the user created in XkyHold to group chosen
   folders (for example "Documents" holding "Personal" and "Projects"). It
   exists only in the backup: its tree has one `dir` entry per grouped
-  folder, each with that folder's own name. Readers need nothing new: it is
-  an ordinary tree. Grouped folders have different names within a group.
+  folder, each with that folder's own name, and one `file` entry per file
+  the user put there directly. Readers need nothing new: it is an ordinary
+  tree. Entries have different names within a group.
 - A snapshot is written **last**, after every pack and index it depends on
   is safely in Drive. A snapshot that exists is therefore always complete.
 - `skipped` counts files that could not be read; the backup still succeeds

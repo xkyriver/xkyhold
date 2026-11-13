@@ -256,6 +256,27 @@ describe('folders made in XkyHold', () => {
     expect([...restored.keys()].sort()).toEqual(['Documents/Personal/id.pdf', 'Documents/Projects/plan.txt'])
   })
 
+  it('keeps files put directly in the folder, next to the grouped folders', async () => {
+    const dirs = members()
+    const takes = [new FakeFile('take 1.m4a', noise(2500, 9)), new FakeFile('take 2.m4a', noise(700, 10))]
+    const first = await grouped([...dirs, ...takes] as FakeDir[])
+    const expected = new FakeDir('Documents', [...dirs, ...takes])
+    expect((await restoreAll(repo, first)).flatten()).toEqual(prefixed(expected))
+
+    const reads = takes[0].reads
+    const second = await grouped([...dirs, ...takes] as FakeDir[], first)
+    expect(takes[0].reads).toBe(reads)
+    expect(second.roots).toEqual(first.roots)
+  })
+
+  it('skips and counts a grouped file that is gone, without failing', async () => {
+    const takes = [new FakeFile('kept.m4a', noise(300, 11)), new FakeFile('gone.m4a', noise(300, 12))]
+    takes[1].unreadable = true
+    const snapshot = await grouped(takes as unknown as FakeDir[])
+    expect(snapshot.stats.skipped).toBe(1)
+    expect([...(await restoreAll(repo, snapshot)).flatten().keys()]).toEqual(['Documents/kept.m4a'])
+  })
+
   it('fails, rather than leaving it out, when a grouped folder cannot be read', async () => {
     const dirs = members()
     dirs[0].unreadable = true

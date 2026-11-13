@@ -1,4 +1,4 @@
-import type { DirHandleLike } from './handles'
+import type { DirHandleLike, FileHandleLike } from './handles'
 
 export interface ScanResult {
   files: number
@@ -12,6 +12,15 @@ export interface ScanOptions {
   leaveOut?: string[]
   onProgress?: (soFar: ScanResult) => void
   signal?: AbortSignal
+}
+
+/** Totals one chosen file, the way scanFolder totals a folder. */
+export async function scanFile(file: FileHandleLike): Promise<ScanResult> {
+  try {
+    return { files: 1, bytes: (await file.getFile()).size, skipped: 0 }
+  } catch {
+    return { files: 0, bytes: 0, skipped: 1 }
+  }
 }
 
 /**
