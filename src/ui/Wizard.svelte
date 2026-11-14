@@ -112,7 +112,7 @@
     run(async () => {
       await connectBackup(choice, useRecoveryKey ? { recoveryKey: recoveryInput } : { password })
       password = ''
-      done(canCreate ? 'home' : 'restore')
+      done(canCreate && !app.readOnly ? 'home' : 'restore')
     })
 
   async function copy() {

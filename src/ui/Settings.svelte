@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from '../lib/i18n.svelte'
   import { KEEP_CHOICES, REMINDER_CHOICES } from '../lib/reminder'
-  import { app, caps, changePassword, disconnect, explain, forgetDevice, savePreferences, signIn } from '../state/app.svelte'
+  import { app, canBackUp, caps, changePassword, disconnect, explain, forgetDevice, savePreferences, signIn } from '../state/app.svelte'
   import Folders from './Folders.svelte'
 
   const MIN_PASSWORD = 8
@@ -36,14 +36,14 @@
   }
 </script>
 
-{#if caps.folderAccess}
+{#if canBackUp()}
   <section class="card stack">
     <h2>{t('Folders to save')}</h2>
     <Folders />
   </section>
 {/if}
 
-{#if caps.folderAccess}
+{#if canBackUp()}
   <section class="card stack">
     <h2>{t('Backups')}</h2>
     <div>
@@ -80,7 +80,11 @@
 <section class="card stack">
   <h2>{t('Password')}</h2>
   {#if !changing}
-    <div><button class="btn" onclick={() => ((changing = true), (message = null))} disabled={!app.connected}>{t('Change password…')}</button></div>
+    {#if app.readOnly}
+      <p class="small muted">{t('The password of this backup is changed in XkyHold-lx.')}</p>
+    {:else}
+      <div><button class="btn" onclick={() => ((changing = true), (message = null))} disabled={!app.connected}>{t('Change password…')}</button></div>
+    {/if}
   {:else}
     <div>
       <label for="cur">{useRecoveryKey ? t('Recovery key') : t('Current password')}</label>

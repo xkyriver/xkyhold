@@ -6,6 +6,12 @@ import { concat, fromBase32Groups, fromBase64, randomBytes, toBase32Groups, toBa
 import type { Bytes } from './bytes'
 
 export const FORMAT_VERSION = 1
+/**
+ * Formats this version can open. XkyHold writes format 1; format 2
+ * repositories, written by XkyHold-lx, are restore-only here
+ * (docs/FORMAT-v2.md, section 8).
+ */
+export const READABLE_FORMATS: readonly number[] = [1, 2]
 const NONCE_LENGTH = 12
 const TAG_LENGTH = 16
 const KEY_LENGTH = 32
@@ -212,7 +218,7 @@ export async function createRepository(password: string, params: Argon2Params = 
 
 function checkConfig(config: RepoConfig): void {
   if (typeof config?.format !== 'number') throw new FormatError('This is not an XkyHold backup')
-  if (config.format !== FORMAT_VERSION) {
+  if (!READABLE_FORMATS.includes(config.format)) {
     throw new FormatError(`This backup uses format ${config.format}, which this version of XkyHold cannot read`)
   }
 }

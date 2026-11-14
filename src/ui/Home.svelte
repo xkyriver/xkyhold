@@ -2,7 +2,7 @@
   import { formatBytes } from '../lib/format'
   import { fileCount, formatWhen, t } from '../lib/i18n.svelte'
   import { reminder } from '../lib/reminder'
-  import { allowFolders, app, backupNow, caps, retryOpen, signIn, stopJob } from '../state/app.svelte'
+  import { allowFolders, app, backupNow, canBackUp, caps, retryOpen, signIn, stopJob } from '../state/app.svelte'
 
   const last = $derived(app.lastBackup)
   const blocked = $derived(app.folders.filter((f) => f.permission !== 'granted').length)
@@ -22,7 +22,7 @@
   </div>
 {/if}
 
-{#if blocked > 0 && caps.folderAccess}
+{#if blocked > 0 && canBackUp()}
   <div class="banner warn">
     <span>{t('XkyHold needs your permission to read your folders again.')}</span>
     <button class="btn" onclick={allowFolders}>{t('Allow')}</button>
@@ -76,7 +76,11 @@
       <p class="muted">{t('Make your first backup now.')}</p>
     {/if}
 
-    {#if caps.folderAccess}
+    {#if app.readOnly}
+      <p class="small muted">
+        {t('This backup was made by XkyHold-lx on Linux. You can restore from it here; new backups to it are made by XkyHold-lx.')}
+      </p>
+    {:else if caps.folderAccess}
       <div>
         <button class="btn primary big" onclick={backupNow} disabled={!!app.job || app.opening}>{t('Back up now')}</button>
       </div>

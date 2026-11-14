@@ -6,6 +6,8 @@ import { EngineError } from './errors'
 import { createHost } from './host'
 import type { Request, Response } from './host'
 import type { TreeDir, TreeEntry } from './repo'
+import { fromBase64 } from './bytes'
+import golden from './golden-v2-repo.json'
 import { FakeDir, FakeFile, noise } from './testing'
 
 const FAST = { memoryKiB: 64, iterations: 1, parallelism: 1 }
@@ -81,7 +83,7 @@ describe('engine over messages', () => {
     expect(sentBytes).toBeGreaterThan(23_000)
     expect(seen.at(-1)).toBe(3)
 
-    expect(await client.call('check', { entries: asDirs(snapshot) })).toEqual({ files: 3, bytes: 23_011 })
+    expect(await client.call('check', { entries: asDirs(snapshot) })).toEqual({ files: 3, bytes: 23_011, links: 0, unknown: 0, renamed: 0 })
     expect(await client.call('listBackups', undefined)).toEqual(['laptop'])
   })
 
@@ -195,7 +197,7 @@ describe('engine over messages', () => {
     expect(november.freedBytes).toBeGreaterThan(20_000)
     expect(november.snapshots.map((s) => s.id)).toEqual([november.snapshot.id])
     expect(destinations.get('laptop')!.names('locks')).toEqual([])
-    expect(await client.call('check', { entries: asDirs(november.snapshot) })).toEqual({ files: 2, bytes: 3011 })
+    expect(await client.call('check', { entries: asDirs(november.snapshot) })).toEqual({ files: 2, bytes: 3011, links: 0, unknown: 0, renamed: 0 })
 
     // "Forever" keeps everything.
     page.clock.now = new Date('2030-01-01T10:00:00Z')
@@ -246,5 +248,42 @@ describe('engine over messages', () => {
     destinations.get('laptop')!.putDelayMs = 0
     const { snapshot } = await client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 0 })
     expect(snapshot.stats.files).toBe(3)
+  })
+})
+
+describe('a backup made by XkyHold-lx (format 2)', () => {
+  function linux(): MemoryDestination {
+    const dest = new MemoryDestination()
+    for (const [k, v] of Object.entries(golden.objects)) dest.objects.set(k, fromBase64(v))
+    page.destinations.set('linux', dest)
+    return dest
+  }
+
+  it('is restore-only: no backup, no password change, nothing written', async () => {
+    const { client } = page
+    const dest = linux()
+    const before = new Map(dest.objects)
+    const connected = await client.call('connect', { repoName: 'linux', credential: { password: golden.password } })
+    expect(connected.format).toBe(2)
+    expect(connected.snapshots).toHaveLength(1)
+    await expect(client.call('backup', { roots: roots(tree()), device: 'laptop', keepMonths: 1 })).rejects.toMatchObject({
+      kind: 'read-only',
+    })
+    await expect(
+      client.call('changePassword', { repoName: 'linux', credential: { password: golden.password }, newPassword: 'x' }),
+    ).rejects.toMatchObject({ kind: 'read-only' })
+    // Reopened with the keys kept in the browser, it is still restore-only.
+    const reopened = await client.call('open', { repoName: 'linux', keys: connected.keys })
+    expect(reopened.format).toBe(2)
+    expect(new Map(dest.objects)).toEqual(before)
+  })
+
+  it('restores into a .zip with the links in it', async () => {
+    const { client } = page
+    linux()
+    const { snapshots } = await client.call('connect', { repoName: 'linux', credential: { password: golden.password } })
+    const done = await client.call('restoreZip', { entries: asDirs(snapshots[0]) })
+    expect(done).toMatchObject({ links: 0, unknown: 0, renamed: 1 })
+    expect(done.files).toBe(golden.expected.filter((e) => e.type === 'file').length)
   })
 })

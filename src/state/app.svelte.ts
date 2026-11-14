@@ -5,7 +5,7 @@ import { AuthError, googleAuth } from '../auth/google'
 import { EngineClient, workerTransport } from '../engine/client'
 import type { Credential, RepoKeys } from '../engine/crypto'
 import { EngineError } from '../engine/errors'
-import type { Progress } from '../engine/host'
+import type { Progress, RestoreCounts } from '../engine/host'
 import type { Snapshot, TreeEntry } from '../engine/repo'
 import { checkPermission, listFolders, pickRestoreFolder, requestPermission } from '../fs/folders'
 import type { SavedFolder } from '../fs/folders'
@@ -55,6 +55,8 @@ interface SavedSetup {
   repoName: string
   account: string | null
   keys: RepoKeys
+  /** A format 2 backup, made by XkyHold-lx: restore only here. */
+  readOnly?: boolean
 }
 
 /** Development only: `?restore-only` shows the app as a browser without folder access sees it. */
@@ -90,7 +92,16 @@ export const app = $state({
   reminderDismissed: false,
   notice: null as string | null,
   error: null as string | null,
+  /**
+   * The backup was made by XkyHold-lx (format 2): XkyHold restores from it
+   * but does not back up into it or remove old backups
+   * (docs/FORMAT-v2.md, section 8).
+   */
+  readOnly: false,
 })
+
+/** Backups can be made here: a browser with folder access, and a backup XkyHold writes. */
+export const canBackUp = (): boolean => caps.folderAccess && !app.readOnly
 
 /** The backup engine, in its own thread so the page never freezes. */
 const engineWorker = new Worker(new URL('../engine/worker.ts', import.meta.url), { type: 'module' })
@@ -146,6 +157,8 @@ export function explain(err: unknown): string {
       return t('There is not enough free space on this device for the .zip file.')
     case 'busy':
       return t('Another device is using this backup right now. Try again in a few minutes.')
+    case 'read-only':
+      return t('This backup was made by XkyHold-lx on Linux. You can restore from it here, but not add to it.')
     case 'refused':
       return t('Google Drive refused the request. Your Drive may be full.')
     case 'network':
@@ -214,6 +227,7 @@ export async function start(): Promise<void> {
       keys = saved.keys
       app.repoName = saved.repoName
       app.account = saved.account
+      app.readOnly = saved.readOnly ?? false
       app.configured = true
     }
     markReturning(!!saved)
@@ -252,9 +266,10 @@ export async function allowFolders(): Promise<void> {
 
 export const listBackups = () => engine.call('listBackups', undefined)
 
-async function remember(repoName: string, repoKeys: RepoKeys, snapshots: Snapshot[]): Promise<void> {
+async function remember(repoName: string, repoKeys: RepoKeys, snapshots: Snapshot[], readOnly = false): Promise<void> {
   keys = repoKeys
-  await settings.set('setup', { repoName, account: app.account, keys } satisfies SavedSetup)
+  app.readOnly = readOnly
+  await settings.set('setup', { repoName, account: app.account, keys, readOnly } satisfies SavedSetup)
   app.repoName = repoName
   setSnapshots(snapshots)
   app.configured = true
@@ -272,7 +287,7 @@ export async function createBackup(repoName: string, password: string): Promise<
 /** Connects this device to a backup that already exists in Drive. */
 export async function connectBackup(repoName: string, credential: Credential): Promise<void> {
   const connected = await engine.call('connect', { repoName, credential })
-  await remember(repoName, connected.keys, connected.snapshots)
+  await remember(repoName, connected.keys, connected.snapshots, connected.format !== 1)
 }
 
 async function openBackup(): Promise<void> {
@@ -280,7 +295,9 @@ async function openBackup(): Promise<void> {
   app.opening = true
   app.error = null
   try {
-    setSnapshots((await engine.call('open', { repoName: app.repoName, keys })).snapshots)
+    const opened = await engine.call('open', { repoName: app.repoName, keys })
+    app.readOnly = opened.format !== 1
+    setSnapshots(opened.snapshots)
     app.loaded = true
   } catch (err) {
     noteSession(err)
@@ -373,11 +390,34 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
   await runJob('restore', async (job) => {
     const done = await engine.call('restore', { entries: plain, folder }, job)
     const size = formatBytes(done.bytes)
-    app.notice =
+    app.notice = withSkipped(
       done.files === 1
         ? t('Restored 1 file ({size}).', { size })
-        : t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size })
+        : t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size }),
+      done,
+      true,
+    )
   })
+}
+
+/**
+ * Adds what a browser could not restore from a backup made by XkyHold-lx
+ * (docs/FORMAT-v2.md, section 8), so that nothing is left out silently.
+ */
+function withSkipped(text: string, done: RestoreCounts, folder: boolean): string {
+  const parts = [text]
+  if (done.links > 0) {
+    parts.push(
+      folder
+        ? t('{n} symbolic links were not restored: a browser cannot create them. Download as .zip to keep them.', { n: done.links })
+        : t('{n} symbolic links are in the .zip as links.', { n: done.links }),
+    )
+  }
+  if (done.unknown > 0) parts.push(t('{n} items of a kind this version does not know were not restored.', { n: done.unknown }))
+  if (done.renamed > 0) {
+    parts.push(t('{n} items got a changed name, because their names look the same here.', { n: done.renamed }))
+  }
+  return parts.join(' ')
 }
 
 const ZIP_PREFIX = 'restore-'
@@ -409,10 +449,13 @@ export async function restoreAsZip(entries: TreeEntry[]): Promise<void> {
     // The browser needs the URL until it has taken the file; a minute is ample.
     setTimeout(() => URL.revokeObjectURL(url), 60_000)
     const size = formatBytes(done.bytes)
-    app.notice =
+    app.notice = withSkipped(
       done.files === 1
         ? t('1 file ({size}) is in a .zip file in your downloads.', { size })
-        : t('{files} files ({size}) are in a .zip file in your downloads.', { files: done.files.toLocaleString(), size })
+        : t('{files} files ({size}) are in a .zip file in your downloads.', { files: done.files.toLocaleString(), size }),
+      done,
+      false,
+    )
   })
 }
 

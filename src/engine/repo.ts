@@ -10,6 +10,7 @@ import {
   blobId,
   changePassword,
   createRepository,
+  FORMAT_VERSION,
   FormatError,
   open,
   seal,
@@ -20,7 +21,12 @@ import type { Argon2Params, Credential, RepoConfig, RepoKeys } from './crypto'
 import { PACK_TARGET_SIZE, PackWriter, readBlob } from './pack'
 import type { BlobEntry, BlobType } from './pack'
 
+// Format 2 (docs/FORMAT-v2.md, section 4) adds optional metadata that a
+// browser cannot apply (mode, owners, extended attributes, nanoseconds):
+// it is ignored here. Only what XkyHold uses is typed.
+
 export interface TreeFile {
+  /** For display and writing; with format 2 possibly a display form (nameBytes holds the real name). */
   name: string
   type: 'file'
   size: number
@@ -33,15 +39,38 @@ export interface TreeDir {
   name: string
   type: 'dir'
   subtree: string
+  /** Format 2: another disk that was not backed up, stored as an empty folder. */
+  mount?: boolean
 }
 
-export type TreeEntry = TreeFile | TreeDir
+/** Format 2: a symbolic link, stored as a link and never followed. */
+export interface TreeSymlink {
+  name: string
+  type: 'symlink'
+  target: string
+  mtime?: number
+}
+
+/**
+ * Entries of a type this version does not know may also appear (format 2,
+ * section 4.7): they are never restored, and nothing that removes data may
+ * run past them.
+ */
+export type TreeEntry = TreeFile | TreeDir | TreeSymlink
+
+/** Is this an entry type this version knows? */
+export const knownEntry = (entry: { type: string }): entry is TreeEntry =>
+  entry.type === 'file' || entry.type === 'dir' || entry.type === 'symlink'
 
 export interface Snapshot {
+  /** 2 for snapshots written by XkyHold-lx; absent in format 1. */
+  format?: number
   id: string
   time: string
   device: string
-  roots: { name: string; tree: string }[]
+  /** Format 2: the home folder the backup came from. */
+  home?: { path: string; user: string; uid: number; gid: number }
+  roots: { name: string; tree: string; source?: { kind: string; path: string } }[]
   stats: { files: number; bytes: number; skipped: number }
   parent: string | null
 }
@@ -72,6 +101,7 @@ export interface RepositoryOptions {
 
 const INDEX_AAD = 'xkyhold/v1/index'
 const snapshotAad = (id: string) => `xkyhold/v1/snapshot/${id}`
+const snapshotAadV2 = (id: string) => `xkyhold/v2/snapshot/${id}`
 const CONFIG = 'config'
 
 export class Repository {
@@ -91,6 +121,12 @@ export class Repository {
 
   /** Bytes of packs uploaded by this instance. */
   uploadedBytes = 0
+
+  /**
+   * The repository's format. Format 2 is restore-only in XkyHold: no
+   * backup, prune or password change (docs/FORMAT-v2.md, section 8).
+   */
+  format = FORMAT_VERSION
 
   constructor(
     readonly dest: Destination,
@@ -124,8 +160,10 @@ export class Repository {
 
   /** Opens an existing repository and loads its index. */
   static async open(dest: Destination, credential: Credential, options: RepositoryOptions = {}): Promise<Repository> {
-    const keys = await unlockRepository(await Repository.readConfig(dest), credential)
+    const config = await Repository.readConfig(dest)
+    const keys = await unlockRepository(config, credential)
     const repo = new Repository(dest, keys, options)
+    repo.format = config.format
     await repo.loadIndex()
     return repo
   }
@@ -355,9 +393,25 @@ export class Repository {
     return full
   }
 
+  /**
+   * Opens a snapshot of either version: format 2 snapshots are sealed with
+   * their own AAD, so that older versions fail closed on them
+   * (docs/FORMAT-v2.md, section 3.2).
+   */
   async loadSnapshot(id: string): Promise<Snapshot> {
     const sealed = await this.dest.get('snapshots', id)
-    return JSON.parse(fromUtf8(await inflate(await open(this.keys.encKey, sealed, snapshotAad(id)))))
+    let plaintext: Bytes
+    let version = 2
+    try {
+      plaintext = await open(this.keys.encKey, sealed, snapshotAadV2(id))
+    } catch (err) {
+      if (!(err instanceof AuthenticationError)) throw err
+      plaintext = await open(this.keys.encKey, sealed, snapshotAad(id))
+      version = 1
+    }
+    const snapshot = JSON.parse(fromUtf8(await inflate(plaintext))) as Snapshot
+    if ((snapshot.format ?? 1) !== version) throw new AuthenticationError('Snapshot version does not match its seal')
+    return snapshot
   }
 
   /** Moves a snapshot to the trash. Its data stays until prune runs. */

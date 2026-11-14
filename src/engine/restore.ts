@@ -2,18 +2,27 @@
 // its id inside Repository.loadBlob before it reaches the target.
 
 import type { Bytes } from './bytes'
-import type { Repository, TreeEntry, TreeFile } from './repo'
+import { knownEntry } from './repo'
+import type { Repository, TreeEntry, TreeFile, TreeSymlink } from './repo'
 
 /** Where restored files go: a real folder, a zip, or memory in tests. */
 export interface RestoreTarget {
   createDir(name: string): Promise<RestoreTarget>
   writeFile(file: TreeFile, chunks: AsyncIterable<Bytes>): Promise<void>
+  /** Targets that can hold a symbolic link (a .zip). Others skip links. */
+  writeLink?(link: TreeSymlink): Promise<void>
 }
 
 export interface RestoreProgress {
   files: number
   bytes: number
   current: string
+  /** Symbolic links this target cannot hold, so not restored. */
+  links?: number
+  /** Entries of a type this version does not know, not restored. */
+  unknown?: number
+  /** Entries restored under a changed name: two names on Linux looked the same here. */
+  renamed?: number
 }
 
 export interface RestoreOptions {
@@ -84,15 +93,40 @@ export async function restoreEntries(
     running.add(job)
   }
 
+  const count = (what: 'links' | 'unknown' | 'renamed') => (progress[what] = (progress[what] ?? 0) + 1)
+
   async function walk(list: TreeEntry[], into: RestoreTarget, path: string): Promise<void> {
+    // Format 2 names that are not valid UTF-8 are shown with U+FFFD, so two
+    // can look the same here: the second gets a changed name, never
+    // overwriting the first (docs/FORMAT-v2.md, section 4.1).
+    const used = new Set<string>()
+    const unique = (name: string): string => {
+      let candidate = name
+      for (let n = 2; used.has(candidate); n++) candidate = `${name} (${n})`
+      if (candidate !== name) count('renamed')
+      used.add(candidate)
+      return candidate
+    }
     for (const entry of list) {
       if (failure) return
       options.signal?.throwIfAborted()
-      const entryPath = path ? `${path}/${entry.name}` : entry.name
+      if (!knownEntry(entry)) {
+        count('unknown')
+        continue
+      }
+      if (entry.type === 'symlink' && !into.writeLink) {
+        count('links')
+        continue
+      }
+      const name = unique(entry.name)
+      const entryPath = path ? `${path}/${name}` : name
       if (entry.type === 'dir') {
-        await walk(await repo.loadTree(entry.subtree), await into.createDir(entry.name), entryPath)
+        // A mount point (format 2) has an empty subtree: an empty folder.
+        await walk(await repo.loadTree(entry.subtree), await into.createDir(name), entryPath)
+      } else if (entry.type === 'symlink') {
+        await into.writeLink!({ ...entry, name })
       } else {
-        await file(entry, into, entryPath)
+        await file(name === entry.name ? entry : { ...entry, name }, into, entryPath)
       }
     }
   }

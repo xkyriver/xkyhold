@@ -11,7 +11,7 @@
 
 import { concat, utf8 } from './bytes'
 import type { Bytes } from './bytes'
-import type { TreeFile } from './repo'
+import type { TreeFile, TreeSymlink } from './repo'
 import type { RestoreTarget } from './restore'
 
 /** Where the archive's bytes go, in order. */
@@ -29,6 +29,8 @@ const VERSION_ZIP64 = 45
 const MADE_BY = (3 << 8) | VERSION_ZIP64
 const MODE_FILE = 0o100644
 const MODE_DIR = 0o040755
+/** A symbolic link: unzip tools that keep Unix modes recreate the link. */
+const MODE_LINK = 0o120777
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256)
@@ -103,6 +105,8 @@ function timestampExtra(ms: number): Bytes {
 interface Entry {
   name: Bytes
   directory: boolean
+  /** Unix mode for the external attributes, when not a plain file or folder. */
+  mode?: number
   mtime: number
   crc: number
   size: number
@@ -163,10 +167,17 @@ export class ZipWriter {
    * Adds a file from its chunks. `expectedSize` only decides whether the
    * entry needs ZIP64; the real size is whatever the chunks add up to.
    */
-  async addFile(path: string, mtime: number, expectedSize: number, chunks: AsyncIterable<Uint8Array>): Promise<void> {
+  async addFile(
+    path: string,
+    mtime: number,
+    expectedSize: number,
+    chunks: AsyncIterable<Uint8Array>,
+    mode?: number,
+  ): Promise<void> {
     const entry: Entry = {
       name: utf8(path),
       directory: false,
+      mode,
       mtime,
       crc: 0,
       size: 0,
@@ -185,6 +196,14 @@ export class ZipWriter {
       : Record.of(16).u32(0x08074b50).u32(entry.crc).u32(entry.size).u32(entry.size)
     await this.put(descriptor.bytes)
     this.entries.push(entry)
+  }
+
+  /** A symbolic link, stored the Unix way: the target is the content. */
+  async addLink(path: string, mtime: number, target: string): Promise<void> {
+    const content = utf8(target)
+    await this.addFile(path, mtime, content.length, (async function* () {
+      yield content
+    })(), MODE_LINK)
   }
 
   private centralHeader(entry: Entry): Bytes {
@@ -215,7 +234,7 @@ export class ZipWriter {
       .u16(0) // comment
       .u16(0) // disk
       .u16(0) // internal attributes
-      .u32((((entry.directory ? MODE_DIR : MODE_FILE) << 16) | (entry.directory ? 0x10 : 0)) >>> 0)
+      .u32((((entry.mode ?? (entry.directory ? MODE_DIR : MODE_FILE)) << 16) | (entry.directory ? 0x10 : 0)) >>> 0)
       .u32(bigOffset ? MAX32 : entry.offset)
       .raw(entry.name)
       .raw(extra).bytes
@@ -294,5 +313,9 @@ export class ZipTarget implements RestoreTarget {
 
   writeFile(file: TreeFile, chunks: AsyncIterable<Bytes>): Promise<void> {
     return this.inOrder(() => this.zip.addFile(this.prefix + safeName(file.name), file.mtime, file.size, chunks))
+  }
+
+  writeLink(link: TreeSymlink): Promise<void> {
+    return this.inOrder(() => this.zip.addLink(this.prefix + safeName(link.name), link.mtime ?? Date.now(), link.target))
   }
 }

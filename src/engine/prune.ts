@@ -6,6 +6,8 @@
 // never missing ones.
 
 import type { BlobType } from './pack'
+import { FormatError } from './crypto'
+import { knownEntry } from './repo'
 import type { Repository, Snapshot } from './repo'
 
 /** Snapshots older than `keepMonths`, oldest first. Never the newest one. */
@@ -53,8 +55,11 @@ async function reachable(repo: Repository, snapshots: Snapshot[], signal?: Abort
     live.add(tree)
     // If a listing cannot be read we stop here, before removing anything.
     for (const entry of await repo.loadTree(tree)) {
+      // An entry type this version does not know may keep data alive in a
+      // way it cannot see: never remove anything past it (FORMAT-v2.md 4.7).
+      if (!knownEntry(entry)) throw new FormatError('This backup holds items this version of XkyHold does not know')
       if (entry.type === 'dir') todo.push(entry.subtree)
-      else for (const id of entry.content) live.add(id)
+      else if (entry.type === 'file') for (const id of entry.content) live.add(id)
     }
   }
   return live

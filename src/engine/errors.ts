@@ -14,6 +14,7 @@ export type ErrorKind =
   | 'refused' // Drive said no: quota, permissions
   | 'space' // this device has no room for a temporary file
   | 'busy' // another device is working on this backup right now
+  | 'read-only' // a format 2 backup (XkyHold-lx): XkyHold only restores from it
   | 'network'
   | 'aborted'
   | 'other'

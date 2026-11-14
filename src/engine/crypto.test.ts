@@ -101,9 +101,11 @@ describe('repository keys', () => {
     await expect(unlockRepository(updated, { password: 'new' })).resolves.toBeDefined()
   })
 
-  it('refuses a newer format and something that is not a config', async () => {
+  it('opens format 2, refuses a newer format and something that is not a config', async () => {
     const repo = await createRepository('p', FAST)
-    await expect(unlockRepository({ ...repo.config, format: 2 }, { password: 'p' })).rejects.toThrow(FormatError)
+    // Format 2 (XkyHold-lx) keeps the keys of format 1 (FORMAT-v2.md 3.1).
+    await expect(unlockRepository({ ...repo.config, format: 2 }, { password: 'p' })).resolves.toBeDefined()
+    await expect(unlockRepository({ ...repo.config, format: 3 }, { password: 'p' })).rejects.toThrow(FormatError)
     await expect(unlockRepository({} as never, { password: 'p' })).rejects.toThrow(FormatError)
   })
 

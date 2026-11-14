@@ -16,6 +16,7 @@ import type { SerializedError } from './errors'
 import { Repository } from './repo'
 import type { RepositoryOptions, Snapshot, TreeEntry } from './repo'
 import { restoreEntries } from './restore'
+import type { RestoreProgress } from './restore'
 import { ZipTarget, ZipWriter } from './zip'
 import type { ZipSink } from './zip'
 
@@ -31,8 +32,8 @@ export interface Progress {
 export interface EngineApi {
   listBackups(args: void): string[]
   create(args: { repoName: string; password: string }): { recoveryKey: string; keys: RepoKeys }
-  connect(args: { repoName: string; credential: Credential }): { keys: RepoKeys; snapshots: Snapshot[] }
-  open(args: { repoName: string; keys: RepoKeys }): { snapshots: Snapshot[] }
+  connect(args: { repoName: string; credential: Credential }): { keys: RepoKeys; snapshots: Snapshot[]; format: number }
+  open(args: { repoName: string; keys: RepoKeys }): { snapshots: Snapshot[]; format: number }
   close(args: void): void
   backup(args: {
     roots: { name: string; handle?: DirHandleLike; members?: (DirHandleLike | FileHandleLike)[]; leaveOut?: string[] }[]
@@ -41,12 +42,32 @@ export interface EngineApi {
     keepMonths: number
   }): { snapshot: Snapshot; snapshots: Snapshot[]; sentBytes: number; removed: number; freedBytes: number }
   loadTree(args: { tree: string }): TreeEntry[]
-  restore(args: { entries: TreeEntry[]; folder: unknown }): { files: number; bytes: number }
-  check(args: { entries: TreeEntry[] }): { files: number; bytes: number }
+  restore(args: { entries: TreeEntry[]; folder: unknown }): RestoreCounts
+  check(args: { entries: TreeEntry[] }): RestoreCounts
   /** Restores into a ZIP archive, for browsers that cannot write to folders. */
-  restoreZip(args: { entries: TreeEntry[] }): { files: number; bytes: number } & ZipResult
+  restoreZip(args: { entries: TreeEntry[] }): RestoreCounts & ZipResult
   changePassword(args: { repoName: string; credential: Credential; newPassword: string }): void
 }
+
+/** What a restore did, including what a browser could not restore. */
+export interface RestoreCounts {
+  files: number
+  bytes: number
+  /** Symbolic links (format 2), not restorable into a folder. */
+  links: number
+  /** Items of a kind this version does not know. */
+  unknown: number
+  /** Items restored under a changed name (format 2 names that look alike). */
+  renamed: number
+}
+
+const counts = (p: RestoreProgress): RestoreCounts => ({
+  files: p.files,
+  bytes: p.bytes,
+  links: p.links ?? 0,
+  unknown: p.unknown ?? 0,
+  renamed: p.renamed ?? 0,
+})
 
 export type Method = keyof EngineApi
 
@@ -131,17 +152,23 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
       const connected = await Repository.open(dest, credential, env.repository)
       snapshots = await connected.listSnapshots()
       repo = connected
-      return { keys: repo.keys, snapshots }
+      return { keys: repo.keys, snapshots, format: repo.format }
     },
 
     async open({ repoName, keys }) {
       const dest = await destination(repoName)
       void dest.warm?.().catch(() => {})
       const reopened = new Repository(dest, keys, env.repository)
-      const [, listed] = await Promise.all([reopened.loadIndex(), reopened.listSnapshots()])
+      // The keys are known, but the format decides what may be done here.
+      const [config, , listed] = await Promise.all([
+        Repository.readConfig(dest),
+        reopened.loadIndex(),
+        reopened.listSnapshots(),
+      ])
+      reopened.format = config.format
       snapshots = listed
       repo = reopened
-      return { snapshots }
+      return { snapshots, format: reopened.format }
     },
 
     async close() {
@@ -151,6 +178,8 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
 
     async backup({ roots, device, keepMonths }, { signal, progress }) {
       const r = opened()
+      // Format 2 is XkyHold-lx's: restore only (FORMAT-v2.md, section 8).
+      if (r.format !== 1) throw new EngineError('read-only')
       const now = env.now ?? (() => new Date())
       const before = r.uploadedBytes
       let snapshot: Snapshot
@@ -201,12 +230,12 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
 
     async restore({ entries, folder }, { signal, progress }) {
       const total = await restoreEntries(opened(), entries, new FolderTarget(folder as WritableDir), { signal, onProgress: progress })
-      return { files: total.files, bytes: total.bytes }
+      return counts(total)
     },
 
     async check({ entries }, { signal, progress }) {
       const total = await restoreEntries(opened(), entries, new VerifyTarget(), { signal, onProgress: progress })
-      return { files: total.files, bytes: total.bytes }
+      return counts(total)
     },
 
     async restoreZip({ entries }, { signal, progress }) {
@@ -216,7 +245,7 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
         const zip = new ZipWriter(output)
         const total = await restoreEntries(r, entries, ZipTarget.root(zip), { signal, onProgress: progress })
         await zip.finish()
-        return { files: total.files, bytes: total.bytes, ...(await output.finish()) }
+        return { ...counts(total), ...(await output.finish()) }
       } catch (err) {
         await output.discard()
         throw err
@@ -224,6 +253,8 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     },
 
     async changePassword({ repoName, credential, newPassword }) {
+      const config = await Repository.readConfig(await destination(repoName))
+      if (config.format !== 1) throw new EngineError('read-only')
       await Repository.changePassword(await destination(repoName), credential, newPassword, env.repository?.argon2)
     },
   }

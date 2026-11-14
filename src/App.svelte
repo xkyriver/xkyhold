@@ -3,7 +3,7 @@
   import type { Lang } from './lib/i18n.svelte'
   import { landingHref } from './lib/landing'
   import { reminder } from './lib/reminder'
-  import { app, backupNow, caps, signIn, start } from './state/app.svelte'
+  import { app, backupNow, canBackUp, caps, signIn, start } from './state/app.svelte'
   import type { View } from './state/app.svelte'
   import Home from './ui/Home.svelte'
   import Restore from './ui/Restore.svelte'
@@ -41,7 +41,7 @@
   // Home already says it, with its own button.
   const remind = $derived(
     // Before connecting, only what this device remembers is known.
-    caps.folderAccess && (app.loaded || !!app.lastBackup) && !app.job && !app.opening && due.due && !app.reminderDismissed && app.view !== 'home',
+    canBackUp() && (app.loaded || !!app.lastBackup) && !app.job && !app.opening && due.due && !app.reminderDismissed && app.view !== 'home',
   )
 
   function backUpFromReminder() {

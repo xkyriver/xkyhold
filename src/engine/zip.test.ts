@@ -85,6 +85,18 @@ function readZip(zip: Uint8Array): Parsed[] {
   return out
 }
 
+describe('symbolic links (backups made by XkyHold-lx)', () => {
+  it('stores a link the Unix way: link mode, target as content', async () => {
+    const sink = new MemorySink()
+    const zip = new ZipWriter(sink)
+    await zip.addLink('Docs/current', 1_794_400_000_000, 'releases/2026-11')
+    await zip.finish()
+    const [entry] = readZip(sink.bytes)
+    expect(entry).toMatchObject({ name: 'Docs/current', directory: false, crcOk: true, mode: 0o120777 })
+    expect(fromUtf8(entry.data)).toBe('releases/2026-11')
+  })
+})
+
 describe('crc32', () => {
   it('matches the standard check value', () => {
     expect(crc32(utf8('123456789'))).toBe(0xcbf43926)

@@ -115,6 +115,19 @@ describe('forget and prune', () => {
     expect(await prune(fresh, { repackBelow: 1 })).toEqual({ packsRemoved: 0, packsRewritten: 0, bytesFreed: 0 })
   })
 
+  it('stops before removing anything when a tree holds a type it does not know', async () => {
+    // FORMAT-v2.md 4.7: an unknown entry may keep data alive in a way this
+    // version cannot see.
+    const old = await run('2026-01-01T10:00:00Z')
+    const odd = await repo.saveTree([{ name: 'future', type: 'hardlink-group' } as never])
+    await repo.flush()
+    await repo.saveSnapshot({ time: '2026-02-01T10:00:00Z', device: 'test', roots: [{ name: 'x', tree: odd }], stats: { files: 0, bytes: 0, skipped: 0 }, parent: null })
+    await repo.trashSnapshot(old.id)
+    const before = new Map(dest.objects)
+    await expect(prune(repo)).rejects.toThrow(/does not know/)
+    expect(new Map(dest.objects)).toEqual(before)
+  })
+
   it('does nothing when every snapshot is kept', async () => {
     await history()
     const before = new Map(dest.objects)

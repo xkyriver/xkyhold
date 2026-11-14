@@ -260,4 +260,15 @@ export const ptPT: Record<string, string> = {
   Contact: 'Contacto',
   'Source code': 'Código-fonte',
   'Yes, remove': 'Sim, remover',
+
+  // Backups made by XkyHold-lx (format 2)
+  'This backup was made by XkyHold-lx on Linux. You can restore from it here, but not add to it.': 'Esta cópia de segurança foi feita pelo XkyHold-lx no Linux. Podes restaurar a partir dela aqui, mas não acrescentar nada.',
+  '{n} symbolic links were not restored: a browser cannot create them. Download as .zip to keep them.': '{n} ligações simbólicas não foram restauradas: um navegador não as consegue criar. Transfere em .zip para as manter.',
+  '{n} symbolic links are in the .zip as links.': '{n} ligações simbólicas estão no .zip como ligações.',
+  '{n} items of a kind this version does not know were not restored.': '{n} itens de um tipo que esta versão não conhece não foram restaurados.',
+  '{n} items got a changed name, because their names look the same here.': '{n} itens ficaram com outro nome, porque os nomes aparecem iguais aqui.',
+  'This backup was made by XkyHold-lx on Linux. You can restore from it here; new backups to it are made by XkyHold-lx.': 'Esta cópia de segurança foi feita pelo XkyHold-lx no Linux. Podes restaurar a partir dela aqui; as cópias novas são feitas pelo XkyHold-lx.',
+  'another disk, not in the backup': 'outro disco, fora da cópia',
+  'link': 'ligação',
+  'The password of this backup is changed in XkyHold-lx.': 'A palavra-passe desta cópia muda-se no XkyHold-lx.',
 }

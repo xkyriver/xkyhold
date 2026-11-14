@@ -145,8 +145,12 @@
             {#if entry.type === 'dir'}
               <button class="pick grow" onclick={() => enter(entry)} disabled={loading}>
                 <span>📁 {entry.name}</span>
+                {#if entry.mount}<span class="small muted">{t('another disk, not in the backup')}</span>{/if}
               </button>
               <span class="muted" aria-hidden="true">›</span>
+            {:else if entry.type === 'symlink'}
+              <span class="grow">↪ {entry.name}</span>
+              <span class="small muted">{t('link')}</span>
             {:else}
               <span class="grow">{entry.name}</span>
               <span class="small muted">{formatBytes(entry.size)}</span>
