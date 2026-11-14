@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XkyHold-lx — Your whole Linux home folder, backed up. Readable only by you.</title>
+    <meta
+      name="description"
+      content="Free, encrypted backups of your whole Linux home folder, with settings, keys and permissions, to your own Google Drive or a disk."
+    />
+    <link rel="canonical" href="https://xkyhold.xkyriver.com/linux/" />
+    <link rel="alternate" hreflang="en" href="https://xkyhold.xkyriver.com/linux/" />
+    <link rel="alternate" hreflang="pt-PT" href="https://xkyhold.xkyriver.com/pt/linux/" />
+    <link rel="alternate" hreflang="x-default" href="https://xkyhold.xkyriver.com/linux/" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#02090b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="XkyHold" />
+    <meta property="og:title" content="XkyHold-lx — Your whole Linux home folder, backed up." />
+    <meta
+      property="og:description"
+      content="Encrypted backups of your Linux home folder to your Google Drive or a disk. Free and open source."
+    />
+    <meta property="og:url" content="https://xkyhold.xkyriver.com/linux/" />
+    <meta property="og:image" content="https://xkyhold.xkyriver.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/src/landing/landing.css" />
+    <script type="module" src="/src/landing/landing.ts"></script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap top-row">
+        <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28" /> XkyHold</a>
+        <nav class="nav" aria-label="Sections">
+          <a href="#install">Install</a>
+          <a href="#which">Linux or browser</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <a class="lang" href="/pt/linux/" hreflang="pt-PT" lang="pt-PT" data-set-lang="pt-PT">PT</a>
+        <a class="btn small" href="https://github.com/xkyriver/xkyhold-lx/releases/latest">Download</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="wrap hero-grid">
+          <div class="hero-text">
+            <p class="eyebrow">XkyHold-lx · For Linux</p>
+            <h1>Your whole home folder, backed up. <span class="accent">Readable only by you.</span></h1>
+            <p class="lead">
+              XkyHold-lx is the Linux app of XkyHold. It backs up your whole personal folder, with your settings, keys
+              and file permissions, to your Google Drive or to a disk. Everything is encrypted on your computer before
+              it leaves it.
+            </p>
+            <div class="cta">
+              <a class="btn" href="https://github.com/xkyriver/xkyhold-lx/releases/latest">Download for Linux</a>
+              <a class="btn ghost" href="#install">How to install <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="fine"><span class="dot" aria-hidden="true"></span> Free and open source. AppImage, .deb and .rpm.</p>
+          </div>
+
+          <div class="preview" aria-hidden="true">
+            <div class="window">
+              <div class="window-bar">
+                <span class="window-brand"><img src="/favicon.svg" alt="" width="18" height="18" /> XkyHold-lx</span>
+                <span class="tabs"><b>Home</b><span>Restore</span><span>Settings</span></span>
+              </div>
+              <div class="window-body">
+                <div class="mark">✓</div>
+                <p class="p-title">Your files are safe</p>
+                <p class="p-muted">Last backup: Today, 18:16<br />233,236 files · 26 GB</p>
+                <span class="p-btn">Back up now</span>
+                <ul class="p-folders">
+                  <li><span class="folder"></span> Documents</li>
+                  <li><span class="folder"></span> .config</li>
+                  <li><span class="folder"></span> .ssh</li>
+                </ul>
+              </div>
+            </div>
+            <div class="badge">
+              <svg viewBox="0 0 24 24" width="18" height="18"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+              Encrypted on this computer
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="strip">
+        <ul class="wrap strip-row">
+          <li>Encrypted before upload</li>
+          <li>Google Drive or a disk</li>
+          <li>Permissions and links kept</li>
+          <li>Open source</li>
+        </ul>
+      </section>
+
+      <section class="section" id="features">
+        <div class="wrap">
+          <h2>Everything in your personal folder</h2>
+          <p class="section-lead">Choose what to leave out once. XkyHold-lx takes care of the rest.</p>
+          <div class="cards">
+            <article class="card">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" /></svg>
+              <h3>Your whole home folder</h3>
+              <p>Documents and pictures, and also settings, keys, permissions and links. Caches are left out for you.</p>
+            </article>
+            <article class="card">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+              <h3>Encrypted on your computer</h3>
+              <p>Google Drive and the disk only ever see encrypted data. Only your password or recovery key opens it.</p>
+            </article>
+            <article class="card">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg>
+              <h3>A reminder, or automatic</h3>
+              <p>By default it reminds you when a backup is due. If you want, it backs up by itself, even with the window closed.</p>
+            </article>
+            <article class="card">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 4v11" /><path d="m7.5 10.5 4.5 4.5 4.5-4.5" /><path d="M5 19.5h14" /></svg>
+              <h3>Restore anywhere</h3>
+              <p>One file or everything, to a new folder, a disk or its original place. On a new computer, too.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="install">
+        <div class="wrap">
+          <h2>Install</h2>
+          <p class="section-lead">
+            Download the file for your system from the
+            <a href="https://github.com/xkyriver/xkyhold-lx/releases/latest">latest release</a>. For 64-bit Intel
+            and AMD computers.
+          </p>
+          <ol class="steps">
+            <li>
+              <span class="num">1</span>
+              <h3>Any distribution: AppImage</h3>
+              <p>Make the file executable, then open it.</p>
+              <pre class="cmd"><code>chmod +x xkyhold-lx_*.AppImage
+./xkyhold-lx_*.AppImage</code></pre>
+            </li>
+            <li>
+              <span class="num">2</span>
+              <h3>Debian, Ubuntu, Mint: .deb</h3>
+              <p>Install it, then open XkyHold-lx from your applications.</p>
+              <pre class="cmd"><code>sudo apt install ./xkyhold-lx_*.deb</code></pre>
+            </li>
+            <li>
+              <span class="num">3</span>
+              <h3>Fedora, openSUSE: .rpm</h3>
+              <p>Install it, then open XkyHold-lx from your applications.</p>
+              <pre class="cmd"><code>sudo dnf install ./xkyhold-lx-*.rpm</code></pre>
+            </li>
+          </ol>
+          <p class="note">
+            To keep your backup's key on this computer, and for automatic backups, XkyHold-lx uses your desktop's
+            keyring (GNOME Keyring or KWallet). Without one, it asks for your password each time.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="which">
+        <div class="wrap">
+          <h2>XkyHold-lx or XkyHold in the browser?</h2>
+          <p class="section-lead">Both keep your backup encrypted in your own Google Drive, and they understand each other.</p>
+          <div class="sees">
+            <div class="sees-col">
+              <h3>XkyHold-lx, on Linux</h3>
+              <ul>
+                <li>Your whole home folder, with settings and keys</li>
+                <li>Permissions and links kept</li>
+                <li>Google Drive or a disk</li>
+                <li>Automatic backups, if you want them</li>
+              </ul>
+            </div>
+            <div class="sees-col">
+              <h3>XkyHold, in the browser</h3>
+              <ul>
+                <li>The folders you choose</li>
+                <li>Nothing to install</li>
+                <li>Windows, macOS and Linux</li>
+                <li>Restores XkyHold-lx backups, even on a phone</li>
+              </ul>
+            </div>
+          </div>
+          <p class="note"><a href="/">XkyHold in the browser</a></p>
+        </div>
+      </section>
+
+      <section class="section alt" id="faq">
+        <div class="wrap narrow">
+          <h2>Questions</h2>
+          <details>
+            <summary>Is it free?</summary>
+            <p>Yes. No ads and no paid features. Your backup uses the space in your Google Drive or on your disk.</p>
+          </details>
+          <details>
+            <summary>Does it back up the whole system?</summary>
+            <p>
+              No. It backs up your personal folder only. It does not save the system, installed programs or other
+              users' folders, and it never runs as administrator.
+            </p>
+          </details>
+          <details>
+            <summary>What is left out?</summary>
+            <p>
+              Caches, the trash and the app's own files, always. You can also leave out folders such as Videos, and
+              large folders that are easy to rebuild, such as node_modules. XkyHold-lx shows how much space each one
+              takes.
+            </p>
+          </details>
+          <details>
+            <summary>What if I forget my password?</summary>
+            <p>
+              Use your recovery key. Only your password or your recovery key can open your backup. If you lose both,
+              nobody can open it, not even us.
+            </p>
+          </details>
+          <details>
+            <summary>I lost my computer. How do I get my files back?</summary>
+            <p>
+              Install XkyHold-lx on the new computer, choose the same Google account or disk, and open your backup with
+              its password or recovery key. Without Linux, XkyHold in the browser can restore it too.
+            </p>
+          </details>
+          <details>
+            <summary>Can I use a work or school account?</summary>
+            <p>
+              Yes, but your administrator may have to approve XkyHold-lx first.
+              <a href="/privacy.html#admins">What to approve</a>
+            </p>
+          </details>
+          <details>
+            <summary>How do I uninstall it?</summary>
+            <p>
+              First open Settings and choose “Remove from this computer”. This turns off reminders and automatic
+              backups and forgets the key; your backup stays where it is. Then uninstall the package, or delete the
+              AppImage.
+            </p>
+          </details>
+          <details>
+            <summary>Can I check how it works?</summary>
+            <p>
+              Yes. The source code is public under the AGPL-3.0 licence, including the description of how backups are
+              stored. <a href="https://github.com/xkyriver/xkyhold-lx">Source code</a>
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="section final">
+        <div class="wrap center">
+          <h2>Keep your home folder safe today</h2>
+          <p class="section-lead">It takes a couple of minutes to set up.</p>
+          <a class="btn" href="https://github.com/xkyriver/xkyhold-lx/releases/latest">Download for Linux</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-row">
+        <span class="brand small-brand"><img src="/favicon.svg" alt="" width="20" height="20" /> XkyHold</span>
+        <nav class="foot-links" aria-label="More">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms of use</a>
+          <a href="mailto:privacy@xkyhold.xkyriver.com">Contact</a>
+          <a href="https://github.com/xkyriver/xkyhold-lx">Source code</a>
+          <a href="https://xkyriver.com/">More apps by XKYRIVER</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -560,6 +560,30 @@ h3 {
   color: var(--muted);
 }
 
+/* Install commands (/linux/) */
+
+/* A long command wraps inside its box instead of widening the grid. */
+.steps > li {
+  min-width: 0;
+}
+
+.cmd {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.cmd code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  color: var(--text);
+}
+
 /* FAQ */
 
 details {
