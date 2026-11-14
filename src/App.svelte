@@ -5,6 +5,7 @@
   import { reminder } from './lib/reminder'
   import { app, backupNow, canBackUp, caps, signIn, start } from './state/app.svelte'
   import type { View } from './state/app.svelte'
+  import { notNow, reloadForUpdate, startUpdateChecks, update } from './state/update.svelte'
   import Home from './ui/Home.svelte'
   import Restore from './ui/Restore.svelte'
   import Settings from './ui/Settings.svelte'
@@ -22,6 +23,7 @@
   let inWizard = $state(false)
 
   void start().then(() => (inWizard = !app.configured))
+  startUpdateChecks()
   $effect(() => {
     if (app.ready && !app.configured) inWizard = true
   })
@@ -65,6 +67,16 @@
   </header>
 
   <main class="page">
+    {#if update.waiting}
+      <div class="banner info" role="status">
+        <span>
+          {t('There is a new version of XkyHold.')}
+          {#if app.job}<span class="small muted">{t('You can update when this finishes.')}</span>{/if}
+        </span>
+        <button class="btn primary" onclick={reloadForUpdate} disabled={!!app.job}>{t('Update')}</button>
+        <button class="btn" onclick={notNow}>{t('Not now')}</button>
+      </div>
+    {/if}
     {#if caps.mode === 'unsupported'}
       <section class="card stack">
         <h1>{t('This browser is not supported')}</h1>

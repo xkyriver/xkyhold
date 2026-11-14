@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 declare const __APP_VERSION__: string
+/** The build this page came from (vite.config.ts). */
+declare const __APP_BUILD__: string
 
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID?: string

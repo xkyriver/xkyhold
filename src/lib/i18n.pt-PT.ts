@@ -271,4 +271,7 @@ export const ptPT: Record<string, string> = {
   'another disk, not in the backup': 'outro disco, fora da cópia',
   'link': 'ligação',
   'The password of this backup is changed in XkyHold-lx.': 'A palavra-passe desta cópia muda-se no XkyHold-lx.',
+  'There is a new version of XkyHold.': 'Há uma versão nova do XkyHold.',
+  'You can update when this finishes.': 'Podes atualizar quando isto terminar.',
+  'Update': 'Atualizar',
 }
