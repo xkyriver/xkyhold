@@ -13,7 +13,7 @@
       <p><a href="/">← XkyHold</a></p>
 
       <h1>Privacy</h1>
-      <p class="muted">Last updated: 13 November 2026 · <a href="#pt">Português</a></p>
+      <p class="muted">Last updated: 14 November 2026 · <a href="#pt">Português</a></p>
 
       <p>
         XkyHold backs up folders you choose to your own Google Drive. It is a web page that runs entirely in your
@@ -69,6 +69,35 @@
         only one XkyHold needs; you do not have to mark it as trusted.
       </p>
 
+      <h2 id="linux">XkyHold-lx, the app for Linux</h2>
+      <p>
+        XkyHold-lx is installed on your computer and backs up your personal folder to your Google Drive or to a folder
+        you choose, such as an external disk. It works like XkyHold: no server, no account, and everything is
+        encrypted on your computer before it is saved.
+      </p>
+      <ul>
+        <li>
+          In its settings folder on your computer: where your backup is, your Google account's email address, what to
+          save, your preferences, and the date and size of your last backup.
+        </li>
+        <li>
+          In your desktop's keyring (such as GNOME Keyring or KWallet): the Google sign-in, and the key that opens your
+          backup if you choose to open it without the password. Without a keyring, the Google sign-in is kept only
+          while the window is open.
+        </li>
+        <li>On your computer, encrypted copies of parts of your backup, to make it faster, and a log of errors.</li>
+        <li>On Google Drive or your disk: only your encrypted files, as described above.</li>
+      </ul>
+      <p>
+        It asks Google for the same single permission (<code>drive.file</code>) and reads your email address for the
+        same reason. In Settings, “Remove from this computer” deletes the settings, the key and the Google sign-in from
+        that computer; your backup stays where it is.
+      </p>
+      <p id="admins-lx">
+        Administrators of work or school accounts approve XkyHold-lx as above, with OAuth client ID
+        <code>780229057994-bq9u7g6pf2pk1fiumb84lsoi2pdd1v5j.apps.googleusercontent.com</code> and the same scope.
+      </p>
+
       <h2>What we do not do</h2>
       <ul>
         <li>No analytics, no advertising, no cookies, no tracking.</li>
@@ -90,7 +119,7 @@
 
       <h1 id="pt" lang="pt-PT">Privacidade</h1>
       <div lang="pt-PT">
-        <p class="muted">Última atualização: 13 de novembro de 2026</p>
+        <p class="muted">Última atualização: 14 de novembro de 2026</p>
 
         <p>
           O XkyHold faz cópias de segurança das pastas que escolheres para o teu próprio Google Drive. É uma página
@@ -144,6 +173,35 @@
           (Security → Access and data control → API controls → Manage Third-Party App Access) com o ID de cliente OAuth
           <code>780229057994-s92kffrbro66ok9mmep62v2v94mtd62e.apps.googleusercontent.com</code> e o scope <code>https://www.googleapis.com/auth/drive.file</code>. É o único scope de que
           o XkyHold precisa; não é preciso marcá-lo como confiável.
+        </p>
+
+        <h2 id="linux-pt">XkyHold-lx, a app para Linux</h2>
+        <p>
+          O XkyHold-lx é instalado no teu computador e faz a cópia de segurança da tua pasta pessoal para o teu Google
+          Drive ou para uma pasta que escolheres, por exemplo num disco externo. Funciona como o XkyHold: sem
+          servidor, sem conta, e tudo é encriptado no teu computador antes de ser guardado.
+        </p>
+        <ul>
+          <li>
+            Na pasta de definições, no teu computador: onde está a cópia de segurança, o endereço de email da tua
+            conta Google, o que guardar, as tuas preferências e a data e o tamanho da última cópia.
+          </li>
+          <li>
+            No porta-chaves do teu ambiente de trabalho (como o GNOME Keyring ou o KWallet): a sessão Google e, se
+            escolheres abrir a cópia sem a palavra-passe, a chave que a abre. Sem porta-chaves, a sessão Google só
+            fica guardada enquanto a janela estiver aberta.
+          </li>
+          <li>No teu computador, cópias encriptadas de partes da cópia de segurança, para ser mais rápido, e um registo de erros.</li>
+          <li>No Google Drive ou no teu disco: só os teus ficheiros encriptados, como descrito acima.</li>
+        </ul>
+        <p>
+          Pede à Google a mesma única permissão (<code>drive.file</code>) e lê o endereço de email pelo mesmo motivo.
+          Nas Definições, “Remover deste computador” apaga desse computador as definições, a chave e a sessão Google;
+          a cópia de segurança fica onde está.
+        </p>
+        <p id="admins-lx-pt">
+          Os administradores de contas de trabalho ou escola aprovam o XkyHold-lx como acima, com o ID de cliente OAuth
+          <code>780229057994-bq9u7g6pf2pk1fiumb84lsoi2pdd1v5j.apps.googleusercontent.com</code> e o mesmo scope.
         </p>
 
         <h2>O que não fazemos</h2>
