@@ -55,6 +55,8 @@ export interface RestoreCounts {
   bytes: number
   /** Symbolic links (format 2), not restorable into a folder. */
   links: number
+  /** Symbolic links kept as links (in a .zip). */
+  linksKept: number
   /** Items of a kind this version does not know. */
   unknown: number
   /** Items restored under a changed name (format 2 names that look alike). */
@@ -65,6 +67,7 @@ const counts = (p: RestoreProgress): RestoreCounts => ({
   files: p.files,
   bytes: p.bytes,
   links: p.links ?? 0,
+  linksKept: p.linksKept ?? 0,
   unknown: p.unknown ?? 0,
   renamed: p.renamed ?? 0,
 })

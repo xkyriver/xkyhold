@@ -128,6 +128,7 @@ describe('format v2 golden repository (written by XkyHold-lx)', () => {
     })
     const done = await restoreEntries(repo, await repo.loadTree(snapshot.roots[0].tree), linkTarget())
     expect(done.links ?? 0).toBe(0)
+    expect(done.linksKept).toBe(2)
     expect(links.map((l) => [l.name, l.target]).sort()).toEqual([
       ['dangling', 'does/not/exist'],
       ['link', 'notes.txt'],

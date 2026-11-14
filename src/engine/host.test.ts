@@ -83,7 +83,7 @@ describe('engine over messages', () => {
     expect(sentBytes).toBeGreaterThan(23_000)
     expect(seen.at(-1)).toBe(3)
 
-    expect(await client.call('check', { entries: asDirs(snapshot) })).toEqual({ files: 3, bytes: 23_011, links: 0, unknown: 0, renamed: 0 })
+    expect(await client.call('check', { entries: asDirs(snapshot) })).toEqual({ files: 3, bytes: 23_011, links: 0, linksKept: 0, unknown: 0, renamed: 0 })
     expect(await client.call('listBackups', undefined)).toEqual(['laptop'])
   })
 
@@ -197,7 +197,7 @@ describe('engine over messages', () => {
     expect(november.freedBytes).toBeGreaterThan(20_000)
     expect(november.snapshots.map((s) => s.id)).toEqual([november.snapshot.id])
     expect(destinations.get('laptop')!.names('locks')).toEqual([])
-    expect(await client.call('check', { entries: asDirs(november.snapshot) })).toEqual({ files: 2, bytes: 3011, links: 0, unknown: 0, renamed: 0 })
+    expect(await client.call('check', { entries: asDirs(november.snapshot) })).toEqual({ files: 2, bytes: 3011, links: 0, linksKept: 0, unknown: 0, renamed: 0 })
 
     // "Forever" keeps everything.
     page.clock.now = new Date('2030-01-01T10:00:00Z')
@@ -283,7 +283,7 @@ describe('a backup made by XkyHold-lx (format 2)', () => {
     linux()
     const { snapshots } = await client.call('connect', { repoName: 'linux', credential: { password: golden.password } })
     const done = await client.call('restoreZip', { entries: asDirs(snapshots[0]) })
-    expect(done).toMatchObject({ links: 0, unknown: 0, renamed: 1 })
+    expect(done).toMatchObject({ links: 0, linksKept: 2, unknown: 0, renamed: 1 })
     expect(done.files).toBe(golden.expected.filter((e) => e.type === 'file').length)
   })
 })

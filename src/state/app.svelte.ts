@@ -395,7 +395,6 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
         ? t('Restored 1 file ({size}).', { size })
         : t('Restored {files} files ({size}).', { files: done.files.toLocaleString(), size }),
       done,
-      true,
     )
   })
 }
@@ -404,15 +403,12 @@ export async function restoreToFolder(entries: TreeEntry[]): Promise<void> {
  * Adds what a browser could not restore from a backup made by XkyHold-lx
  * (docs/FORMAT-v2.md, section 8), so that nothing is left out silently.
  */
-function withSkipped(text: string, done: RestoreCounts, folder: boolean): string {
+function withSkipped(text: string, done: RestoreCounts): string {
   const parts = [text]
   if (done.links > 0) {
-    parts.push(
-      folder
-        ? t('{n} symbolic links were not restored: a browser cannot create them. Download as .zip to keep them.', { n: done.links })
-        : t('{n} symbolic links are in the .zip as links.', { n: done.links }),
-    )
+    parts.push(t('{n} symbolic links were not restored: a browser cannot create them. Download as .zip to keep them.', { n: done.links }))
   }
+  if (done.linksKept > 0) parts.push(t('{n} symbolic links are in the .zip as links.', { n: done.linksKept }))
   if (done.unknown > 0) parts.push(t('{n} items of a kind this version does not know were not restored.', { n: done.unknown }))
   if (done.renamed > 0) {
     parts.push(t('{n} items got a changed name, because their names look the same here.', { n: done.renamed }))
@@ -454,7 +450,6 @@ export async function restoreAsZip(entries: TreeEntry[]): Promise<void> {
         ? t('1 file ({size}) is in a .zip file in your downloads.', { size })
         : t('{files} files ({size}) are in a .zip file in your downloads.', { files: done.files.toLocaleString(), size }),
       done,
-      false,
     )
   })
 }

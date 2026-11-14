@@ -19,6 +19,8 @@ export interface RestoreProgress {
   current: string
   /** Symbolic links this target cannot hold, so not restored. */
   links?: number
+  /** Symbolic links restored as links (into a .zip). */
+  linksKept?: number
   /** Entries of a type this version does not know, not restored. */
   unknown?: number
   /** Entries restored under a changed name: two names on Linux looked the same here. */
@@ -93,7 +95,7 @@ export async function restoreEntries(
     running.add(job)
   }
 
-  const count = (what: 'links' | 'unknown' | 'renamed') => (progress[what] = (progress[what] ?? 0) + 1)
+  const count = (what: 'links' | 'linksKept' | 'unknown' | 'renamed') => (progress[what] = (progress[what] ?? 0) + 1)
 
   async function walk(list: TreeEntry[], into: RestoreTarget, path: string): Promise<void> {
     // Format 2 names that are not valid UTF-8 are shown with U+FFFD, so two
@@ -125,6 +127,7 @@ export async function restoreEntries(
         await walk(await repo.loadTree(entry.subtree), await into.createDir(name), entryPath)
       } else if (entry.type === 'symlink') {
         await into.writeLink!({ ...entry, name })
+        count('linksKept')
       } else {
         await file(name === entry.name ? entry : { ...entry, name }, into, entryPath)
       }
