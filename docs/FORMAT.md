@@ -17,6 +17,11 @@ The rule from here on:
 - Wording in this document may be clarified, as long as it describes the
   same bytes.
 
+Version 2, which adds what a Linux program can capture (permissions,
+owners, symbolic links, extended attributes), is specified in
+`docs/FORMAT-v2.md`. It is written by XkyHold-lx; this document stays the
+specification of version 1.
+
 This document is the contract between the backup engine and the data it
 leaves in Google Drive. If the code and this document disagree, one of them
 has a bug.

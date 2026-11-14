@@ -1,9 +1,14 @@
 # XkyHold repository format — version 2
 
-Status: **draft for review**, 13 November 2026, revised 14 November 2026.
-Nothing implements it yet.
-Once approved it is frozen like version 1, and the fixtures written for it
-(`golden-v2*.json`, section 10) are never regenerated.
+Status: **approved by the owner and frozen** on 14 November 2026. Not
+implemented yet; XkyHold-lx implements it first. The rules of version 1
+apply from here on:
+
+- Version 2 does not change in incompatible ways. Wording may be
+  clarified, as long as it describes the same bytes.
+- `golden-v2-repo.json` (section 10) is written once by the first
+  implementation and never regenerated. If a test against it fails, the
+  change is wrong.
 
 Version 2 is version 1 (`docs/FORMAT.md`) plus what a program running on
 Linux can capture and a browser cannot: permissions, owners, nanosecond
