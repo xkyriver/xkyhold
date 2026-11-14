@@ -1,6 +1,7 @@
 # XkyHold repository format — version 2
 
-Status: **draft for review**, 13 November 2026. Nothing implements it yet.
+Status: **draft for review**, 13 November 2026, revised 14 November 2026.
+Nothing implements it yet.
 Once approved it is frozen like version 1, and the fixtures written for it
 (`golden-v2*.json`, section 10) are never regenerated.
 
@@ -16,7 +17,8 @@ index, locks, prune order and Drive layout.
 
 1. **A version 2 repository restores the home folder as it was**: content,
    permission bits, modification times to the nanosecond, symbolic links,
-   extended attributes and, where the user is the same, the owner.
+   extended attributes and, where the restoring user belongs to it, the
+   group.
 2. **XkyHold web can still restore files from it** in any browser, ignoring
    what a browser cannot apply (section 8).
 3. **A program that only knows version 1 never misreads version 2.** It
@@ -36,8 +38,9 @@ files outside it.
 |---|---|---|
 | `config.format` | `1` | `2` |
 | Snapshot | `id`, `time`, `device`, `roots`, `stats`, `parent` | Adds `format: 2`, optional `home`, `source` and `meta` per root, more `stats`; encrypted with AAD `xkyhold/v2/snapshot/<id>` |
-| Tree entry types | `file`, `dir` | Adds `symlink` |
+| Tree entry types | `file`, `dir` | Adds `symlink`; a mount point that is not crossed is an empty `dir` (4.9) |
 | Entry fields | `name`, `size`, `mtime` (ms), `content` / `subtree` | Adds optional `nameBytes`, `mtimeNanos`, `mode`, `uid`, `gid`, `user`, `group`, `xattrs`, `change`; folders get the same metadata |
+| Who writes | XkyHold web | XkyHold-lx writes only into `format: 2` repositories; XkyHold web only restores from them (sections 7 and 8) |
 | Destinations | Google Drive | Also a local folder (section 9) |
 
 ## 3. Marking the version, and what older programs do
@@ -57,11 +60,14 @@ that say `v1`.
 ### 3.2 In each snapshot
 
 XkyHold web 1.0 has one path that does not read `config`: reopening a
-backup this browser already knows, with the keys kept in IndexedDB. If a
-repository it knew as version 1 later became version 2 (section 7), that
-path would load version 2 snapshots and trees as if they were version 1.
-Its restore would then fail on a symbolic link in an unhelpful way, and
-its prune would read a tree it does not understand.
+backup this browser already knows, with the keys kept in IndexedDB.
+Version 2 never turns a version 1 repository into a version 2 one (section
+7), so that path should never meet a version 2 snapshot. The rule below is
+defence in depth for the day it does (an in-place upgrade specified later,
+or a `config` copied by hand): without it, that path would load version 2
+snapshots and trees as if they were version 1, its restore would fail on a
+symbolic link in an unhelpful way, and its prune would read a tree it does
+not understand.
 
 So every version 2 snapshot is sealed with a different AAD:
 
@@ -73,8 +79,7 @@ So every version 2 snapshot is sealed with a different AAD:
 A version 1 reader fails to authenticate a version 2 snapshot, and because
 it lists all snapshots before it backs up, restores or prunes, it stops
 before reading any version 2 tree. It says the backup is damaged, which is
-wrong but safe; it can only happen to a browser tab left open from before
-XkyHold web learned version 2. Version 2 trees are only reachable from
+wrong but safe. Version 2 trees are only reachable from
 version 2 snapshots, so no other object needs a new AAD.
 
 A version 2 reader opens a snapshot with the version 2 AAD first and, if
@@ -84,12 +89,15 @@ that opened it is damaged.
 
 ### 3.3 Mixed repositories
 
-A `format: 2` repository may hold version 1 and version 2 snapshots side by
-side, and they share blobs. A writer that records anything version 2 adds
-writes a version 2 snapshot; a writer that only knows version 1 fields
-(XkyHold web, which keeps writing version 1 snapshots) may keep doing so.
-A version 1 snapshot never refers to a tree containing version 2 fields or
-types, because version 1 writers do not produce them.
+The format allows a `format: 2` repository to hold version 1 and version 2
+snapshots side by side, sharing blobs, and readers accept both (3.2). A
+version 1 snapshot never refers to a tree containing version 2 fields or
+types.
+
+No first-version writer produces a version 1 snapshot in a `format: 2`
+repository: XkyHold-lx writes only version 2 snapshots, and XkyHold web
+does not write into `format: 2` repositories at all (section 8). The rule
+exists so that a later writer may do so without a new format version.
 
 ## 4. Tree entries
 
@@ -204,6 +212,29 @@ example an optional `linkGroup` field) can be added later under 4.7 without
 a new version, since a reader that ignores it still restores correct
 files.
 
+### 4.9 Mount points
+
+Another file system mounted inside the home folder (a second disk, a
+network share, a FUSE mount) is not crossed unless the user chose to cross
+it. A folder whose device differs from its parent's and that is not
+crossed is stored as a `dir` entry with its own metadata and an empty
+subtree (`{ "entries": [] }`), so that a restore recreates the mount point
+as an empty folder. It may carry `"mount": true` (optional, for display:
+"another disk, not backed up"); readers that ignore it restore an empty
+folder. Each such folder is counted in `stats.mounts` (5.3). A mount point
+the user chose to cross is stored like any folder.
+
+### 4.10 Not stored
+
+- **Holes in sparse files.** A sparse file is stored expanded. Its zero
+  chunks all have the same id and are stored once. A restore may recreate
+  holes; that is the restore's freedom, not a matter of the format.
+- **File flags** set with `chattr` (immutable, append-only, btrfs
+  `nodatacow`, …).
+- **Creation (birth) time.**
+- What section 4.5 leaves out of extended attributes, and the special
+  files counted in `stats.special`.
+
 ## 5. Snapshots
 
 ```json
@@ -226,7 +257,7 @@ files.
 
 Where the backup came from: the absolute path of the home folder, the user
 name and the numeric ids. Used to restore "to the original place" and to
-decide whether owners can be restored (section 6). Optional; version 2
+tell the user when a backup came from another account (section 6). Optional; version 2
 snapshots written by XkyHold-lx always have it.
 
 ### 5.2 Roots
@@ -252,6 +283,7 @@ An incremental backup finds its previous tree by `source`, not by `name`.
 | `changed` | Files that changed while being read, stored as read |
 | `special` | Sockets, FIFOs and device files, which are never stored |
 | `symlinks` | Symbolic links stored |
+| `mounts` | Mount points not crossed, stored as empty folders (4.9) |
 
 ## 6. Restoring
 
@@ -265,9 +297,17 @@ says what a browser does.
 - Validate every name (section 4.1) before using it; a bad name is skipped
   and counted, never written.
 - `mode`: apply `mode & 0o1777`. **Setuid and setgid are never restored.**
-- `uid`/`gid`: applied only when the restoring user is the one in `home`
-  (same `uid`) or when they equal the restoring user's own ids; otherwise
-  the files belong to whoever restores them. Restores never need root.
+- **Owner:** never changed. Every restored item belongs to the user who
+  restores it (without root, changing the owner to another user fails
+  anyway). Restores never need root.
+- **Group:** restored only when the restoring user is a member of that
+  group (primary or supplementary); otherwise the item keeps the group it
+  was created with.
+- **Matching names and numbers:** `user` and `group` names win over the
+  numeric `uid` and `gid` when the name exists on the restoring system;
+  otherwise the number is used. The same rule decides whether the stored
+  owner is the restoring user, for example to warn that a backup came from
+  another account.
 - `xattrs`: applied when the destination file system supports them; a
   failure is counted, not fatal.
 - Times: applied last, after content and attributes, and folders after
@@ -276,23 +316,23 @@ says what a browser does.
 - To the original place: never replace an existing item silently; the user
   chooses to skip, replace or keep both.
 
-## 7. Upgrading a version 1 repository
+## 7. Version 1 repositories
 
-Proposal (to be decided by the owner, `xkyhold-lx/docs/PLAN.md`, open
-question 4): XkyHold-lx may back up into an existing version 1 repository
-only after the user agrees to upgrade it. Upgrading rewrites `config` with
-`"format": 2` and nothing else (keys and data untouched), the same way a
-password change rewrites it. From then on XkyHold web older than the
-version that reads version 2 refuses to connect (3.1) and, in a tab left
-open, fails on the first version 2 snapshot (3.2). XkyHold-lx only offers
-the upgrade once XkyHold web with version 2 support is published.
+XkyHold-lx writes only into repositories created as `format: 2`. It opens
+version 1 repositories to browse, restore and check them, and never writes
+into them: no backup, no retention, no prune, no change to `config`.
 
-The alternative is that XkyHold-lx only writes into repositories it
-created, and opens version 1 repositories for restoring and checking only.
+Version 2 does not specify an in-place upgrade from version 1. One can be
+specified later if there is demand; section 3.2 already keeps an old reader
+safe if that happens.
 
 ## 8. XkyHold web and version 2
 
-XkyHold web will (in its own phase of work):
+In its first version with version 2 support, XkyHold web is
+**restore-only on `format: 2` repositories**: it connects to them, browses,
+restores and checks, but does not back up into them and does not prune
+them (retention included), and says so when the user opens one. It will
+(in its own phase of work):
 
 - Accept `format: 2` and open snapshots with both AADs (3.2).
 - Restore files and folders; ignore `mode`, owners, `xattrs` and
@@ -303,10 +343,8 @@ XkyHold web will (in its own phase of work):
   content). Either way, say how many items were not restored and why.
 - Use `name` for display and writing, and handle display-form collisions
   as in 4.1.
-- Treat `symlink` as an entry with no blobs in prune; stop on unknown types
-  (4.7).
-- Keep writing version 1 snapshots, which are valid in a version 2
-  repository (3.3).
+- Restore a mount point (4.9) as an empty folder.
+- Keep backing up and pruning version 1 repositories exactly as today.
 
 ## 9. Local folder destination
 
@@ -334,14 +372,27 @@ valid.
   every implementation.
 - `golden-v2-repo.json`: a whole small `format: 2` repository, written once
   by the first implementation (XkyHold-lx) and frozen with this document.
-  It holds one version 1 snapshot and one version 2 snapshot, and in the
-  version 2 snapshot: a file with mode `0o755`, a file with `0o600`, an empty
-  file, a file of more than one chunk (with a small chunk size recorded in
-  the fixture), an empty folder with mode `0o700`, a relative symbolic link, a
-  dangling symbolic link, a name that is not valid UTF-8, a `user.` extended
-  attribute, nanosecond times, and a setuid bit that a restore must drop.
-- Both engines (Rust and TypeScript) read it; the Rust engine also reads
-  repositories written by the TypeScript engine, and the reverse.
+  It holds version 2 snapshots only, since no first-version writer
+  produces a version 1 snapshot in a `format: 2` repository (3.3); reading
+  version 1 snapshots is covered by the version 1 fixtures. It contains:
+  - a file with mode `0o755`, a file with `0o600`, an empty file, and a
+    file of more than one chunk (with a small chunk size recorded in the
+    fixture);
+  - an empty folder with mode `0o700`;
+  - a relative symbolic link and a dangling symbolic link;
+  - a name that is not valid UTF-8, and two invalid names with the same
+    display form in one folder;
+  - a `user.` extended attribute and a POSIX ACL
+    (`system.posix_acl_access`);
+  - nanosecond times, and a modification time before 1970, to pin the
+    "round towards minus infinity" rule of `mtime` + `mtimeNanos` in both
+    languages;
+  - a mount point that was not crossed (4.9);
+  - a setuid bit that a restore must drop.
+- Both engines (Rust and TypeScript) read it. Cross round trips: the Rust
+  engine reads version 1 repositories written by the TypeScript engine,
+  and the TypeScript engine reads version 2 repositories written by the
+  Rust engine.
 
 ## 11. What Google can observe
 
