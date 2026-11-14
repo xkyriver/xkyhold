@@ -37,7 +37,7 @@ files outside it.
 | Where | Version 1 | Version 2 |
 |---|---|---|
 | `config.format` | `1` | `2` |
-| Snapshot | `id`, `time`, `device`, `roots`, `stats`, `parent` | Adds `format: 2`, optional `home`, `source` and `meta` per root, more `stats`; encrypted with AAD `xkyhold/v2/snapshot/<id>` |
+| Snapshot | `id`, `time`, `device`, `roots`, `stats`, `parent` | Adds `format: 2`, optional `home`, `source`, `meta` and `leftOut` per root, more `stats`; encrypted with AAD `xkyhold/v2/snapshot/<id>` |
 | Tree entry types | `file`, `dir` | Adds `symlink`; a mount point that is not crossed is an empty `dir` (4.9) |
 | Entry fields | `name`, `size`, `mtime` (ms), `content` / `subtree` | Adds optional `nameBytes`, `mtimeNanos`, `mode`, `uid`, `gid`, `user`, `group`, `xattrs`, `change`; folders get the same metadata |
 | Who writes | XkyHold web | XkyHold-lx writes only into `format: 2` repositories; XkyHold web only restores from them (sections 7 and 8) |
@@ -271,6 +271,8 @@ snapshots written by XkyHold-lx always have it.
   do not need it treat the root as in version 1.
 - `meta` (optional): the common metadata of section 4.1 for the root
   folder itself, which has no entry of its own.
+- `leftOut` (optional): the rules that decided what was left out of this
+  root in this backup (5.4).
 
 An incremental backup finds its previous tree by `source`, not by `name`.
 
@@ -284,6 +286,52 @@ An incremental backup finds its previous tree by `source`, not by `name`.
 | `special` | Sockets, FIFOs and device files, which are never stored |
 | `symlinks` | Symbolic links stored |
 | `mounts` | Mount points not crossed, stored as empty folders (4.9) |
+
+### 5.4 `leftOut`
+
+The exclusion rules in force for a root when the backup ran, so that the
+app can answer "why is this folder not in the backup?" for that backup,
+even after the rules have changed. It holds the **rules**, not the list of
+paths they excluded, which could run to thousands of entries. Readers
+ignore it for restoring; it is for display only.
+
+```json
+"leftOut": [
+  { "kind": "default", "id": "cache", "patterns": [".cache"] },
+  { "kind": "default", "id": "trash", "patterns": [".local/share/Trash"] },
+  { "kind": "default", "id": "app-state", "patterns": [".cache/xkyhold-lx", ".local/state/xkyhold-lx"] },
+  { "kind": "default", "id": "cachedir-tag" },
+  { "kind": "default", "id": "other-file-systems" },
+  { "kind": "preset", "id": "node-modules", "patterns": ["**/node_modules"] },
+  { "kind": "path", "path": "Downloads" },
+  { "kind": "pattern", "patterns": ["**/*.iso"] },
+  { "kind": "cross-mount", "path": "Data" }
+]
+```
+
+An array of rules, in the order the writer applied them:
+
+| `kind` | Meaning |
+|---|---|
+| `default` | Always left out by the writer. With `patterns`, the paths they match. Without, a rule named by `id`: `cachedir-tag` (folders holding a `CACHEDIR.TAG` file) and `other-file-systems` (mount points not crossed, 4.9) |
+| `preset` | A suggestion the user switched on (`node_modules`, build folders, browser caches…), with the `patterns` it stands for |
+| `path` | A folder or file the user unticked in the leave-out tree |
+| `pattern` | Glob `patterns` the user wrote |
+| `cross-mount` | An exception: a mount point the user chose to cross |
+
+- `id` is the writer's name for a default or preset; readers show it or
+  ignore it, and must not need to know it, since `patterns` says what it
+  matched.
+- `path` is relative to the root's `source.path`, with `/` between names;
+  `pathBytes` (base64) replaces it when it is not valid UTF-8, as in 4.1.
+- Patterns are relative to the same folder and match whole paths: `*` and
+  `?` match within one name, and `**` matches any number of whole names,
+  including none. Patterns are anchored there: `.cache` matches only the
+  `.cache` at the top, and `**/node_modules` matches one at any depth.
+- Mount points not crossed are also visible in the trees (4.9); the
+  `other-file-systems` rule says why.
+- Unknown `kind` values are shown as they are or ignored; they never change
+  what is restored.
 
 ## 6. Restoring
 
@@ -388,6 +436,8 @@ valid.
     "round towards minus infinity" rule of `mtime` + `mtimeNanos` in both
     languages;
   - a mount point that was not crossed (4.9);
+  - a `leftOut` list on the root with one rule of every kind (5.4), and
+    the matching items absent from the tree;
   - a setuid bit that a restore must drop.
 - Both engines (Rust and TypeScript) read it. Cross round trips: the Rust
   engine reads version 1 repositories written by the TypeScript engine,
