@@ -274,4 +274,5 @@ export const ptPT: Record<string, string> = {
   'There is a new version of XkyHold.': 'Há uma versão nova do XkyHold.',
   'You can update when this finishes.': 'Podes atualizar quando isto terminar.',
   'Update': 'Atualizar',
+  'On Linux, XkyHold-lx saves your whole personal folder, settings and keys included.': 'No Linux, o XkyHold-lx guarda a pasta pessoal inteira, incluindo configurações e chaves.',
 }

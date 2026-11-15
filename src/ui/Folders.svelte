@@ -13,6 +13,7 @@
   import type { ScanResult } from '../fs/scan'
   import { formatBytes } from '../lib/format'
   import { fileCount, t } from '../lib/i18n.svelte'
+  import { isLinuxDesktop, linuxHref } from '../lib/landing'
   import { app, refreshFolders } from '../state/app.svelte'
   import type { FolderStatus } from '../state/app.svelte'
   import DropZone from './DropZone.svelte'
@@ -291,6 +292,13 @@
 <p class="small muted">
   {t('Your browser does not let you choose some folders whole, such as your personal folder, Documents or Desktop, because they can contain system files. Choose the folders inside them instead.')}
 </p>
+{#if isLinuxDesktop()}
+  <!-- Where the browser's limit is felt (docs/LANDING.md, decision P3). -->
+  <p class="small muted">
+    {t('On Linux, XkyHold-lx saves your whole personal folder, settings and keys included.')}
+    <a href={linuxHref()}>XkyHold-lx</a>
+  </p>
+{/if}
 {#if error}<p class="small" style:color="var(--warn)" role="alert">{error}</p>{/if}
 
 <style>
