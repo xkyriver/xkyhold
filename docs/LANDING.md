@@ -51,13 +51,13 @@ Sem JavaScript, ou noutro sistema, a página mostra as duas formas com o mesmo p
 
 P1, P2, P3 e P5: **sim**, como recomendado. P4: **não** a uma entrada própria no xkyriver.com. Nas palavras dele: a app deve ser considerada como stack da entrada XkyHold, porque virá também o XkyHold-wd para Windows; serão três apps com a mesma ideia de cópias de segurança e não quer inundar o xkyriver.com com apps muito semelhantes.
 
-| # | Pergunta | Recomendação apresentada |
+| # | Pergunta | Decisão |
 |---|---|---|
-| P1 | Uma página inicial com as duas formas lado a lado (esta proposta), ou a página inicial passa a ser só um ecrã de escolha que manda para `/browser/` e `/linux/`? | **Lado a lado.** Mantém os endereços, não parte ligações existentes nem o que a Google verificou, e a escolha vê-se sem mais um clique |
+| P1 | Uma página inicial com as formas de usar lado a lado, ou a página inicial passa a ser só um ecrã de escolha que manda para `/browser/` e `/linux/`? | **Lado a lado.** Mantém os endereços, não parte ligações existentes nem o que a Google verificou, e a escolha vê-se sem mais um clique |
 | P2 | Visitantes em Linux veem o botão do Linux em primeiro lugar (secção 4)? | **Sim** |
 | P3 | A app web mostra a linha sobre o XkyHold-lx no passo das pastas, em Linux (secção 5)? | **Sim** |
-| P4 | No xkyriver.com, o XkyHold-lx tem entrada própria? | **Sim, mais tarde**, como passo separado: mexe noutro repositório e nas imagens de partilha desse site |
-| P5 | O título do topo muda? Hoje: "Your folders, backed up. Readable only by you." | **Fica.** Serve as duas formas; só o parágrafo por baixo passa a falar do browser e do Linux |
+| P4 | No xkyriver.com, o XkyHold-lx tem entrada própria? | **Não.** O XkyHold fica como uma única entrada; o XkyHold-lx (e, mais tarde, o XkyHold-wd) aparece dentro dela, como stack dessa entrada. A recomendação apresentada era "sim, mais tarde"; o proprietário decidiu o contrário |
+| P5 | O título do topo muda? Hoje: "Your folders, backed up. Readable only by you." | **Fica.** Serve todas as formas; só o parágrafo por baixo passa a falar do browser e do Linux |
 
 ## 7. Fases
 
@@ -78,7 +78,7 @@ P1, P2, P3 e P5: **sim**, como recomendado. P4: **não** a uma entrada própria 
 - Nada de novo na CSP: sem código na página, sem pedidos a terceiros, sem tipos de letra externos.
 - A landing não deve prometer, para o Linux, o que ainda não foi provado: os pacotes `.deb` e `.rpm` nunca foram instalados num Debian ou Fedora reais.
 
-## 9. Textos (fase 1, 15/11/2026) — por aprovar
+## 9. Textos (fase 1, aprovados pelo proprietário a 15/11/2026: "Aprovo")
 
 Só o que é novo ou muda; o resto da página fica igual. Português com "tu" e o vocabulário da página atual ("encriptado", "navegador", "o XkyHold"). Nada diz quantas formas há, e nada promete para o Linux o que não foi provado (o texto nomeia os formatos, não distribuições).
 
@@ -115,3 +115,7 @@ Só o que é novo ou muda; o resto da página fica igual. Português com "tu" e 
 | App web, passo das pastas, só em Linux (P3) | On Linux, XkyHold-lx saves your whole personal folder, settings and keys included. | No Linux, o XkyHold-lx guarda a pasta pessoal inteira, incluindo configurações e chaves. |
 
 Saem: o botão "See how it works ↓" do topo (dá lugar aos dois botões; "How it works" continua na navegação) e o "Nothing to install" da linha pequena (só é verdade no navegador; passa para o cartão do navegador).
+
+## 10. Registo
+
+- **Fase 2 feita a 15/11/2026.** `index.html` e `pt/index.html` com os textos aprovados (mesma estrutura nas duas línguas): ligação "Linux" na navegação (e, em ecrãs estreitos, ao lado de PT/EN), dois botões no topo e na chamada final, pré-visualização com a janela da web e a do XkyHold-lx sobrepostas, secção "Choose how to use XkyHold" com uma grelha que aceita mais cartões, ajustes em "Simple on purpose", "How it works", na nota da Google e nas perguntas. `public/landing-os.js` (ficheiro próprio, sem código na página) põe a classe `os-linux` em computadores com Linux (não Android nem ChromeOS); com ela, o botão e o cartão do Linux vêm primeiro e o do navegador fica secundário. **Visto** em `vite preview`, EN e PT, a 1366 px, 900 px e 375 px, com e sem a classe: ordem certa, sem deslocamento horizontal, cabeçalho numa linha. Corrigido no teste: a barra da janela pequena a 900 px; o cabeçalho e as janelas desenhadas no telemóvel (lá escondem-se os separadores e o selo, decorativos). Sem JavaScript, todo o texto está na página; nenhum código na página nem anfitriões novos. **Nota:** a landing só tem tema escuro (`color-scheme: dark`), por isso não há versão clara para ver.

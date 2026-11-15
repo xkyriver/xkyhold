@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="/landing-redirect.js"></script>
+    <script src="/landing-os.js"></script>
     <title>XkyHold — As tuas pastas, guardadas. Só tu as consegues ler.</title>
     <meta
       name="description"
-      content="Cópias de segurança gratuitas e encriptadas das tuas pastas, no teu próprio Google Drive. Os ficheiros são encriptados no teu computador antes de saírem dele. Nada para instalar, sem conta."
+      content="Cópias de segurança gratuitas e encriptadas no teu próprio Google Drive: as pastas que escolheres, no navegador, ou a pasta pessoal inteira no Linux. Os ficheiros são encriptados no teu computador antes de saírem dele. Sem conta."
     />
     <link rel="canonical" href="https://xkyhold.xkyriver.com/pt/" />
     <link rel="alternate" hreflang="en" href="https://xkyhold.xkyriver.com/" />
@@ -22,7 +23,7 @@
     <meta property="og:title" content="XkyHold — As tuas pastas, guardadas. Só tu as consegues ler." />
     <meta
       property="og:description"
-      content="Cópias de segurança gratuitas e encriptadas das tuas pastas, no teu próprio Google Drive. Nada para instalar."
+      content="Cópias de segurança gratuitas e encriptadas no teu próprio Google Drive, no navegador ou no Linux."
     />
     <meta property="og:url" content="https://xkyhold.xkyriver.com/pt/" />
     <meta property="og:image" content="https://xkyhold.xkyriver.com/og-pt.png" />
@@ -39,10 +40,12 @@
       <div class="wrap top-row">
         <a class="brand" href="/pt/"><img src="/favicon.svg" alt="" width="28" height="28" /> XkyHold</a>
         <nav class="nav" aria-label="Secções">
+          <a href="/pt/linux/">Linux</a>
           <a href="#how">Como funciona</a>
           <a href="#google">Privacidade</a>
           <a href="#faq">Perguntas</a>
         </nav>
+        <a class="lang nav-linux" href="/pt/linux/">Linux</a>
         <a class="lang" href="/" hreflang="en" lang="en" data-set-lang="en">EN</a>
         <a class="btn small" href="/app/">Abrir app</a>
       </div>
@@ -52,21 +55,22 @@
       <section class="hero">
         <div class="wrap hero-grid">
           <div class="hero-text">
-            <p class="eyebrow">Cópias encriptadas · O teu próprio Google Drive</p>
+            <p class="eyebrow">Cópias encriptadas · No navegador ou no Linux</p>
             <h1>As tuas pastas, guardadas. <span class="accent">Só tu as consegues ler.</span></h1>
             <p class="lead">
-              O XkyHold copia as pastas que escolheres para o teu Google Drive. Cada ficheiro é encriptado no teu
-              computador antes de sair dele, por isso a Google guarda a tua cópia mas não a consegue ler.
+              O XkyHold copia as tuas pastas para o teu próprio Google Drive, a partir do navegador ou com a app para
+              Linux, que também consegue guardar a pasta pessoal inteira. Cada ficheiro é encriptado no teu computador
+              antes de sair dele, por isso a Google guarda a tua cópia mas não a consegue ler.
             </p>
             <div class="cta">
-              <a class="btn" href="/app/">Começar a cópia</a>
-              <a class="btn ghost" href="#how">Ver como funciona <span aria-hidden="true">↓</span></a>
+              <a class="btn btn-web" href="/app/">Começar no navegador</a>
+              <a class="btn btn-linux" href="/pt/linux/">Descarregar para Linux</a>
             </div>
-            <p class="fine"><span class="dot" aria-hidden="true"></span> Grátis. Sem conta. Nada para instalar.</p>
+            <p class="fine"><span class="dot" aria-hidden="true"></span> Grátis. Sem conta.</p>
           </div>
 
-          <div class="preview" aria-hidden="true">
-            <div class="window">
+          <div class="preview two" aria-hidden="true">
+            <div class="window window-web">
               <div class="window-bar">
                 <span class="window-brand"><img src="/favicon.svg" alt="" width="18" height="18" /> XkyHold</span>
                 <span class="tabs"><b>Início</b><span>Restaurar</span><span>Definições</span></span>
@@ -83,6 +87,23 @@
                 </ul>
               </div>
             </div>
+            <div class="window window-lx">
+              <div class="window-bar">
+                <span class="window-brand"><img src="/favicon.svg" alt="" width="18" height="18" /> XkyHold-lx</span>
+                <span class="tabs"><b>Início</b><span>Restaurar</span><span>Definições</span></span>
+              </div>
+              <div class="window-body">
+                <div class="mark">✓</div>
+                <p class="p-title">Os teus ficheiros estão seguros</p>
+                <p class="p-muted">Última cópia: Hoje, 18:16<br />233 236 ficheiros · 26 GB</p>
+                <span class="p-btn">Fazer cópia agora</span>
+                <ul class="p-folders">
+                  <li><span class="folder"></span> Documentos</li>
+                  <li><span class="folder"></span> .config</li>
+                  <li><span class="folder"></span> .ssh</li>
+                </ul>
+              </div>
+            </div>
             <div class="badge">
               <svg viewBox="0 0 24 24" width="18" height="18"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
               Encriptado neste computador
@@ -95,15 +116,48 @@
         <ul class="wrap strip-row">
           <li>Encriptado antes de enviar</li>
           <li>O teu próprio Google Drive</li>
-          <li>Corre no teu navegador</li>
+          <li>No navegador ou no Linux</li>
           <li>Código aberto</li>
         </ul>
+      </section>
+
+      <section class="section" id="ways">
+        <div class="wrap">
+          <h2>Escolhe como usar o XkyHold</h2>
+          <p class="section-lead">As mesmas cópias encriptadas no teu próprio Google Drive. Escolhe o que serve este computador.</p>
+          <div class="ways">
+            <article class="way way-web">
+              <h3>No navegador</h3>
+              <ul>
+                <li>As pastas que escolheres</li>
+                <li>Nada para instalar</li>
+                <li>Cópias no Chrome ou no Edge num computador; restauro em qualquer navegador, até no telemóvel</li>
+                <li>Um lembrete quando está na hora de uma cópia</li>
+              </ul>
+              <div class="way-actions"><a class="btn" href="/app/">Começar no navegador</a></div>
+            </article>
+            <article class="way way-linux">
+              <h3>No Linux: XkyHold-lx</h3>
+              <ul>
+                <li>A tua pasta pessoal inteira, com configurações, chaves, permissões e ligações</li>
+                <li>Google Drive ou um disco</li>
+                <li>Um lembrete, ou cópias automáticas se as quiseres</li>
+                <li>AppImage, .deb e .rpm</li>
+              </ul>
+              <div class="way-actions">
+                <a class="btn" href="/pt/linux/">Descarregar para Linux</a>
+                <a href="/pt/linux/">Ver o que guarda</a>
+              </div>
+            </article>
+          </div>
+          <p class="note center">As cópias feitas no Linux restauram-se em qualquer navegador.</p>
+        </div>
       </section>
 
       <section class="section" id="features">
         <div class="wrap">
           <h2>Simples de propósito</h2>
-          <p class="section-lead">Nada para aprender. Escolhes as pastas uma vez e fazes uma cópia quando o XkyHold te lembrar.</p>
+          <p class="section-lead">Nada para aprender. Escolhes uma vez o que guardar, e o XkyHold lembra-te quando está na hora de uma cópia.</p>
           <div class="cards">
             <article class="card">
               <svg class="icon" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
@@ -123,7 +177,7 @@
             <article class="card">
               <svg class="icon" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg>
               <h3>Lembra-te, nunca decide por ti</h3>
-              <p>O XkyHold avisa quando está na hora de uma cópia. Nunca começa uma sozinho nem te ocupa a ligação sem pedires.</p>
+              <p>O XkyHold avisa quando está na hora de uma cópia e nunca começa uma sem pedires. No Linux, podes escolher cópias automáticas.</p>
             </article>
           </div>
         </div>
@@ -132,6 +186,7 @@
       <section class="section alt" id="how">
         <div class="wrap">
           <h2>Como funciona</h2>
+          <p class="section-lead">No navegador</p>
           <ol class="steps">
             <li>
               <span class="num">1</span>
@@ -149,6 +204,7 @@
               <p>Um clique. Restaura um ficheiro ou tudo, quando precisares.</p>
             </li>
           </ol>
+          <p class="note"><a href="/pt/linux/#install">No Linux: como instalar <span aria-hidden="true">→</span></a></p>
         </div>
       </section>
 
@@ -175,7 +231,7 @@
             </div>
           </div>
           <p class="note">
-            Não há servidor do XkyHold. Os teus ficheiros vão do teu navegador para o teu Drive e para mais lado
+            Não há servidor do XkyHold. Os teus ficheiros vão do teu computador para o teu Drive e para mais lado
             nenhum. <a href="/privacy.html#pt">Política de privacidade</a>
           </p>
         </div>
@@ -185,8 +241,16 @@
         <div class="wrap narrow">
           <h2>Perguntas</h2>
           <details>
+            <summary>Qual devo usar?</summary>
+            <p>
+              No Linux, o <a href="/pt/linux/">XkyHold-lx</a>: guarda a pasta pessoal inteira, com configurações e
+              chaves, e pode fazer cópias sozinho. Em qualquer outro computador, ou num onde não podes instalar apps, o
+              XkyHold no navegador: guarda as pastas que escolheres, sem nada para instalar.
+            </p>
+          </details>
+          <details>
             <summary>É grátis?</summary>
-            <p>Sim. Sem anúncios nem funcionalidades pagas. A tua cópia usa o espaço do teu Google Drive.</p>
+            <p>Sim. Sem anúncios nem funcionalidades pagas. A tua cópia usa o espaço do teu Google Drive, ou de um disco com o XkyHold-lx.</p>
           </details>
           <details>
             <summary>Que navegadores posso usar?</summary>
@@ -207,24 +271,25 @@
           <details>
             <summary>Faz cópias enquanto não estou?</summary>
             <p>
-              Não. Uma cópia só corre enquanto a página do XkyHold está aberta, e só quando a começas. O XkyHold
-              lembra-te quando está na hora.
+              No navegador, não: uma cópia só corre enquanto a página do XkyHold está aberta, e só quando a começas; o
+              XkyHold lembra-te quando está na hora. No Linux, o XkyHold-lx pode fazer cópias sozinho, mesmo com a
+              janela fechada, se ligares as cópias automáticas.
             </p>
           </details>
           <details>
             <summary>Guarda o computador inteiro?</summary>
             <p>
-              Não, guarda as pastas que escolheres, como documentos, fotografias ou trabalho. Não guarda as permissões
-              dos ficheiros nem atalhos (ligações simbólicas).
+              Não. No navegador guarda as pastas que escolheres, como documentos, fotografias ou trabalho, sem as
+              permissões dos ficheiros nem atalhos (ligações simbólicas). O XkyHold-lx guarda a tua pasta pessoal
+              inteira, com permissões e ligações, mas não o sistema nem os programas instalados.
             </p>
           </details>
           <details>
             <summary>Guarda a pasta pessoal inteira, com configurações e chaves?</summary>
             <p>
-              Não. O XkyHold guarda as pastas pessoais que escolheres, como documentos e fotografias. Os navegadores não
-              deixam uma página web ler as configurações, chaves e outros ficheiros de configuração da tua pasta
-              pessoal, e o XkyHold não guarda as permissões dos ficheiros. No Linux, o
-              <a href="/pt/linux/">XkyHold-lx</a> guarda a tua pasta pessoal inteira, com definições, chaves e
+              No navegador, não: os navegadores não deixam uma página web ler as configurações, chaves e outros
+              ficheiros de configuração da tua pasta pessoal, nem guardam as permissões dos ficheiros. No Linux, o
+              <a href="/pt/linux/">XkyHold-lx</a> guarda a tua pasta pessoal inteira, com configurações, chaves e
               permissões.
             </p>
           </details>
@@ -249,7 +314,10 @@
         <div class="wrap center">
           <h2>Põe as tuas pastas a salvo hoje</h2>
           <p class="section-lead">Fica pronto em poucos minutos.</p>
-          <a class="btn" href="/app/">Começar a cópia</a>
+<div class="cta center-cta">
+              <a class="btn btn-web" href="/app/">Começar no navegador</a>
+              <a class="btn btn-linux" href="/pt/linux/">Descarregar para Linux</a>
+            </div>
         </div>
       </section>
     </main>

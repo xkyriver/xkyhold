@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="/landing-redirect.js"></script>
+    <script src="/landing-os.js"></script>
     <title>XkyHold — Your folders, backed up. Readable only by you.</title>
     <meta
       name="description"
-      content="Free, encrypted backups of your folders to your own Google Drive. Files are encrypted on your computer before they leave it. Nothing to install, no account."
+      content="Free, encrypted backups to your own Google Drive: the folders you choose, from your browser, or your whole personal folder on Linux. Files are encrypted on your computer before they leave it. No account."
     />
     <link rel="canonical" href="https://xkyhold.xkyriver.com/" />
     <link rel="alternate" hreflang="en" href="https://xkyhold.xkyriver.com/" />
@@ -22,7 +23,7 @@
     <meta property="og:title" content="XkyHold — Your folders, backed up. Readable only by you." />
     <meta
       property="og:description"
-      content="Free, encrypted backups of your folders to your own Google Drive. Nothing to install."
+      content="Free, encrypted backups to your own Google Drive, in your browser or on Linux."
     />
     <meta property="og:url" content="https://xkyhold.xkyriver.com/" />
     <meta property="og:image" content="https://xkyhold.xkyriver.com/og.png" />
@@ -39,10 +40,12 @@
       <div class="wrap top-row">
         <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28" /> XkyHold</a>
         <nav class="nav" aria-label="Sections">
+          <a href="/linux/">Linux</a>
           <a href="#how">How it works</a>
           <a href="#google">Privacy</a>
           <a href="#faq">FAQ</a>
         </nav>
+        <a class="lang nav-linux" href="/linux/">Linux</a>
         <a class="lang" href="/pt/" hreflang="pt-PT" lang="pt-PT" data-set-lang="pt-PT">PT</a>
         <a class="btn small" href="/app/">Open app</a>
       </div>
@@ -52,21 +55,22 @@
       <section class="hero">
         <div class="wrap hero-grid">
           <div class="hero-text">
-            <p class="eyebrow">Encrypted backups · Your own Google Drive</p>
+            <p class="eyebrow">Encrypted backups · In your browser or on Linux</p>
             <h1>Your folders, backed up. <span class="accent">Readable only by you.</span></h1>
             <p class="lead">
-              XkyHold copies the folders you choose to your Google Drive. Every file is encrypted on your computer
-              before it leaves it, so Google keeps your backup but cannot read it.
+              XkyHold copies your folders to your own Google Drive, from your browser or with the app for Linux, which
+              can also save your whole personal folder. Every file is encrypted on your computer before it leaves it,
+              so Google keeps your backup but cannot read it.
             </p>
             <div class="cta">
-              <a class="btn" href="/app/">Start your backup</a>
-              <a class="btn ghost" href="#how">See how it works <span aria-hidden="true">↓</span></a>
+              <a class="btn btn-web" href="/app/">Start in your browser</a>
+              <a class="btn btn-linux" href="/linux/">Download for Linux</a>
             </div>
-            <p class="fine"><span class="dot" aria-hidden="true"></span> Free. No account. Nothing to install.</p>
+            <p class="fine"><span class="dot" aria-hidden="true"></span> Free. No account.</p>
           </div>
 
-          <div class="preview" aria-hidden="true">
-            <div class="window">
+          <div class="preview two" aria-hidden="true">
+            <div class="window window-web">
               <div class="window-bar">
                 <span class="window-brand"><img src="/favicon.svg" alt="" width="18" height="18" /> XkyHold</span>
                 <span class="tabs"><b>Home</b><span>Restore</span><span>Settings</span></span>
@@ -83,6 +87,23 @@
                 </ul>
               </div>
             </div>
+            <div class="window window-lx">
+              <div class="window-bar">
+                <span class="window-brand"><img src="/favicon.svg" alt="" width="18" height="18" /> XkyHold-lx</span>
+                <span class="tabs"><b>Home</b><span>Restore</span><span>Settings</span></span>
+              </div>
+              <div class="window-body">
+                <div class="mark">✓</div>
+                <p class="p-title">Your files are safe</p>
+                <p class="p-muted">Last backup: Today, 18:16<br />233,236 files · 26 GB</p>
+                <span class="p-btn">Back up now</span>
+                <ul class="p-folders">
+                  <li><span class="folder"></span> Documents</li>
+                  <li><span class="folder"></span> .config</li>
+                  <li><span class="folder"></span> .ssh</li>
+                </ul>
+              </div>
+            </div>
             <div class="badge">
               <svg viewBox="0 0 24 24" width="18" height="18"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
               Encrypted on this computer
@@ -95,15 +116,48 @@
         <ul class="wrap strip-row">
           <li>Encrypted before upload</li>
           <li>Your own Google Drive</li>
-          <li>Runs in your browser</li>
+          <li>In your browser or on Linux</li>
           <li>Open source</li>
         </ul>
+      </section>
+
+      <section class="section" id="ways">
+        <div class="wrap">
+          <h2>Choose how to use XkyHold</h2>
+          <p class="section-lead">The same encrypted backups in your own Google Drive. Pick what suits this computer.</p>
+          <div class="ways">
+            <article class="way way-web">
+              <h3>In your browser</h3>
+              <ul>
+                <li>The folders you choose</li>
+                <li>Nothing to install</li>
+                <li>Back up from Chrome or Edge on a computer; restore from any browser, even on a phone</li>
+                <li>A reminder when a backup is due</li>
+              </ul>
+              <div class="way-actions"><a class="btn" href="/app/">Start in your browser</a></div>
+            </article>
+            <article class="way way-linux">
+              <h3>On Linux: XkyHold-lx</h3>
+              <ul>
+                <li>Your whole personal folder, with settings, keys, permissions and links</li>
+                <li>Google Drive or a disk</li>
+                <li>A reminder, or automatic backups if you want them</li>
+                <li>AppImage, .deb and .rpm</li>
+              </ul>
+              <div class="way-actions">
+                <a class="btn" href="/linux/">Download for Linux</a>
+                <a href="/linux/">See what it saves</a>
+              </div>
+            </article>
+          </div>
+          <p class="note center">Backups made on Linux can be restored in any browser.</p>
+        </div>
       </section>
 
       <section class="section" id="features">
         <div class="wrap">
           <h2>Simple on purpose</h2>
-          <p class="section-lead">No settings to learn. Choose your folders once, then back up when XkyHold reminds you.</p>
+          <p class="section-lead">No settings to learn. Choose what to save once, and XkyHold reminds you when a backup is due.</p>
           <div class="cards">
             <article class="card">
               <svg class="icon" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
@@ -123,7 +177,7 @@
             <article class="card">
               <svg class="icon" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2H5z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg>
               <h3>Reminds you, never decides for you</h3>
-              <p>XkyHold tells you when a backup is due. It never starts one by itself or slows your connection unasked.</p>
+              <p>XkyHold tells you when a backup is due and never starts one unasked. On Linux, you can choose automatic backups.</p>
             </article>
           </div>
         </div>
@@ -132,6 +186,7 @@
       <section class="section alt" id="how">
         <div class="wrap">
           <h2>How it works</h2>
+          <p class="section-lead">In your browser</p>
           <ol class="steps">
             <li>
               <span class="num">1</span>
@@ -149,6 +204,7 @@
               <p>One click. Restore one file or everything, whenever you need it.</p>
             </li>
           </ol>
+          <p class="note"><a href="/linux/#install">On Linux: how to install <span aria-hidden="true">→</span></a></p>
         </div>
       </section>
 
@@ -175,7 +231,7 @@
             </div>
           </div>
           <p class="note">
-            There is no XkyHold server. Your files go from your browser to your Drive and nowhere else.
+            There is no XkyHold server. Your files go from your computer to your Drive and nowhere else.
             <a href="/privacy.html">Privacy policy</a>
           </p>
         </div>
@@ -185,8 +241,16 @@
         <div class="wrap narrow">
           <h2>Questions</h2>
           <details>
+            <summary>Which one should I use?</summary>
+            <p>
+              On Linux, <a href="/linux/">XkyHold-lx</a>: it saves your whole personal folder, with settings and keys,
+              and can back up by itself. On any other computer, or one where you cannot install apps, XkyHold in your
+              browser: it saves the folders you choose, with nothing to install.
+            </p>
+          </details>
+          <details>
             <summary>Is it free?</summary>
-            <p>Yes. No ads and no paid features. Your backup uses the space in your Google Drive.</p>
+            <p>Yes. No ads and no paid features. Your backup uses the space in your Google Drive, or on a disk with XkyHold-lx.</p>
           </details>
           <details>
             <summary>Which browsers can I use?</summary>
@@ -206,24 +270,25 @@
           <details>
             <summary>Does it back up while I am away?</summary>
             <p>
-              No. A backup runs only while the XkyHold page is open, and only when you start it. XkyHold reminds you
-              when one is due.
+              In your browser, no: a backup runs only while the XkyHold page is open, and only when you start it;
+              XkyHold reminds you when one is due. On Linux, XkyHold-lx can back up by itself, also with the window
+              closed, if you turn on automatic backups.
             </p>
           </details>
           <details>
             <summary>Does it back up my whole computer?</summary>
             <p>
-              No, it backs up the folders you choose, such as documents, pictures or work. It does not keep file
-              permissions or shortcuts (symbolic links).
+              No. In your browser it backs up the folders you choose, such as documents, pictures or work, without file
+              permissions or shortcuts (symbolic links). XkyHold-lx backs up your whole personal folder, permissions
+              and links included, but not the system or the programs installed.
             </p>
           </details>
           <details>
             <summary>Does it save my whole personal folder, with settings and keys?</summary>
             <p>
-              No. XkyHold saves the personal folders you choose, such as documents and pictures. Browsers do not let a
-              web page read the settings, keys and other configuration files in your personal folder, and XkyHold does
-              not keep file permissions. On Linux, <a href="/linux/">XkyHold-lx</a> saves your whole personal folder,
-              with settings, keys and permissions.
+              Not in your browser: browsers do not let a web page read the settings, keys and other configuration files
+              in your personal folder, and they do not keep file permissions. On Linux,
+              <a href="/linux/">XkyHold-lx</a> saves your whole personal folder, with settings, keys and permissions.
             </p>
           </details>
           <details>
@@ -247,7 +312,10 @@
         <div class="wrap center">
           <h2>Keep your folders safe today</h2>
           <p class="section-lead">It takes a couple of minutes to set up.</p>
-          <a class="btn" href="/app/">Start your backup</a>
+<div class="cta center-cta">
+              <a class="btn btn-web" href="/app/">Start in your browser</a>
+              <a class="btn btn-linux" href="/linux/">Download for Linux</a>
+            </div>
         </div>
       </section>
     </main>

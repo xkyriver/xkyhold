@@ -145,6 +145,7 @@ h3 {
   padding: 8px 14px;
   font-size: 0.9rem;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
 .btn.ghost {
@@ -666,6 +667,142 @@ details p {
   color: var(--text);
 }
 
+/* The ways to use XkyHold (docs/LANDING.md). A grid that takes another
+   card later without a redesign. */
+
+.ways {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.way {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.way h3 {
+  font-size: 1.25rem;
+}
+
+.way ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+
+.way li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.way li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.way-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.note.center {
+  text-align: center;
+}
+
+.center-cta {
+  justify-content: center;
+}
+
+/* Two app windows in the hero: the browser's and XkyHold-lx's. */
+
+.preview.two {
+  max-width: 480px;
+  padding-bottom: 120px;
+}
+
+.preview.two .window-web {
+  width: 86%;
+}
+
+.preview.two .window-lx {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 78%;
+}
+
+.window-lx .window-bar {
+  padding: 10px 12px;
+  font-size: 0.74rem;
+}
+
+.window-lx .window-brand {
+  white-space: nowrap;
+}
+
+.window-lx .tabs > * {
+  padding: 3px 6px;
+}
+
+.window-lx .window-body {
+  padding: 20px 18px 16px;
+}
+
+.window-lx .mark {
+  width: 46px;
+  height: 46px;
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+}
+
+.window-lx .p-title {
+  font-size: 1.1rem;
+}
+
+.window-lx .p-folders {
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+/* The Linux link stays in sight when the navigation folds away. */
+.nav-linux {
+  display: none;
+}
+
+/* Visitors on Linux (landing-os.js): the Linux app comes first. Without
+   the script both ways keep the same weight. */
+.os-linux .btn-linux,
+.os-linux .way-linux {
+  order: -1;
+}
+
+.os-linux .btn-web {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.os-linux .btn-web:hover {
+  background: var(--surface);
+}
+
 /* Narrower screens */
 
 @media (max-width: 980px) {
@@ -701,6 +838,15 @@ details p {
     display: none;
   }
 
+  .nav-linux {
+    display: inline-block;
+    margin-left: auto;
+  }
+
+  .nav-linux + .lang {
+    margin-left: 0;
+  }
+
   .lang {
     margin-left: auto;
   }
@@ -733,5 +879,38 @@ details p {
     display: flex;
     width: fit-content;
     margin: 14px auto 0;
+  }
+}
+
+/* Phones: the header holds the brand, Linux, the language and the app. */
+@media (max-width: 420px) {
+  .top-row {
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 7px;
+    font-size: 1rem;
+  }
+
+  .lang {
+    padding: 4px 7px;
+  }
+
+  .btn.small {
+    padding: 7px 11px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Phones: the two drawn windows keep only what fits (all decorative). */
+@media (max-width: 560px) {
+  .preview.two .tabs,
+  .preview.two .badge {
+    display: none;
+  }
+
+  .preview.two {
+    padding-bottom: 150px;
   }
 }
