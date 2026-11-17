@@ -137,9 +137,11 @@ export class GoogleAuth {
 
   /**
    * Opens Google's popup and resolves with a token. Must be called from a
-   * user gesture (a click), or the browser blocks the popup.
+   * user gesture (a click), or the browser blocks the popup. With
+   * `chooseAccount`, Google lists the accounts instead of reusing the one
+   * already signed in; cancelling keeps the current token.
    */
-  async signIn(accountHint?: string): Promise<Token> {
+  async signIn(accountHint?: string, { chooseAccount = false } = {}): Promise<Token> {
     if (!this.configured) throw new AuthError('not_configured', 'No Google client ID configured')
     const oauth2 = await loadGis()
     this.token = await new Promise<Token>((resolve, reject) => {
@@ -163,7 +165,7 @@ export class GoogleAuth {
         },
       })
       // '' = no consent screen again if the user already granted access.
-      client.requestAccessToken({ prompt: '' })
+      client.requestAccessToken({ prompt: chooseAccount ? 'select_account' : '' })
     })
     session.save(this.token)
     return this.token

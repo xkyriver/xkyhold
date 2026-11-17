@@ -100,6 +100,8 @@ export const app = $state({
   readOnly: false,
   /** The backup set up here is no longer in Google Drive: it was deleted there. */
   missing: false,
+  /** The set-up wizard is waiting on Google or the engine: the account must not change now. */
+  settingUp: false,
 })
 
 /** Backups can be made here: a browser with folder access, and a backup XkyHold writes. */
@@ -204,12 +206,35 @@ async function whoAmI(): Promise<string | null> {
 
 /** Opens Google's window. Must be called from a click. */
 export async function signIn(): Promise<boolean> {
-  app.error = null
-  try {
+  return googleWindow(async () => {
     await googleAuth.signIn(app.account ?? undefined)
     shareToken()
     app.account = (await whoAmI()) ?? app.account
     if (app.configured) await openBackup()
+  })
+}
+
+/**
+ * During set-up: lets someone who signed in with the wrong account pick
+ * another one. Nothing is revoked at Google. Must be called from a click.
+ */
+export async function useAnotherAccount(): Promise<boolean> {
+  return googleWindow(async () => {
+    await googleAuth.signIn(undefined, { chooseAccount: true })
+    shareToken()
+    app.account = await whoAmI()
+  })
+}
+
+/** Finds out which account a token kept from earlier in this tab belongs to. */
+export async function knowAccount(): Promise<void> {
+  if (app.connected && !app.account) app.account = await whoAmI().catch(() => null)
+}
+
+async function googleWindow(work: () => Promise<void>): Promise<boolean> {
+  app.error = null
+  try {
+    await work()
     return true
   } catch (err) {
     if (err instanceof AuthError && err.code === 'cancelled') return false

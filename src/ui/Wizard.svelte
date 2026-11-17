@@ -10,9 +10,11 @@
     createBackup,
     defaultBackupName,
     explain,
+    knowAccount,
     listBackups,
     lostSession,
     signIn,
+    useAnotherAccount,
   } from '../state/app.svelte'
   import type { View } from '../state/app.svelte'
   import Folders from './Folders.svelte'
@@ -73,6 +75,28 @@
     }
     if (work) await run(work)
     else error = null
+  }
+
+  $effect(() => {
+    app.settingUp = busy
+  })
+  void knowAccount()
+
+  /**
+   * Signed in with the wrong account: pick another and look for its backups.
+   * Also called from the account shown in the top bar.
+   */
+  export async function another() {
+    busy = true
+    const ok = await useAnotherAccount()
+    busy = false
+    error = app.error
+    app.error = null
+    if (!ok) return
+    retry = null
+    existing = null
+    choice = NEW
+    step = 'choose'
   }
 
   const loadBackups = () =>
@@ -185,6 +209,7 @@
       <div class="row end">
         {#if existing.length === 0 && !canCreate}
           <!-- Nothing to connect to, and no backup can be made here. -->
+          <button class="btn" onclick={another} disabled={busy}>{t('Use another Google account')}</button>
           <button class="btn" onclick={() => (existing = null)} disabled={busy}>{t('Look again')}</button>
         {:else}
           <button class="btn primary" onclick={chosen} disabled={choice === NEW && (!canCreate || !name.trim())}>

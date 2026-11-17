@@ -21,6 +21,7 @@
   // counts as configured from the moment it is created (the recovery key
   // still has to be shown).
   let inWizard = $state(false)
+  let wizard = $state<ReturnType<typeof Wizard>>()
 
   void start().then(() => (inWizard = !app.configured))
   startUpdateChecks()
@@ -63,6 +64,14 @@
           </button>
         {/each}
       </nav>
+    {:else if inWizard && app.connected && !app.configured}
+      <!-- Which Google account the backup will be in, before anything is made there. -->
+      <div class="account">
+        {#if app.account}<span class="email" title={app.account}>{app.account}</span>{/if}
+        <button class="link" onclick={() => wizard?.another()} disabled={app.settingUp}>
+          {t('Use another account')}
+        </button>
+      </div>
     {/if}
   </header>
 
@@ -86,7 +95,7 @@
     {:else if !app.ready}
       <p class="muted">{t('Loading…')}</p>
     {:else if inWizard}
-      <Wizard done={finishWizard} />
+      <Wizard bind:this={wizard} done={finishWizard} />
     {:else}
       {#if app.error}
         <div class="banner warn" role="alert">

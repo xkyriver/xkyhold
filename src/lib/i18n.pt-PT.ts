@@ -76,6 +76,8 @@ export const ptPT: Record<string, string> = {
   'To make one, open XkyHold in Chrome or Edge on a computer. Then you can restore from it here.':
     'Para fazer uma, abre o XkyHold no Chrome ou no Edge num computador. Depois podes restaurar a partir dela aqui.',
   'Look again': 'Procurar de novo',
+  'Use another Google account': 'Usar outra conta Google',
+  'Use another account': 'Usar outra conta',
   'Name of this backup': 'Nome desta cópia de segurança',
   'Use a different name on each computer.': 'Usa um nome diferente em cada computador.',
   Continue: 'Continuar',
