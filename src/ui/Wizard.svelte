@@ -171,6 +171,9 @@
         </div>
       {:else if !canCreate}
         <p class="muted">{t('There is no backup in this Google account yet.')}</p>
+        <p class="muted">
+          {t('To make one, open XkyHold in Chrome or Edge on a computer. Then you can restore from it here.')}
+        </p>
       {/if}
       {#if choice === NEW && canCreate}
         <div>
@@ -180,9 +183,14 @@
         </div>
       {/if}
       <div class="row end">
-        <button class="btn primary" onclick={chosen} disabled={choice === NEW && (!canCreate || !name.trim())}>
-          {t('Continue')}
-        </button>
+        {#if existing.length === 0 && !canCreate}
+          <!-- Nothing to connect to, and no backup can be made here. -->
+          <button class="btn" onclick={() => (existing = null)} disabled={busy}>{t('Look again')}</button>
+        {:else}
+          <button class="btn primary" onclick={chosen} disabled={choice === NEW && (!canCreate || !name.trim())}>
+            {t('Continue')}
+          </button>
+        {/if}
       </div>
     {/if}
   {:else if step === 'folders'}
