@@ -46,11 +46,13 @@ function fakeDrive() {
       const q = u.searchParams.get('q')!
       const parent = q.match(/'([^']+)' in parents/)![1]
       const name = q.match(/name = '([^']+)'/)?.[1]
+      const foldersOnly = q.includes(`mimeType = '${DRIVE_FOLDER_MIME}'`)
       const files = [...nodes.values()].filter(
         (n) =>
           n.parent === parent &&
           (stillListed.has(n.id) || (!n.trashed && !unlisted.has(n.id))) &&
-          (!name || (n.name === name && n.mimeType === DRIVE_FOLDER_MIME)),
+          (!name || n.name === name) &&
+          (!foldersOnly || n.mimeType === DRIVE_FOLDER_MIME),
       )
       return Response.json({ files: files.map(describeNode) })
     }
@@ -88,7 +90,7 @@ const token = async () => 't'
 describe('DriveDestination', () => {
   it('creates XkyHold/<name> and stores objects in sub-folders', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'My computer')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'My computer', true))!
     await dest.put('packs', 'abc', utf8('pack bytes'))
     await dest.put('', 'config', utf8('{}'))
 
@@ -108,15 +110,15 @@ describe('DriveDestination', () => {
 
   it('finds objects written by an earlier session', async () => {
     const fake = fakeDrive()
-    await (await DriveDestination.forName(fake.drive, token, 'repo')).put('index', 'i1', utf8('index'))
-    const later = await DriveDestination.forName(fake.drive, token, 'repo')
+    await ((await DriveDestination.forName(fake.drive, token, 'repo', true))!).put('index', 'i1', utf8('index'))
+    const later = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     expect(await later.get('index', 'i1')).toEqual(utf8('index'))
     expect([...fake.nodes.values()].filter((n) => n.name === 'repo')).toHaveLength(1)
   })
 
   it('does not upload a content-named object twice', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     await dest.put('packs', 'abc', utf8('same'))
     const uploads = () => fake.log.filter((l) => l.includes('multipart')).length
     const before = uploads()
@@ -126,7 +128,7 @@ describe('DriveDestination', () => {
 
   it('rewrites config in place instead of creating a second one', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     await dest.put('', 'config', utf8('one'))
     await dest.put('', 'config', utf8('two'))
     expect([...fake.nodes.values()].filter((n) => n.name === 'config')).toHaveLength(1)
@@ -135,7 +137,7 @@ describe('DriveDestination', () => {
 
   it('reports missing objects and forgets trashed ones', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     await expect(dest.get('snapshots', 'nope')).rejects.toThrow(NotFoundError)
     await dest.put('snapshots', 's1', utf8('x'))
     await dest.trash('snapshots', 's1')
@@ -145,11 +147,11 @@ describe('DriveDestination', () => {
 
   it('opens a whole repository with one listing per folder', async () => {
     const fake = fakeDrive()
-    const first = await DriveDestination.forName(fake.drive, token, 'repo')
+    const first = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     await first.put('packs', 'p1', utf8('x'))
     await first.put('index', 'i1', utf8('y'))
 
-    const later = await DriveDestination.forName(fake.drive, token, 'repo')
+    const later = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     fake.log.length = 0
     await later.warm()
     // repo folder once, then packs, index and snapshots; snapshots is created, not listed
@@ -163,7 +165,7 @@ describe('DriveDestination', () => {
 
   it('retries when Drive is briefly unavailable, and gives up on real errors', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     await dest.put('packs', 'p1', utf8('data'))
     const waits: number[] = []
     dest.wait = async (ms) => void waits.push(ms)
@@ -180,7 +182,7 @@ describe('DriveDestination', () => {
 
   it('keeps its own writes and removals when a fresh listing lags behind', async () => {
     const fake = fakeDrive()
-    const dest = await DriveDestination.forName(fake.drive, token, 'repo')
+    const dest = (await DriveDestination.forName(fake.drive, token, 'repo', true))!
     const node = (name: string) => [...fake.nodes.values()].find((n) => n.name === name)!
 
     // Just written, not yet in Drive's listing: still known, and can be trashed.
@@ -200,13 +202,26 @@ describe('DriveDestination', () => {
     expect((await dest.list('locks', true)).map((o) => o.name)).toEqual(['theirs'])
   })
 
-  it('lists repositories, ignoring loose files', async () => {
+  it('lists repositories, ignoring loose files and folders without a config', async () => {
     const fake = fakeDrive()
-    await DriveDestination.forName(fake.drive, token, 'laptop')
-    await DriveDestination.forName(fake.drive, token, 'desktop')
+    for (const name of ['laptop', 'desktop']) {
+      await (await DriveDestination.forName(fake.drive, token, name, true))!.put('', 'config', utf8('{}'))
+    }
+    await DriveDestination.forName(fake.drive, token, 'left empty', true)
     const app = [...fake.nodes.values()].find((n) => n.name === APP_FOLDER)!
     fake.create('stray.txt', app.id, 'text/plain')
     const names = (await DriveDestination.listRepositories(fake.drive, token)).map((r) => r.name).sort()
     expect(names).toEqual(['desktop', 'laptop'])
+  })
+
+  it('never creates a folder when opening a backup that is gone', async () => {
+    const fake = fakeDrive()
+    expect(await DriveDestination.forName(fake.drive, token, 'deleted')).toBeNull()
+    expect(fake.nodes.size).toBe(0)
+    await DriveDestination.forName(fake.drive, token, 'other', true)
+    const before = fake.nodes.size
+    expect(await DriveDestination.forName(fake.drive, token, 'deleted')).toBeNull()
+    expect(fake.nodes.size).toBe(before)
+    expect(await DriveDestination.listRepositories(fake.drive, token)).toEqual([])
   })
 })

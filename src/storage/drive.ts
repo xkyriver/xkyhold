@@ -68,14 +68,22 @@ export class Drive {
 
   /** Finds a folder by name under `parent` ('root' by default), creating it if missing. */
   async ensureFolder(token: string, name: string, parent = 'root'): Promise<string> {
-    const q = `name = ${quote(name)} and mimeType = '${FOLDER_MIME}' and ${quote(parent)} in parents and trashed = false`
+    return (await this.findFolder(token, name, parent)) ?? this.createFolder(token, name, parent)
+  }
+
+  /** Finds a folder by name under `parent` ('root' by default), or null. Never creates one. */
+  async findFolder(token: string, name: string, parent = 'root'): Promise<string | null> {
+    return this.findChild(token, parent, name, `mimeType = '${FOLDER_MIME}'`)
+  }
+
+  /** The id of a non-trashed child of `parent` called `name`, or null. */
+  async findChild(token: string, parent: string, name: string, extra?: string): Promise<string | null> {
+    const q = [`name = ${quote(name)}`, `${quote(parent)} in parents`, 'trashed = false', ...(extra ? [extra] : [])].join(' and ')
     const found = await this.fetch(`${API}/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, {
       headers: this.headers(token),
     })
     if (!found.ok) await fail(found)
-    const existing = (await found.json()).files?.[0]?.id as string | undefined
-    if (existing) return existing
-    return this.createFolder(token, name, parent)
+    return ((await found.json()).files?.[0]?.id as string | undefined) ?? null
   }
 
   async createFolder(token: string, name: string, parent: string): Promise<string> {

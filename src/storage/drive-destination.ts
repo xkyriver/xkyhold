@@ -48,20 +48,31 @@ export class DriveDestination implements Destination {
     this.folders.set('', Promise.resolve(repoFolder))
   }
 
-  /** The repositories in the user's Drive, by folder name. */
+  /**
+   * The repositories in the user's Drive, by folder name: the folders under
+   * XkyHold/ that hold a `config` (docs/FORMAT.md, section 3). An empty
+   * folder is not a backup.
+   */
   static async listRepositories(drive: Drive, token: TokenSource): Promise<{ id: string; name: string }[]> {
     const t = await token()
-    const app = await drive.ensureFolder(t, APP_FOLDER)
-    return (await drive.listChildren(t, app))
-      .filter((f) => f.mimeType === DRIVE_FOLDER_MIME)
-      .map(({ id, name }) => ({ id, name }))
+    const app = await drive.findFolder(t, APP_FOLDER)
+    if (!app) return []
+    const folders = (await drive.listChildren(t, app)).filter((f) => f.mimeType === DRIVE_FOLDER_MIME)
+    const withConfig = await Promise.all(folders.map(async (f) => ((await drive.findChild(t, f.id, 'config')) ? f : null)))
+    return withConfig.filter((f): f is DriveFile => f !== null).map(({ id, name }) => ({ id, name }))
   }
 
-  /** Opens the repository folder called `name`, creating it if missing. */
-  static async forName(drive: Drive, token: TokenSource, name: string): Promise<DriveDestination> {
+  /**
+   * The repository folder called `name`. With `create`, it is made if
+   * missing (creating a backup); without, a missing folder gives null
+   * (the backup was deleted in Drive).
+   */
+  static async forName(drive: Drive, token: TokenSource, name: string, create = false): Promise<DriveDestination | null> {
     const t = await token()
-    const app = await drive.ensureFolder(t, APP_FOLDER)
-    return new DriveDestination(drive, token, await drive.ensureFolder(t, name, app))
+    const app = create ? await drive.ensureFolder(t, APP_FOLDER) : await drive.findFolder(t, APP_FOLDER)
+    if (!app) return null
+    const folder = create ? await drive.ensureFolder(t, name, app) : await drive.findFolder(t, name, app)
+    return folder ? new DriveDestination(drive, token, folder) : null
   }
 
   /** Repeats `work` a few times when Drive is briefly unavailable. */

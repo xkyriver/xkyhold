@@ -20,9 +20,10 @@ function connect() {
   let toClient: (message: Response) => void = () => {}
   const handle = createHost(
     {
-      destination: async (name, token) => {
+      destination: async (name, token, create) => {
         await token() // every storage access needs a session, as with Drive
         let dest = destinations.get(name)
+        if (!dest && !create) return null // only creating a backup makes its folder
         if (!dest) destinations.set(name, (dest = new MemoryDestination()))
         return dest
       },
@@ -167,6 +168,19 @@ describe('engine over messages', () => {
     const unreadable = tree()
     unreadable.unreadable = true
     await expect(client.call('backup', { roots: roots(unreadable), device: 'laptop', keepMonths: 0 })).rejects.toMatchObject({ kind: 'read' })
+  })
+
+  it('says a backup is missing when it was deleted in Drive, and does not make it again', async () => {
+    const { client, destinations } = page
+    const { keys } = await client.call('create', { repoName: 'laptop', password: 'correct horse' })
+    destinations.delete('laptop') // the user deleted the folder in Drive
+
+    await expect(client.call('open', { repoName: 'laptop', keys })).rejects.toMatchObject({ kind: 'missing' })
+    await expect(
+      client.call('connect', { repoName: 'laptop', credential: { password: 'correct horse' } }),
+    ).rejects.toMatchObject({ kind: 'missing' })
+    expect(destinations.has('laptop')).toBe(false)
+    expect(await client.call('listBackups', undefined)).toEqual([])
   })
 
   it('refuses to work without a Google session', async () => {

@@ -96,8 +96,15 @@ export interface ZipOutput extends ZipSink {
 
 export interface HostEnvironment {
   openZip(): Promise<ZipOutput>
-  /** The storage for the backup called `repoName`. */
-  destination(repoName: string, token: () => Promise<string>): Promise<Destination & { warm?(): Promise<void> }>
+  /**
+   * The storage for the backup called `repoName`. Only `create` may make
+   * it; otherwise a backup that is gone gives null.
+   */
+  destination(
+    repoName: string,
+    token: () => Promise<string>,
+    create: boolean,
+  ): Promise<(Destination & { warm?(): Promise<void> }) | null>
   listBackups(token: () => Promise<string>): Promise<string[]>
   /** Test hooks: cheaper key derivation and smaller packs. */
   repository?: RepositoryOptions & { argon2?: Argon2Params }
@@ -120,9 +127,20 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     return repo
   }
 
-  async function destination(repoName: string) {
-    const dest = await env.destination(repoName, token)
+  async function destination(repoName: string, create = false) {
+    const dest = await env.destination(repoName, token, create)
+    if (!dest) throw new EngineError('missing', `No backup called ${repoName} in Drive`)
     return dest
+  }
+
+  /** Reads `config`, or says the backup is missing when its folder holds none. */
+  async function existingConfig(dest: Destination) {
+    try {
+      return await Repository.readConfig(dest)
+    } catch (err) {
+      if (err instanceof NotFoundError) throw new EngineError('missing', 'The backup has no config')
+      throw err
+    }
   }
 
   type Handler<M extends Method> = (
@@ -134,7 +152,7 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     listBackups: () => env.listBackups(token),
 
     async create({ repoName, password }) {
-      const dest = await destination(repoName)
+      const dest = await destination(repoName, true)
       let exists = true
       try {
         await Repository.readConfig(dest)
@@ -152,6 +170,7 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     async connect({ repoName, credential }) {
       const dest = await destination(repoName)
       void dest.warm?.().catch(() => {})
+      await existingConfig(dest)
       const connected = await Repository.open(dest, credential, env.repository)
       snapshots = await connected.listSnapshots()
       repo = connected
@@ -163,8 +182,8 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
       void dest.warm?.().catch(() => {})
       const reopened = new Repository(dest, keys, env.repository)
       // The keys are known, but the format decides what may be done here.
-      const [config, , listed] = await Promise.all([
-        Repository.readConfig(dest),
+      const config = await existingConfig(dest)
+      const [, listed] = await Promise.all([
         reopened.loadIndex(),
         reopened.listSnapshots(),
       ])
@@ -256,7 +275,7 @@ export function createHost(env: HostEnvironment, post: (message: Response) => vo
     },
 
     async changePassword({ repoName, credential, newPassword }) {
-      const config = await Repository.readConfig(await destination(repoName))
+      const config = await existingConfig(await destination(repoName))
       if (config.format !== 1) throw new EngineError('read-only')
       await Repository.changePassword(await destination(repoName), credential, newPassword, env.repository?.argon2)
     },

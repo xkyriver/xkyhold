@@ -93,6 +93,11 @@ Drive-specific rules:
   on password change).
 - "Delete" always means **move to the Drive trash**, which Drive keeps for
   30 days. The engine never deletes permanently.
+- A backup is a folder under `XkyHold/` that holds `config`. A folder
+  without `config` (for example one left empty) is not listed as a backup.
+- Only creating a backup creates its folder. Opening, connecting to or
+  changing the password of a backup never does: if the folder is gone
+  (the user deleted it in Drive), the operation fails with "missing".
 
 ## 4. Cryptography
 

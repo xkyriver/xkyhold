@@ -15,7 +15,7 @@ let clockOffset = 0
 
 const handle = createHost(
   {
-    destination: (repoName, token) => DriveDestination.forName(drive, token, repoName),
+    destination: (repoName, token, create) => DriveDestination.forName(drive, token, repoName, create),
     openZip,
     listBackups: async (token) => (await DriveDestination.listRepositories(drive, token)).map((r) => r.name).sort(),
     ...(import.meta.env.DEV ? { now: () => new Date(Date.now() + clockOffset) } : {}),

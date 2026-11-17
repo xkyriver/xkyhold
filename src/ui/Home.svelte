@@ -15,7 +15,7 @@
     <span>{t('Connect to Google Drive to back up or restore.')}</span>
     <button class="btn primary" onclick={signIn}>{t('Continue with Google')}</button>
   </div>
-{:else if app.connected && !app.loaded && !app.opening}
+{:else if app.connected && !app.loaded && !app.opening && !app.missing}
   <div class="banner warn">
     <span>{t('Your backup could not be opened.')}</span>
     <button class="btn" onclick={retryOpen}>{t('Try again')}</button>

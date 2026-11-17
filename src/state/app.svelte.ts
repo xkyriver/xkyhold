@@ -98,6 +98,8 @@ export const app = $state({
    * (docs/FORMAT-v2.md, section 8).
    */
   readOnly: false,
+  /** The backup set up here is no longer in Google Drive: it was deleted there. */
+  missing: false,
 })
 
 /** Backups can be made here: a browser with folder access, and a backup XkyHold writes. */
@@ -157,6 +159,8 @@ export function explain(err: unknown): string {
       return t('There is not enough free space on this device for the .zip file.')
     case 'busy':
       return t('Another device is using this backup right now. Try again in a few minutes.')
+    case 'missing':
+      return t('This backup is no longer in your Google Drive. It may have been deleted there.')
     case 'read-only':
       return t('This backup was made by XkyHold-lx on Linux. You can restore from it here, but not add to it.')
     case 'refused':
@@ -301,6 +305,7 @@ async function openBackup(): Promise<void> {
     app.loaded = true
   } catch (err) {
     noteSession(err)
+    app.missing = err instanceof EngineError && err.kind === 'missing'
     app.error = explain(err)
   } finally {
     app.opening = false
@@ -308,6 +313,33 @@ async function openBackup(): Promise<void> {
 }
 
 export const retryOpen = () => openBackup()
+
+/**
+ * Stops using the backup set up on this device (for example because it was
+ * deleted in Drive), so another one can be chosen or created. The chosen
+ * folders, the settings and the Google sign-in stay. Nothing in Drive is
+ * touched.
+ */
+export async function forgetBackup(): Promise<void> {
+  stopJob()
+  await engine.call('close', undefined)
+  await settings.delete('setup')
+  await settings.delete('lastBackup')
+  markReturning(false)
+  keys = null
+  Object.assign(app, {
+    view: 'home',
+    configured: false,
+    repoName: '',
+    loaded: false,
+    snapshots: [],
+    lastBackup: null,
+    readOnly: false,
+    missing: false,
+    notice: null,
+    error: null,
+  })
+}
 
 // --- Jobs -----------------------------------------------------------------
 
@@ -511,6 +543,7 @@ export async function forgetDevice(): Promise<void> {
     reminderDismissed: false,
     notice: null,
     error: null,
+    missing: false,
   })
 }
 

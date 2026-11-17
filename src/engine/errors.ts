@@ -15,6 +15,7 @@ export type ErrorKind =
   | 'space' // this device has no room for a temporary file
   | 'busy' // another device is working on this backup right now
   | 'read-only' // a format 2 backup (XkyHold-lx): XkyHold only restores from it
+  | 'missing' // the backup is no longer in Google Drive (deleted there)
   | 'network'
   | 'aborted'
   | 'other'
