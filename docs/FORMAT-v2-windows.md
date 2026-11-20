@@ -1,9 +1,10 @@
 # XkyHold repository format — version 2, Windows addendum
 
-Status: **draft, waiting for the owner's approval.** Nothing depends on it
-yet. Once approved it is frozen under the same rules as `FORMAT-v2.md`:
-wording may be clarified, the bytes it describes do not change, and its
-test vector (section 9) is written once and never regenerated.
+Status: **approved by the owner and frozen** on 20 November 2026
+(decisions in section 10). Not implemented yet; XkyHold-wd implements it
+first. The rules of `FORMAT-v2.md` apply: wording may be clarified, the
+bytes it describes do not change, and its test vector (section 9) is
+written once and never regenerated.
 
 This addendum says how XkyHold-wd, the Windows app, writes version 2
 repositories, and what every reader does with what it writes. **It is not
@@ -55,7 +56,7 @@ read in their code on 20 November 2026:
       "meta": { "mtime": 1794400000000, "winAttrs": [] },
       "leftOut": [ … ] }
   ],
-  "stats": { "files": 51234, "bytes": 81234567890, "skipped": 0, "changed": 1, "symlinks": 4, "locked": 3, "cloudOnly": 1520 },
+  "stats": { "files": 51234, "bytes": 81234567890, "skipped": 0, "changed": 1, "symlinks": 4, "locked": 3, "cloudOnly": 1520, "badNames": 0 },
   "parent": "…"
 }
 ```
@@ -94,7 +95,12 @@ As in `FORMAT-v2.md` 5.3, plus, optional:
 | Field | Counts |
 |---|---|
 | `locked` | Files another program held open without sharing (Windows error 32) or with a byte-range lock (error 33). Not stored; no partial file is ever stored |
+| `badNames` | Items whose name is not valid UTF-16 (4.1). Not stored |
 | `cloudOnly` | Cloud files that were not on this computer ("online-only": attribute `RECALL_ON_DATA_ACCESS` or `RECALL_ON_OPEN`, or Windows error 395). Not stored, because reading them would download them |
+
+The snapshot holds only these counts. The paths behind `locked`,
+`cloudOnly` and `badNames` are kept in the app's local log on the computer
+that made the backup, and shown to the user there (decision D2).
 
 `special` also counts reparse points of other kinds (section 4.4).
 `mounts` is not used on Windows.
@@ -125,9 +131,10 @@ Same structure as `FORMAT-v2.md` 5.4. The defaults XkyHold-wd writes:
 - `name` is the name converted from UTF-16 to UTF-8. Windows names never
   contain `/` or NUL, so the rules of `FORMAT-v2.md` 4.1 hold as they are.
 - A name that is not valid UTF-16 (an unpaired surrogate, possible but
-  rare) cannot be written as UTF-8 exactly. **Proposed: such an item is not
-  stored and is counted in `skipped`.** `nameBytes` is never written by
-  XkyHold-wd. (Alternative in section 10.)
+  rare) cannot be written as UTF-8 exactly. Such an item is **not stored**
+  and is counted in `badNames` (3.3), and the app tells the user after the
+  backup which items these were (their paths, with the bad part shown as
+  U+FFFD) and why. `nameBytes` is never written by XkyHold-wd.
 - Uniqueness and order follow `FORMAT-v2.md` 4.1 (bytes of the UTF-8
   name). Two names that differ only in case cannot exist in one Windows
   folder, so a Windows writer never produces them.
@@ -222,9 +229,11 @@ From any version 2 repository, whatever system wrote it.
     restore is done, the target is a folder; otherwise as a file link.
     Links are created after everything else for that reason.
   - Windows refuses symbolic links to users without Developer Mode or
-    the privilege to create them. **Proposed: then the link is not
-    restored, and the restore counts and lists it.** (Alternative in
-    section 10.)
+    the privilege to create them. Then the link is **not restored**, and
+    the app tells the user at the end of the restore: which links, where
+    each one pointed, and that turning on Developer Mode in Windows
+    Settings and restoring again brings them back. Junctions are never
+    affected.
   - The target is written as stored, never rewritten: a Linux target such
     as `/home/ana/x` or a Windows target from another computer may point
     nowhere, and the list says so.
@@ -276,7 +285,7 @@ with this document. Version 2 snapshots only, with `origin` and without
 - a file symbolic link, a folder symbolic link, a junction to an absolute
   target and a dangling relative link;
 - a name with non-ASCII characters;
-- `stats.locked`, `stats.cloudOnly` and `stats.special` not zero, and the
+- `stats.locked`, `stats.cloudOnly`, `stats.badNames` and `stats.special` not zero, and the
   matching items absent from the tree;
 - a `leftOut` list with the defaults of section 3.4 and one rule of each
   user kind.
@@ -287,11 +296,11 @@ Linux build and by the web engine, and one written on Linux restored on
 Windows, covering the renaming rules of section 5. `golden-v1*.json` and
 `golden-v2-repo.json` keep passing unchanged.
 
-## 10. Decisions for the owner
+## 10. Decisions of the owner (20 November 2026)
 
-| # | Question | Proposed | Alternative |
-|---|---|---|---|
-| D1 | A name that is not valid UTF-16 | Not stored, counted in `skipped` | Store it with a new `nameUtf16` field (base64 of the UTF-16 units); older readers show the display form |
-| D2 | Which files were locked or online-only in a given backup | Counts in the snapshot; the list of paths only in the app's local log on that computer | Also a capped list of paths (for example 200) in the snapshot, visible from any computer |
-| D3 | Restoring a symbolic link when Windows refuses it (no Developer Mode) | Not restored, counted and listed | Restore a folder link as a junction when the target is an absolute folder on this computer, and skip the rest |
-| D4 | Creation time | Stored (`btime`) and restored on Windows | Not stored, as on Linux |
+| # | Question | Decision |
+|---|---|---|
+| D1 | A name that is not valid UTF-16 | Not stored, counted in `badNames`, and the user is told which items and why (4.1) |
+| D2 | Which files were locked or online-only in a given backup | Counts in the snapshot; the list of paths only in the app's local log on that computer |
+| D3 | Restoring a symbolic link when Windows refuses it (no Developer Mode) | Not restored; the user is told which links, their targets, and how to get them back (5) |
+| D4 | Creation time | Stored (`btime`) and restored on Windows |
