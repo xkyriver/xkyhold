@@ -285,8 +285,13 @@ with this document. Version 2 snapshots only, with `origin` and without
 - a file symbolic link, a folder symbolic link, a junction to an absolute
   target and a dangling relative link;
 - a name with non-ASCII characters;
-- `stats.locked`, `stats.cloudOnly`, `stats.badNames` and `stats.special` not zero, and the
-  matching items absent from the tree;
+- `stats.locked` and `stats.badNames` not zero, and the matching items
+  absent from the tree. Online-only cloud files (`cloudOnly`) and other
+  reparse points (`special`) cannot be made in a temporary folder: they
+  are tested against a real OneDrive folder and the real
+  `AppData/Local/Microsoft/WindowsApps` on a Windows test machine, not
+  frozen in the fixture (clarified 20 November 2026; the bytes of the
+  format are unchanged);
 - a `leftOut` list with the defaults of section 3.4 and one rule of each
   user kind.
 
