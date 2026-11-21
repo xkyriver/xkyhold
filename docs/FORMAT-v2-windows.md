@@ -234,9 +234,13 @@ From any version 2 repository, whatever system wrote it.
     each one pointed, and that turning on Developer Mode in Windows
     Settings and restoring again brings them back. Junctions are never
     affected.
-  - The target is written as stored, never rewritten: a Linux target such
-    as `/home/ana/x` or a Windows target from another computer may point
-    nowhere, and the list says so.
+  - The target is written as stored, with one exception: a **relative**
+    target of a Linux link (no `link`, not starting with `/`) has each `/`
+    written as `\`, because Windows does not follow a relative link
+    written with `/` (decision D5). Nothing else is rewritten: a Linux
+    target such as `/home/ana/x` or a Windows target from another computer
+    may point nowhere, and the list says so. The repository keeps the
+    target as it was stored.
 - `mode`, owners and `xattrs` from a Linux backup are ignored, like a
   browser does (`FORMAT-v2.md` 8). Files whose name starts with a dot are
   not made hidden.
@@ -309,3 +313,4 @@ Windows, covering the renaming rules of section 5. `golden-v1*.json` and
 | D2 | Which files were locked or online-only in a given backup | Counts in the snapshot; the list of paths only in the app's local log on that computer |
 | D3 | Restoring a symbolic link when Windows refuses it (no Developer Mode) | Not restored; the user is told which links, their targets, and how to get them back (5) |
 | D4 | Creation time | Stored (`btime`) and restored on Windows |
+| D5 | A relative Linux link target written with `/`, restored on Windows (21 November 2026, found in XkyHold-wd's Phase 6) | Each `/` becomes `\` when the link is created, so Windows follows it; the stored target does not change (5) |
